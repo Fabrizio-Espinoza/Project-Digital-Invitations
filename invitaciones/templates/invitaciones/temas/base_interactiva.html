@@ -1,0 +1,214 @@
+<!--
+  Esta es la "base del motor": countdown, RSVP y galeria viven aqui una
+  sola vez. Cada plantilla nueva usara un extends de Django hacia este
+  archivo y solo sobreescribira el bloque "estilos" (y opcionalmente los
+  bloques de decoracion) con su propia paleta y tipografia. Asi agregar
+  un diseño nuevo no significa reescribir el RSVP ni el countdown otra vez.
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+     {% load static %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ invitacion.titulo_evento }}</title>
+
+    <!-- PWA: esto es lo que permite "instalar" la invitación como app -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#000000">
+
+    {% block estilos %}
+    <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
+    {% endblock %}
+</head>
+<body>
+
+        <section class="hero animar-entrada">
+        <div class="marco-decorativo">
+            {% block decoracion_superior %}{% endblock %}
+        </div>
+        <div class="hero-contenido">
+            <p class="eyebrow">
+                {% if plantilla.tipo_evento == "boda" %}¡Nos casamos!
+                {% elif plantilla.tipo_evento == "xv" %}¡Es mi fiesta!
+                {% elif plantilla.tipo_evento == "graduacion" %}¡Lo logré!
+                {% else %}Estás invitado
+                {% endif %}
+            </p>
+
+            <h1 class="nombres">{{ invitacion.anfitriones }}</h1>
+            {% if invitacion.mensaje_bienvenida %}
+            <p class="mensaje">{{ invitacion.mensaje_bienvenida }}</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="detalles animar-entrada">
+        <div class="detalle-item">
+            <span class="detalle-label">Día</span>
+            <span class="detalle-valor">{{ invitacion.fecha_evento|date:"d \d\e F, Y" }}</span>
+        </div>
+        <div class="detalle-divisor"></div>
+        <div class="detalle-item">
+            <span class="detalle-label">Hora</span>
+            <span class="detalle-valor">{{ invitacion.fecha_evento|date:"g:i A" }}</span>
+        </div>
+        {% if invitacion.lugar_nombre %}
+        <div class="detalle-divisor"></div>
+        <div class="detalle-item">
+            <span class="detalle-label">Lugar</span>
+            <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="countdown animar-entrada" id="countdown" data-fecha="{{ invitacion.fecha_evento|date:'c' }}">
+        <div><span id="dias">--</span><label>Días</label></div>
+        <div><span id="horas">--</span><label>Horas</label></div>
+        <div><span id="min">--</span><label>Min</label></div>
+        <div><span id="seg">--</span><label>Seg</label></div>
+    </section>
+
+    <section class="acciones-rapidas animar-entrada">
+        {% if mostrar_rsvp %}
+        <a href="#rsvp" class="accion-icono">
+            <span class="icono-circulo">✓</span>
+            <span>Confirmar</span>
+        </a>
+        {% endif %}
+        {% if invitacion.lugar_mapa_url %}
+        <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+            <span class="icono-circulo">📍</span>
+            <span>Ubicación</span>
+        </a>
+        {% endif %}
+    </section>
+
+    {% if mostrar_galeria %}
+    <section class="galeria animar-entrada">
+        {% for foto in invitacion.galeria.all %}
+            <img src="{{ foto.imagen.url }}" alt="">
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    {% if mostrar_musica and invitacion.musica_url %}
+    <audio autoplay loop src="{{ invitacion.musica_url }}"></audio>
+    {% endif %}
+
+    {% if mostrar_rsvp %}
+    <section class="rsvp animar-entrada" id="rsvp">
+        <h2>Confirma tu asistencia</h2>
+        <p><span id="total-confirmados">…</span> personas ya confirmaron</p>
+
+                <form id="form-rsvp">
+            <input type="text" name="nombre_invitado" placeholder="Tu nombre" required>
+
+            <div class="opciones-asistencia">
+                <input type="radio" id="asistencia-si" name="asistencia" value="si" checked>
+                <label for="asistencia-si">Sí asistiré</label>
+
+                <input type="radio" id="asistencia-no" name="asistencia" value="no">
+                <label for="asistencia-no">No podré</label>
+
+                <input type="radio" id="asistencia-tal_vez" name="asistencia" value="tal_vez">
+                <label for="asistencia-tal_vez">Tal vez</label>
+            </div>
+
+            <div class="campo-con-label">
+                <label for="num_acompanantes">Acompañantes (sin contarte)</label>
+                <input type="number" id="num_acompanantes" name="num_acompanantes" min="0" value="0">
+            </div>
+
+            <textarea name="mensaje" placeholder="Mensaje (opcional)"></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+        <p id="rsvp-status"></p>
+    </section>
+    {% endif %}
+
+    {% block decoracion_inferior %}{% endblock %}
+
+    <script>
+        // --- Countdown ---
+        const fechaEvento = new Date(document.getElementById('countdown').dataset.fecha);
+        function actualizarCountdown() {
+            const diff = fechaEvento - new Date();
+            if (diff <= 0) return;
+            const dias = Math.floor(diff / 86400000);
+            const horas = Math.floor((diff % 86400000) / 3600000);
+            const min = Math.floor((diff % 3600000) / 60000);
+            const seg = Math.floor((diff % 60000) / 1000);
+            document.getElementById('dias').textContent = dias;
+            document.getElementById('horas').textContent = horas;
+            document.getElementById('min').textContent = min;
+            document.getElementById('seg').textContent = seg;
+        }
+        setInterval(actualizarCountdown, 1000);
+        actualizarCountdown();
+
+        // --- Animación de entrada al hacer scroll (sin librerías) ---
+        const observador = new IntersectionObserver((entradas) => {
+            entradas.forEach(entrada => {
+                if (entrada.isIntersecting) {
+                    entrada.target.classList.add('visible');
+                    observador.unobserve(entrada.target);
+                }
+            });
+        }, { threshold: 0.15 });
+        document.querySelectorAll('.animar-entrada').forEach(el => observador.observe(el));
+
+        {% if mostrar_rsvp %}
+        // --- RSVP: envío por fetch (sin recargar) + polling para el conteo "en vivo" ---
+        const slug = "{{ invitacion.slug }}";
+
+        // Django exige este token en cada POST para protegerse de ataques CSRF.
+        // Lo lee de la cookie 'csrftoken' que el navegador ya trae (Django la puso ahí sola,
+        // gracias a @ensure_csrf_cookie en la vista).
+        function getCSRFToken() {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : '';
+        }
+
+        function actualizarConteo() {
+            fetch(`/invitaciones/${slug}/rsvp/conteo/`)
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('total-confirmados').textContent = data.total_confirmados;
+                })
+                .catch(err => console.error('Error al pedir el conteo:', err));
+        }
+        actualizarConteo();
+        setInterval(actualizarConteo, 8000);
+
+        document.getElementById('form-rsvp').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = new FormData(e.target);
+            const payload = Object.fromEntries(form.entries());
+
+            fetch(`/invitaciones/${slug}/rsvp/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(payload),
+            })
+            .then(r => {
+                if (!r.ok) throw new Error(`Status ${r.status}`);
+                return r.json();
+            })
+            .then(data => {
+                document.getElementById('rsvp-status').textContent = '¡Gracias por confirmar!';
+                document.getElementById('total-confirmados').textContent = data.total_confirmados;
+                e.target.reset();
+            })
+            .catch(err => {
+                console.error('Error al enviar RSVP:', err);
+                document.getElementById('rsvp-status').textContent = 'Hubo un error, intenta de nuevo.';
+            });
+        });
+        {% endif %}
+    </script>
+</body>
+</html>
