@@ -43,49 +43,56 @@
         </div>
     </section>
 
-    <section class="detalles animar-entrada">
-        <div class="detalle-item">
-            <span class="detalle-label">Día</span>
-            <span class="detalle-valor">{{ invitacion.fecha_evento|date:"d \d\e F, Y" }}</span>
+       <div class="pantalla-info animar-entrada">
+        <div class="marco-decorativo-info">
+            {% block decoracion_info %}{% endblock %}
         </div>
-        <div class="detalle-divisor"></div>
-        <div class="detalle-item">
-            <span class="detalle-label">Hora</span>
-            <span class="detalle-valor">{{ invitacion.fecha_evento|date:"g:i A" }}</span>
+        <div class="pantalla-contenido">
+            <section class="detalles">
+                <div class="detalle-item">
+                    <span class="detalle-label">Día</span>
+                    <span class="detalle-valor">{{ invitacion.fecha_evento|date:"d \d\e F, Y" }}</span>
+                </div>
+                <div class="detalle-divisor"></div>
+                <div class="detalle-item">
+                    <span class="detalle-label">Hora</span>
+                    <span class="detalle-valor">{{ invitacion.fecha_evento|date:"g:i A" }}</span>
+                </div>
+                {% if invitacion.lugar_nombre %}
+                <div class="detalle-divisor"></div>
+                <div class="detalle-item">
+                    <span class="detalle-label">Lugar</span>
+                    <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
+                </div>
+                {% endif %}
+            </section>
+
+            <section class="countdown" id="countdown" data-fecha="{{ invitacion.fecha_evento|date:'c' }}">
+                <div><span id="dias">--</span><label>Días</label></div>
+                <div><span id="horas">--</span><label>Horas</label></div>
+                <div><span id="min">--</span><label>Min</label></div>
+                <div><span id="seg">--</span><label>Seg</label></div>
+            </section>
+
+            <section class="acciones-rapidas">
+                {% if mostrar_rsvp %}
+                <a href="#rsvp" class="accion-icono">
+                    <span class="icono-circulo">✓</span>
+                    <span>Confirmar</span>
+                </a>
+                {% endif %}
+                {% if invitacion.lugar_mapa_url %}
+                <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+                    <span class="icono-circulo">📍</span>
+                    <span>Ubicación</span>
+                </a>
+                {% endif %}
+            </section>
         </div>
-        {% if invitacion.lugar_nombre %}
-        <div class="detalle-divisor"></div>
-        <div class="detalle-item">
-            <span class="detalle-label">Lugar</span>
-            <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
-        </div>
-        {% endif %}
-    </section>
+    </div>
 
-    <section class="countdown animar-entrada" id="countdown" data-fecha="{{ invitacion.fecha_evento|date:'c' }}">
-        <div><span id="dias">--</span><label>Días</label></div>
-        <div><span id="horas">--</span><label>Horas</label></div>
-        <div><span id="min">--</span><label>Min</label></div>
-        <div><span id="seg">--</span><label>Seg</label></div>
-    </section>
-
-    <section class="acciones-rapidas animar-entrada">
-        {% if mostrar_rsvp %}
-        <a href="#rsvp" class="accion-icono">
-            <span class="icono-circulo">✓</span>
-            <span>Confirmar</span>
-        </a>
-        {% endif %}
-        {% if invitacion.lugar_mapa_url %}
-        <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-            <span class="icono-circulo">📍</span>
-            <span>Ubicación</span>
-        </a>
-        {% endif %}
-    </section>
-
-    {% if mostrar_galeria %}
-    <section class="galeria animar-entrada">
+    {% if mostrar_galeria and invitacion.galeria.all %}
+<section class="galeria animar-entrada">
         {% for foto in invitacion.galeria.all %}
             <img src="{{ foto.imagen.url }}" alt="">
         {% endfor %}

@@ -5,6 +5,8 @@
 <img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt="">
 {% endblock %}
 
+{% block decoracion_info %} <img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt=""> {% endblock %}
+
 {% block decoracion_inferior %}
 {% endblock %}
 
@@ -13,6 +15,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
+    /* ============================================
+       VARIABLES DE COLOR
+       ============================================ */
     :root {
         --bg: #FBF6F0;
         --texto: #2E2A26;
@@ -21,8 +26,13 @@
         --dorado: #B8935A;
     }
 
-    * { box-sizing: border-box; }
+    * {
+        box-sizing: border-box;
+    }
 
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
     body {
         margin: 0;
         background: var(--bg);
@@ -34,7 +44,29 @@
         overflow-x: hidden;
     }
 
-    /* --- Animación de entrada al hacer scroll --- */
+    html {
+        scroll-snap-type: y mandatory;
+    }
+
+    /* ============================================
+       SCROLL TIPO "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .galeria,
+    .rsvp {
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* ============================================
+       ANIMACION DE ENTRADA AL HACER SCROLL
+       ============================================ */
     .animar-entrada {
         opacity: 0;
         transform: translateY(18px);
@@ -45,13 +77,37 @@
         transform: translateY(0);
     }
 
-    /* --- Decoración floral --- */
-    .hojas { display: block; width: 100%; max-width: 500px; margin: 0 auto; }
-    .hojas-superior { margin-bottom: -10px; }
-    .hojas-inferior { margin-top: -10px; }
-
-    /* --- Hero --- */
-    .hero { padding: 10px 24px 40px; }
+    /* ============================================
+       HERO (marco floral + nombres)
+       ============================================ */
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 40px 24px;
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .marco-decorativo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+    .floral-superior {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+        display: block;
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 60px 40px;
+    }
     .eyebrow {
         font-size: 0.8rem;
         letter-spacing: 3px;
@@ -67,8 +123,6 @@
         margin: 0 0 18px;
         line-height: 1.1;
     }
-     .hero { position: relative; overflow: hidden; padding: 40px 24px; min-height: 520px; display: flex; align-items: center; justify-content: center; } .marco-decorativo { position: absolute; inset: 0; z-index: 0; pointer-events: none; } .marco-decorativo img { width: 100%; height: 100%; object-fit: contain; } .hero-contenido { position: relative; z-index: 1; text-align: center; padding: 60px 40px;
-     }
     .mensaje {
         max-width: 380px;
         margin: 0 auto;
@@ -76,16 +130,23 @@
         color: var(--texto);
     }
 
-    /* --- Detalles (Día / Hora / Lugar) --- */
+    /* ============================================
+       DETALLES (Dia / Hora / Lugar)
+       ============================================ */
     .detalles {
         display: flex;
         justify-content: center;
         align-items: center;
         flex-wrap: wrap;
         gap: 24px;
-        padding: 40px 24px 10px;
+             padding: 90px 50px 10px;
     }
-    .detalle-item { display: flex; flex-direction: column; align-items: center; min-width: 110px; }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 110px;
+    }
     .detalle-label {
         font-family: 'Cormorant Garamond', serif;
         font-style: italic;
@@ -105,14 +166,20 @@
         opacity: 0.5;
     }
 
-    /* --- Countdown --- */
+    /* ============================================
+       COUNTDOWN
+       ============================================ */
     .countdown {
         display: flex;
         justify-content: center;
         gap: clamp(16px, 5vw, 48px);
         padding: 40px 20px 50px;
     }
-    .countdown div { display: flex; flex-direction: column; align-items: center; }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
     .countdown span {
         font-family: 'Cormorant Garamond', serif;
         font-size: clamp(2rem, 6vw, 3rem);
@@ -127,7 +194,9 @@
         color: var(--sauce);
     }
 
-    /* --- Acciones rápidas (botones circulares) --- */
+    /* ============================================
+       ACCIONES RAPIDAS (botones circulares)
+       ============================================ */
     .acciones-rapidas {
         display: flex;
         justify-content: center;
@@ -146,103 +215,6 @@
         letter-spacing: 1px;
         text-transform: uppercase;
     }
-    /* --- RSVP estilizado --- */
-.rsvp {
-    background: linear-gradient(180deg, #F3EBE1, #FBF6F0);
-    padding: 70px 24px;
-}
-.rsvp::before {
-    content: "❧";
-    display: block;
-    font-size: 1.8rem;
-    color: var(--dorado);
-    margin-bottom: 10px;
-}
-.rsvp h2 {
-    font-family: 'Cormorant Garamond', serif;
-    font-weight: 500;
-    font-size: 2rem;
-    margin: 0 0 6px;
-}
-.rsvp p { color: var(--sauce); }
-#form-rsvp {
-    background: #fff;
-    max-width: 420px;
-    margin: 30px auto 0;
-    padding: 32px 28px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(46, 42, 38, 0.08);
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-#form-rsvp input,
-#form-rsvp textarea {
-    font-family: 'Jost', sans-serif;
-    font-size: 0.95rem;
-    padding: 12px 14px;
-    border: 1px solid #E4D9C9;
-    border-radius: 8px;
-    background: #FBF6F0;
-    color: var(--texto);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-#form-rsvp input:focus,
-#form-rsvp textarea:focus,
-#form-rsvp select:focus {
-    outline: none;
-    border-color: var(--terracota);
-    box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.15);
-}
-/* El <select> nativo se ve distinto en cada navegador; con appearance:none
-   le quitamos esa flechita fea y le ponemos una propia con SVG de fondo. */
-#form-rsvp select {
-    font-family: 'Jost', sans-serif;
-    font-size: 0.95rem;
-    padding: 12px 40px 12px 14px;
-    border: 1px solid #E4D9C9;
-    border-radius: 8px;
-    background-color: #FBF6F0;
-    color: var(--texto);
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C97C5D' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 14px center;
-}
-#form-rsvp textarea { resize: vertical; min-height: 80px; }
-
- .opciones-asistencia { display: flex; gap: 8px; flex-wrap: wrap; } .opciones-asistencia input[type="radio"] { position: absolute; opacity: 0; pointer-events: none; } .opciones-asistencia label { flex: 1; min-width: 100px; text-align: center; padding: 10px 12px; border: 1px solid #E4D9C9; border-radius: 30px; font-size: 0.85rem; color: var(--texto); background: #FBF6F0; cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease; } .opciones-asistencia input[type="radio"]:checked + label { background: var(--terracota); border-color: var(--terracota); color: #fff; }
-
-#form-rsvp button {
-    font-family: 'Jost', sans-serif;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    font-size: 0.85rem;
-    padding: 15px;
-    border: none;
-    border-radius: 30px;
-    background: var(--terracota);
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 6px 16px rgba(201, 124, 93, 0.35);
-    transition: transform 0.15s ease, background 0.2s ease;
-}
-#form-rsvp button:hover {
-    background: #B56947;
-    transform: translateY(-2px);
-}
-.campo-con-label {
-    text-align: left;
-}
-.campo-con-label label {
-    display: block;
-    font-size: 0.8rem;
-    color: var(--sauce);
-    margin-bottom: 6px;
-}
-
-    .floral-superior { width: 100%; max-width: 500px; margin: 0 auto; display: block; }
     .icono-circulo {
         width: 56px;
         height: 56px;
@@ -261,7 +233,9 @@
         transform: translateY(-3px);
     }
 
-    /* --- Galería --- */
+    /* ============================================
+       GALERIA
+       ============================================ */
     .galeria {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -270,9 +244,151 @@
         max-width: 900px;
         margin: 0 auto;
     }
-    .galeria img { width: 100%; height: 220px; object-fit: cover; border-radius: 2px; }
+    .galeria img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 2px;
+    }
 
-    
-    #rsvp-status { margin-top: 16px; color: var(--sauce); font-size: 0.9rem; }
+    /* ============================================
+       RSVP
+       ============================================ */
+    .rsvp {
+        background: linear-gradient(180deg, #F3EBE1, #FBF6F0);
+        padding: 70px 24px;
+    }
+    .rsvp::before {
+        content: "❧";
+        display: block;
+        font-size: 1.8rem;
+        color: var(--dorado);
+        margin-bottom: 10px;
+    }
+    .rsvp h2 {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 500;
+        font-size: 2rem;
+        margin: 0 0 6px;
+    }
+    .rsvp p {
+        color: var(--sauce);
+    }
+
+    /* --- Formulario --- */
+    #form-rsvp {
+        background: #fff;
+        max-width: 420px;
+        margin: 30px auto 0;
+        padding: 32px 28px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(46, 42, 38, 0.08);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    #form-rsvp input,
+    #form-rsvp textarea {
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+        padding: 12px 14px;
+        border: 1px solid #E4D9C9;
+        border-radius: 8px;
+        background: #FBF6F0;
+        color: var(--texto);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus,
+    #form-rsvp select:focus {
+        outline: none;
+        border-color: var(--terracota);
+        box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.15);
+    }
+    #form-rsvp textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    #form-rsvp button {
+        font-family: 'Jost', sans-serif;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        padding: 15px;
+        border: none;
+        border-radius: 30px;
+        background: var(--terracota);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 6px 16px rgba(201, 124, 93, 0.35);
+        transition: transform 0.15s ease, background 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        background: #B56947;
+        transform: translateY(-2px);
+    }
+
+    /* --- Select nativo (ya no se usa, pero no estorba) --- */
+    #form-rsvp select {
+        font-family: 'Jost', sans-serif;
+        font-size: 0.95rem;
+        padding: 12px 40px 12px 14px;
+        border: 1px solid #E4D9C9;
+        border-radius: 8px;
+        background-color: #FBF6F0;
+        color: var(--texto);
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C97C5D' stroke-width='2' fill='none'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+    }
+
+    /* --- Botones tipo pildora (Si / No / Tal vez) --- */
+    .opciones-asistencia {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        flex: 1;
+        min-width: 100px;
+        text-align: center;
+        padding: 10px 12px;
+        border: 1px solid #E4D9C9;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        color: var(--texto);
+        background: #FBF6F0;
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--terracota);
+        border-color: var(--terracota);
+        color: #fff;
+    }
+
+    /* --- Campo con label visible (acompanantes) --- */
+    .campo-con-label {
+        text-align: left;
+    }
+    .campo-con-label label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--sauce);
+        margin-bottom: 6px;
+    }
+.pantalla-info { position: relative; overflow: hidden; } .marco-decorativo-info { position: absolute; inset: 0; z-index: 0; pointer-events: none; } .marco-decorativo-info img { width: 100%; height: 100%; object-fit: contain; } .pantalla-contenido { position: relative; z-index: 1; }
+    #rsvp-status {
+        margin-top: 16px;
+        color: var(--sauce);
+        font-size: 0.9rem;
+    }
 </style>
 {% endblock %}
