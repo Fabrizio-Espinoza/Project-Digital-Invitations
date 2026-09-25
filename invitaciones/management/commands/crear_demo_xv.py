@@ -20,7 +20,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         plantilla, _ = Plantilla.objects.get_or_create(
             slug_tema="xv-medianoche-01",
-            defaults={"nombre": "Medianoche Dorada", "tipo_evento": "xv"},
+            defaults={"nombre": "Medianoche Dorada", "tipo_evento": "xv", "color_tema": "#120E24"},
         )
 
         fecha = (timezone.now() + timedelta(days=60)).replace(hour=19, minute=0, second=0, microsecond=0)

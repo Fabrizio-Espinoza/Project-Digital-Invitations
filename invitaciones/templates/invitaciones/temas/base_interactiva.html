@@ -19,9 +19,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ invitacion.titulo_evento }}</title>
 
-    <!-- PWA: esto es lo que permite "instalar" la invitación como app -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="{% block color_tema %}#000000{% endblock %}">
+    <!-- PWA: esto es lo que permite "instalar" la invitación como app.
+         El manifest se genera por invitación (nombre, ícono y colores propios). -->
+    <link rel="manifest" href="{% url 'invitaciones:manifest' invitacion.slug %}">
+    <meta name="theme-color" content="{{ plantilla.color_tema }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ iconos_pwa.192 }}">
+    <!-- iPhone no lee los íconos del manifest: usa estas etiquetas propias de Apple -->
+    <link rel="apple-touch-icon" href="{{ iconos_pwa.180 }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ invitacion.anfitriones }}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     {% block estilos %}
     <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
@@ -345,6 +353,18 @@
             });
         });
         {% endif %}
+
+        // --- PWA: registrar el service worker ---
+        // Solo funciona en HTTPS (o en localhost). Por WiFi local con
+        // http://<ip>:8000 el navegador simplemente no lo registra, y la
+        // invitación sigue funcionando normal, solo sin modo offline.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker
+                    .register("{% url 'invitaciones:service_worker' %}")
+                    .catch(err => console.error('No se pudo registrar el service worker:', err));
+            });
+        }
     </script>
 </body>
 </html>
