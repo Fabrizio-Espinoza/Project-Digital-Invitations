@@ -1,0 +1,1468 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% comment %}
+  "Diez Lunas" — plantilla de baby shower.
+  Concepto: un embarazo dura 280 días = diez lunas de 28. La plantilla es un
+  cielo al atardecer con un móvil de cuna (luna, estrellas, nube, corazón)
+  meciéndose, y una pantalla de noche donde las lunas se van llenando.
+  Todo el arte es SVG dibujado aquí mismo, sin imágenes descargadas: cero
+  dudas de licencia para venderla y anunciarla en Meta Ads.
+  Paletas: neutra (default), "rosa" o "azul" con contenido_extra.paleta.
+{% endcomment %}
+
+{% block theme_color %}{% if invitacion.contenido_extra.paleta == "rosa" %}#F4DCE3{% elif invitacion.contenido_extra.paleta == "azul" %}#D6E4F3{% else %}#DCE1F3{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<!-- Figuras reutilizables: se definen una vez y se usan con <use href="#..."> en cualquier pantalla -->
+<svg class="simbolos" aria-hidden="true" focusable="false">
+    <symbol id="sym-destello" viewBox="0 0 24 24">
+        <path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/>
+    </symbol>
+    <symbol id="sym-luna" viewBox="6 6 50 52">
+        <path d="M32 8A24 24 0 1 0 54.16 41.24A20 20 0 0 1 32 8Z"/>
+    </symbol>
+    <symbol id="sym-estrella" viewBox="0 0 24 24">
+        <path d="M12 2.5l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 16.9 6.3 20l1.2-6.4-4.7-4.4 6.4-.8z" stroke-linejoin="round" stroke-width="1.6"/>
+    </symbol>
+    <symbol id="sym-nube" viewBox="0 0 120 60">
+        <circle cx="35" cy="38" r="18"/><circle cx="60" cy="28" r="24"/><circle cx="86" cy="38" r="18"/><rect x="35" y="38" width="51" height="18"/>
+    </symbol>
+    <symbol id="sym-corazon" viewBox="0 0 24 24">
+        <path d="M12 21s-7.5-4.6-9.6-9.3C.9 7.9 3.3 4 7 4c2.1 0 3.8 1.1 5 2.8C13.2 5.1 14.9 4 17 4c3.7 0 6.1 3.9 4.6 7.7C19.5 16.4 12 21 12 21z"/>
+    </symbol>
+</svg>
+
+<div class="cielo-estrellas" aria-hidden="true">
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+</div>
+
+<!-- Móvil de cuna: cada adorno cuelga de un hilo y se mece desde arriba -->
+<div class="movil" aria-hidden="true">
+    <div class="colgante"><svg class="adorno adorno-estrella"><use href="#sym-estrella"/></svg></div>
+    <div class="colgante"><svg class="adorno adorno-nube"><use href="#sym-nube"/></svg></div>
+    <div class="colgante"><svg class="adorno adorno-luna"><use href="#sym-luna"/></svg></div>
+    <div class="colgante"><svg class="adorno adorno-estrella"><use href="#sym-estrella"/></svg></div>
+    <div class="colgante"><svg class="adorno adorno-corazon"><use href="#sym-corazon"/></svg></div>
+</div>
+
+<!-- Banco de nubes: un tramo de 400 de ancho repetido 3 veces. Así en pantallas
+     anchas (compu) el "slice" nunca recorta la parte de arriba de las nubes. -->
+<svg class="nubes-hero" viewBox="0 0 1200 100" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+    <defs>
+        <g id="tramo-nubes-atras">
+            <circle cx="20" cy="80" r="40"/><circle cx="80" cy="70" r="38"/><circle cx="140" cy="82" r="36"/>
+            <circle cx="200" cy="68" r="42"/><circle cx="262" cy="80" r="36"/><circle cx="320" cy="70" r="40"/>
+            <circle cx="385" cy="80" r="38"/><rect x="0" y="80" width="400" height="20"/>
+        </g>
+        <g id="tramo-nubes-frente">
+            <circle cx="0" cy="95" r="30"/><circle cx="55" cy="92" r="28"/><circle cx="110" cy="98" r="30"/>
+            <circle cx="165" cy="90" r="32"/><circle cx="225" cy="97" r="28"/><circle cx="280" cy="92" r="30"/>
+            <circle cx="335" cy="96" r="28"/><circle cx="395" cy="92" r="32"/><rect x="0" y="95" width="400" height="5"/>
+        </g>
+    </defs>
+    <g class="nubes-atras">
+        <use href="#tramo-nubes-atras"/><use href="#tramo-nubes-atras" x="400"/><use href="#tramo-nubes-atras" x="800"/>
+    </g>
+    <g class="nubes-frente">
+        <use href="#tramo-nubes-frente"/><use href="#tramo-nubes-frente" x="400"/><use href="#tramo-nubes-frente" x="800"/>
+    </g>
+</svg>
+
+<div class="indicador-scroll" aria-hidden="true">
+    <span>Desliza</span>
+    <svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</div>
+{% endblock %}
+
+{% block decoracion_bebe %}
+<div class="cielo-estrellas cielo-noche" aria-hidden="true">
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+    <svg class="destello"><use href="#sym-destello"/></svg>
+</div>
+<svg class="nube-noche nube-noche-1" aria-hidden="true"><use href="#sym-nube"/></svg>
+<svg class="nube-noche nube-noche-2" aria-hidden="true"><use href="#sym-nube"/></svg>
+{% endblock %}
+
+{% block decoracion_info %}
+<svg class="nube-info nube-info-1" aria-hidden="true"><use href="#sym-nube"/></svg>
+<svg class="nube-info nube-info-2" aria-hidden="true"><use href="#sym-nube"/></svg>
+<svg class="destello-info destello-info-1" aria-hidden="true"><use href="#sym-destello"/></svg>
+<svg class="destello-info destello-info-2" aria-hidden="true"><use href="#sym-destello"/></svg>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..700,0..100,0..1;1,9..144,300..700,0..100,0..1&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES DE COLOR
+       Paleta neutra: cielo lavanda al atardecer + luna mantequilla.
+       Las variantes rosa/azul solo cambian el cielo y el acento.
+       ============================================ */
+    :root {
+        --cielo-alto: #DCE1F3;
+        --cielo-medio: #EEEBF5;
+        --crema: #FBF7F0;
+        --nube: #FFFFFF;
+        --tinta: #2E3558;
+        --tinta-suave: #5E6488;
+        --acento: #8E95CC;
+        --acento-fuerte: #5B62A3;
+        --luna: #F2D48A;
+        --luna-brillo: #FFF3CF;
+        --noche: #2E3558;
+        --texto-noche: #F4EFE6;
+        --salvia: #7E9A7B;
+        --borde: rgba(46, 53, 88, 0.12);
+        --sombra: 0 18px 44px rgba(46, 53, 88, 0.10);
+        --sombra-suave: 0 10px 26px rgba(46, 53, 88, 0.07);
+    }
+    {% if invitacion.contenido_extra.paleta == "rosa" %}
+    :root {
+        --cielo-alto: #F4DCE3;
+        --cielo-medio: #F7ECEF;
+        --acento: #DDA0B3;
+        --acento-fuerte: #A94F6C;
+    }
+    {% elif invitacion.contenido_extra.paleta == "azul" %}
+    :root {
+        --cielo-alto: #D6E4F3;
+        --cielo-medio: #E9F0F7;
+        --acento: #8FB6DE;
+        --acento-fuerte: #43709F;
+    }
+    {% endif %}
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    html {
+        scroll-snap-type: y mandatory;
+    }
+    body {
+        margin: 0;
+        background: var(--crema);
+        color: var(--tinta);
+        font-family: 'Nunito', sans-serif;
+        font-weight: 400;
+        text-align: center;
+        line-height: 1.6;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+    [hidden] {
+        display: none !important;
+    }
+    .simbolos {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+
+    /* ============================================
+       SCROLL TIPO "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-bebe,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-votacion,
+    .pantalla-regalos,
+    .pantalla-panales,
+    .galeria,
+    .rsvp {
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* ============================================
+       ANIMACION DE ENTRADA AL HACER SCROLL
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* ============================================
+       HERO (cielo + móvil de cuna + nombres)
+       ============================================ */
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 48px 24px;
+        background: linear-gradient(180deg, var(--cielo-alto) 0%, var(--cielo-medio) 58%, var(--crema) 100%);
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 14vh 8px 12vh;
+    }
+    .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        margin: 0 0 18px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--acento-fuerte);
+    }
+    .eyebrow::before,
+    .eyebrow::after {
+        content: "";
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.5;
+    }
+    .nombres {
+        margin: 0 0 22px;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 400;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(3rem, 13vw, 5.2rem);
+        line-height: 1.02;
+        letter-spacing: -0.01em;
+        color: var(--tinta);
+    }
+    .mensaje {
+        max-width: 330px;
+        margin: 0 auto;
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--tinta-suave);
+    }
+
+    /* --- Estrellitas que titilan --- */
+    .cielo-estrellas .destello {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        fill: #FFFFFF;
+        animation: titilar 3.4s ease-in-out infinite;
+    }
+    .cielo-estrellas .destello:nth-child(even) {
+        fill: var(--luna);
+    }
+    .cielo-estrellas .destello:nth-child(1) { top: 34%; left: 12%; animation-delay: -0.4s; }
+    .cielo-estrellas .destello:nth-child(2) { top: 27%; left: 84%; width: 16px; height: 16px; animation-delay: -1.6s; }
+    .cielo-estrellas .destello:nth-child(3) { top: 62%; left: 8%; width: 9px; height: 9px; animation-delay: -2.2s; }
+    .cielo-estrellas .destello:nth-child(4) { top: 55%; left: 90%; width: 10px; height: 10px; animation-delay: -0.9s; }
+    .cielo-estrellas .destello:nth-child(5) { top: 18%; left: 36%; width: 8px; height: 8px; animation-delay: -2.8s; }
+    .cielo-estrellas .destello:nth-child(6) { top: 70%; left: 78%; width: 13px; height: 13px; animation-delay: -1.2s; }
+
+    /* --- Móvil de cuna --- */
+    .movil {
+        position: absolute;
+        inset: 0 0 auto 0;
+    }
+    .colgante {
+        position: absolute;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform-origin: 50% 0;
+        animation: mecer 5s ease-in-out infinite alternate;
+    }
+    .colgante::before {
+        content: "";
+        width: 1px;
+        height: var(--hilo, 12vh);
+        background: rgba(46, 53, 88, 0.28);
+    }
+    .adorno {
+        display: block;
+        margin-top: -1px;
+        filter: drop-shadow(0 6px 10px rgba(46, 53, 88, 0.12));
+    }
+    .adorno-estrella { width: 26px; height: 26px; fill: var(--luna); stroke: var(--luna); }
+    .adorno-nube { width: 58px; height: 29px; fill: var(--nube); }
+    .adorno-luna { width: 54px; height: 56px; fill: var(--luna); }
+    .adorno-corazon { width: 24px; height: 24px; fill: var(--acento); }
+    .colgante:nth-child(1) { left: 9%; --hilo: 17vh; animation-duration: 4.6s; animation-delay: -1.3s; }
+    .colgante:nth-child(2) { left: 25%; --hilo: 9vh; animation-duration: 5.4s; animation-delay: -2.1s; }
+    .colgante:nth-child(3) { left: 50%; --hilo: 5vh; animation-duration: 6s; animation-delay: -0.6s; }
+    .colgante:nth-child(4) { left: 75%; --hilo: 12vh; animation-duration: 4.9s; animation-delay: -3s; }
+    .colgante:nth-child(4) .adorno { width: 20px; height: 20px; }
+    .colgante:nth-child(5) { left: 91%; --hilo: 7vh; animation-duration: 5.2s; animation-delay: -1.8s; }
+
+    /* --- Nubes al pie del hero --- */
+    .nubes-hero {
+        position: absolute;
+        left: -5%;
+        bottom: -2px;
+        width: 110%;
+        height: 20vh;
+    }
+    .nubes-atras {
+        fill: #FFFFFF;
+        opacity: 0.55;
+        animation: derivar 16s ease-in-out infinite alternate;
+    }
+    .nubes-frente {
+        fill: var(--crema);
+        animation: derivar 12s ease-in-out infinite alternate-reverse;
+    }
+
+    /* --- Indicador "Desliza" --- */
+    .indicador-scroll {
+        position: absolute;
+        left: 50%;
+        bottom: 18px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+        transform: translateX(-50%);
+        animation: rebotar 2.2s ease-in-out infinite;
+    }
+    .indicador-scroll svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* ============================================
+       DULCE ESPERA (noche + diez lunas)
+       ============================================ */
+    .pantalla-bebe {
+        position: relative;
+        overflow: hidden;
+        padding: 64px 24px;
+        color: var(--texto-noche);
+        background: radial-gradient(120% 70% at 50% 0%, #4B5390 0%, var(--noche) 55%, #232945 100%);
+    }
+    .marco-decorativo-bebe {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .pantalla-bebe .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
+    }
+    .cielo-noche .destello:nth-child(1) { top: 9%; left: 14%; }
+    .cielo-noche .destello:nth-child(7) { top: 12%; left: 62%; width: 7px; height: 7px; animation-delay: -2s; }
+    .cielo-noche .destello:nth-child(8) { top: 86%; left: 30%; width: 9px; height: 9px; animation-delay: -0.3s; }
+    .nube-noche {
+        position: absolute;
+        fill: #3A4273;
+        opacity: 0.8;
+        animation: derivar 14s ease-in-out infinite alternate;
+    }
+    .nube-noche-1 { width: 170px; height: 85px; bottom: -22px; left: -40px; }
+    .nube-noche-2 { width: 130px; height: 65px; bottom: -14px; right: -30px; animation-direction: alternate-reverse; }
+    .bebe-eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--luna);
+    }
+    .bebe-semanas {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0 0 26px;
+    }
+    .bebe-semana-numero {
+        font-family: 'Fraunces', serif;
+        font-weight: 300;
+        font-variation-settings: "SOFT" 100;
+        font-size: clamp(5rem, 26vw, 7.5rem);
+        line-height: 0.95;
+        color: var(--luna-brillo);
+    }
+    .bebe-semana-label {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 1.15rem;
+        color: rgba(244, 239, 230, 0.75);
+    }
+    .lunas {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px 12px;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+    .luna {
+        display: block;
+        width: 100%;
+        max-width: 48px;
+        margin: 0 auto;
+        overflow: visible;
+        filter: drop-shadow(0 0 7px rgba(242, 212, 138, 0.35));
+    }
+    .luna-sombra {
+        fill: rgba(255, 255, 255, 0.07);
+        stroke: rgba(255, 255, 255, 0.3);
+        stroke-width: 1;
+    }
+    .luna-luz {
+        fill: var(--luna);
+    }
+    .luna-crateres {
+        fill: #8A6D2E;
+        fill-opacity: 0.14;
+    }
+    .luna-actual {
+        animation: latido 2.6s ease-in-out infinite;
+    }
+    .lunas-leyenda {
+        margin: 18px 0 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(244, 239, 230, 0.6);
+    }
+    .bebe-faltan {
+        margin: 26px 0 14px;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 1.3rem;
+        line-height: 1.4;
+    }
+    .bebe-faltan strong {
+        font-style: normal;
+        font-weight: 600;
+        color: var(--luna);
+    }
+    .bebe-tamano {
+        display: inline-block;
+        margin: 0;
+        padding: 9px 18px;
+        border: 1px solid rgba(242, 212, 138, 0.45);
+        border-radius: 999px;
+        font-size: 0.88rem;
+        color: var(--luna-brillo);
+    }
+    .bebe-tamano:empty {
+        display: none;
+    }
+    .bebe-nota {
+        max-width: 260px;
+        margin: 26px auto 0;
+        font-size: 0.78rem;
+        font-style: italic;
+        color: rgba(244, 239, 230, 0.55);
+    }
+
+    /* ============================================
+       PANTALLA INFO: tarjeta sobre el cielo
+       ============================================ */
+    .pantalla-info {
+        position: relative;
+        overflow: hidden;
+        padding: 64px 18px 48px;
+        background: linear-gradient(180deg, var(--crema) 0%, var(--cielo-medio) 100%);
+    }
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .nube-info {
+        position: absolute;
+        fill: var(--nube);
+        filter: drop-shadow(0 10px 18px rgba(46, 53, 88, 0.08));
+        animation: flotar 7s ease-in-out infinite alternate;
+    }
+    .nube-info-1 { width: 150px; height: 75px; top: 4%; left: -46px; }
+    .nube-info-2 { width: 120px; height: 60px; bottom: 5%; right: -34px; animation-delay: -3s; }
+    .destello-info {
+        position: absolute;
+        fill: var(--luna);
+        animation: titilar 3.6s ease-in-out infinite;
+    }
+    .destello-info-1 { width: 14px; height: 14px; top: 9%; right: 16%; }
+    .destello-info-2 { width: 10px; height: 10px; bottom: 12%; left: 12%; animation-delay: -1.5s; }
+    .pantalla-info .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+        padding: 46px 22px 28px;
+        border-radius: 28px;
+        background: var(--nube);
+        box-shadow: var(--sombra);
+    }
+    /* medallón con luna sobre el borde superior de la tarjeta */
+    .pantalla-info .pantalla-contenido::before {
+        content: "";
+        position: absolute;
+        top: -28px;
+        left: 50%;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+        background: var(--noche) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='6 6 50 52'%3E%3Cpath d='M32 8A24 24 0 1 0 54.16 41.24A20 20 0 0 1 32 8Z' fill='%23F2D48A'/%3E%3C/svg%3E") center / 26px no-repeat;
+        box-shadow: 0 8px 18px rgba(46, 53, 88, 0.25);
+    }
+
+    /* ============================================
+       DETALLES (Dia / Hora)
+       ============================================ */
+    .detalles {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 18px;
+        padding: 0 0 18px;
+    }
+    .detalle-item {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+    }
+    .detalle-label {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 1.05rem;
+        color: var(--acento-fuerte);
+    }
+    .detalle-valor {
+        margin-top: 4px;
+        font-size: 0.86rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+    .detalle-divisor {
+        flex: none;
+        align-self: center;
+        width: 1px;
+        height: 42px;
+        background: var(--borde);
+    }
+
+    /* ============================================
+       LUGAR
+       ============================================ */
+    .lugares {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 24px;
+        padding: 16px 0;
+        border-top: 1px dashed var(--borde);
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .lugar-direccion {
+        margin-top: 2px;
+        font-size: 0.85rem;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       VESTIMENTA
+       ============================================ */
+    .vestimenta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 16px 0;
+        border-top: 1px dashed var(--borde);
+    }
+    .vestimenta-valor {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .vestimenta-color {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        box-shadow: inset 0 0 0 1px rgba(46, 53, 88, 0.1);
+    }
+    .vestimenta-valor .detalle-valor {
+        margin: 0 0 0 4px;
+        font-size: 0.95rem;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+
+    /* ============================================
+       COUNTDOWN (burbujas)
+       ============================================ */
+    .countdown {
+        display: flex;
+        justify-content: center;
+        gap: clamp(8px, 3vw, 16px);
+        padding: 20px 0 22px;
+        border-top: 1px dashed var(--borde);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: var(--cielo-medio);
+    }
+    .countdown span {
+        font-family: 'Fraunces', serif;
+        font-weight: 500;
+        font-size: 1.5rem;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        color: var(--tinta);
+    }
+    .countdown label {
+        margin-top: 3px;
+        font-size: 0.56rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (botones circulares)
+       ============================================ */
+    .acciones-rapidas {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: clamp(16px, 7vw, 30px);
+        padding: 4px 0 0;
+    }
+    .accion-icono {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 7px;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: var(--tinta);
+    }
+    .icono-circulo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 54px;
+        height: 54px;
+        border: 1px solid var(--borde);
+        border-radius: 50%;
+        background: var(--cielo-medio);
+        font-size: 1.3rem;
+        color: var(--acento-fuerte);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .accion-icono:hover .icono-circulo,
+    .accion-icono:active .icono-circulo {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(46, 53, 88, 0.12);
+    }
+
+    /* ============================================
+       PANTALLA EXTRA (si el cliente usa itinerario /
+       mesa de regalos simple / nota de niños)
+       ============================================ */
+    .pantalla-extra {
+        align-items: center;
+        gap: 32px;
+        padding: 60px 24px;
+    }
+    .itinerario {
+        width: 100%;
+        max-width: 340px;
+    }
+    .itinerario h3 {
+        margin: 0 0 16px;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 400;
+        font-size: 2rem;
+    }
+    .itinerario-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px dashed var(--borde);
+    }
+    .itinerario-hora {
+        font-weight: 700;
+        color: var(--acento-fuerte);
+    }
+    .boton-mesa-regalos {
+        padding: 14px 30px;
+        border-radius: 999px;
+        background: var(--acento-fuerte);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        text-decoration: none;
+        color: #FFFFFF;
+    }
+    .nota-ninos {
+        max-width: 300px;
+        margin: 0;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-size: 1.1rem;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       VOTACION EN VIVO ("¿Niña o niño?")
+       ============================================ */
+    .pantalla-votacion {
+        padding: 64px 20px;
+        background: linear-gradient(160deg, #FBEFF3 0%, var(--crema) 50%, #EDF3FB 100%);
+    }
+    .pantalla-votacion .pantalla-contenido {
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
+    }
+    .votacion-eyebrow {
+        margin: 0 0 6px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--acento-fuerte);
+    }
+    .votacion-pregunta {
+        margin: 0 0 10px;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 400;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(2.5rem, 11vw, 3.4rem);
+        line-height: 1.05;
+    }
+    .votacion-subtitulo {
+        max-width: 320px;
+        margin: 0 auto 26px;
+        color: var(--tinta-suave);
+    }
+    .votacion-opciones {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+        gap: 14px;
+    }
+    .votacion-opcion {
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 2px;
+        min-height: 210px;
+        padding: 20px 12px 18px;
+        border: 2px solid var(--color-opcion);
+        border-radius: 26px;
+        background: #FFFFFF;
+        box-shadow: var(--sombra-suave);
+        font: inherit;
+        color: var(--tinta);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.4s ease;
+    }
+    .votacion-opcion:not(:disabled):hover,
+    .votacion-opcion:not(:disabled):active {
+        transform: translateY(-4px);
+        box-shadow: var(--sombra);
+    }
+    .votacion-opcion:focus-visible {
+        outline: 3px solid var(--acento-fuerte);
+        outline-offset: 3px;
+    }
+    .votacion-opcion:disabled {
+        cursor: default;
+    }
+    /* círculo de color + ícono (moño / corbatín) */
+    .votacion-opcion::before,
+    .votacion-opcion::after {
+        content: "";
+        position: absolute;
+        top: 26px;
+        left: 50%;
+        width: 78px;
+        height: 78px;
+        border-radius: 50%;
+        transform: translateX(-50%);
+    }
+    .votacion-opcion::before {
+        background: var(--color-opcion);
+        opacity: 0.3;
+    }
+    .votacion-opcion::after {
+        background: center / 48px no-repeat;
+    }
+    .votacion-opcion[data-opcion="nina"]::after {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%232E3558' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M24 23C18 14 7 12 7 20c0 7 10 8 17 3zM24 23c6-9 17-11 17-3 0 7-10 8-17 3z'/%3E%3Cpath d='M22 25l-5 12 3.5-1 2 3L24 27M26 25l5 12-3.5-1-2 3L24 27'/%3E%3Cellipse cx='24' cy='23' rx='3.2' ry='4' fill='%23fff'/%3E%3C/svg%3E");
+    }
+    .votacion-opcion[data-opcion="nino"]::after {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%232E3558' stroke-width='1.8' stroke-linejoin='round' stroke-linecap='round'%3E%3Cpath d='M24 24L9 15c-2-1-3 0-3 2v14c0 2 1 3 3 2zM24 24l15-9c2-1 3 0 3 2v14c0 2-1 3-3 2z'/%3E%3Crect x='20.5' y='19.5' width='7' height='9' rx='2.5' fill='%23fff'/%3E%3C/svg%3E");
+    }
+    /* relleno que sube como líquido hasta el porcentaje de votos */
+    .opcion-relleno {
+        position: absolute;
+        inset: auto 0 0 0;
+        z-index: -1;
+        height: 0;
+        background: var(--color-opcion);
+        opacity: 0.45;
+        transition: height 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .con-resultados .opcion-relleno {
+        height: var(--porcentaje, 0%);
+    }
+    .opcion-texto {
+        font-family: 'Fraunces', serif;
+        font-weight: 500;
+        font-variation-settings: "SOFT" 100;
+        font-size: 1.7rem;
+        line-height: 1.2;
+    }
+    .opcion-porcentaje {
+        min-height: 1.5em;
+        font-size: 1rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+    }
+    .opcion-mi-voto {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: var(--tinta);
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #FFFFFF;
+        opacity: 0;
+        transform: scale(0.8);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .es-mi-voto .opcion-mi-voto {
+        opacity: 1;
+        transform: scale(1);
+    }
+    .votacion-ayuda {
+        margin: 18px 0 0;
+        font-size: 0.82rem;
+        color: var(--tinta-suave);
+    }
+    .con-resultados .votacion-ayuda {
+        display: none;
+    }
+    .votacion-total {
+        margin: 14px 0 0;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .votacion-status {
+        min-height: 1.6em;
+        margin: 6px 0 0;
+        font-weight: 600;
+        color: var(--acento-fuerte);
+    }
+
+    /* --- Revelación ("¡Es niña!") --- */
+    .votacion-revelacion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 4px 0 24px;
+        animation: aparecer 0.9s cubic-bezier(0.2, 0.9, 0.3, 1.3) both;
+    }
+    .revelacion-eyebrow {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .revelacion-texto {
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 500;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(3rem, 15vw, 4.6rem);
+        line-height: 1.05;
+        color: var(--acento-fuerte);
+    }
+    .revelacion-detalle {
+        margin-top: 4px;
+        font-size: 0.9rem;
+        color: var(--tinta-suave);
+    }
+    .revelada .votacion-subtitulo {
+        display: none;
+    }
+    .revelada .votacion-opcion:not(.es-ganadora) {
+        opacity: 0.45;
+        transform: scale(0.95);
+    }
+    .revelada .es-ganadora {
+        transform: scale(1.03);
+        box-shadow: var(--sombra);
+    }
+
+    /* ============================================
+       REGALOS (mesa de regalos + lluvia de sobres)
+       ============================================ */
+    .pantalla-regalos,
+    .pantalla-panales {
+        padding: 60px 18px;
+    }
+    .pantalla-regalos {
+        background: linear-gradient(180deg, var(--cielo-medio) 0%, var(--crema) 100%);
+    }
+    .pantalla-regalos .pantalla-contenido,
+    .pantalla-panales .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+    .regalos-titulo {
+        margin: 0;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 400;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(2.5rem, 11vw, 3.2rem);
+        line-height: 1.1;
+    }
+    .regalos-intro {
+        max-width: 330px;
+        margin: 0 auto 8px;
+        color: var(--tinta-suave);
+    }
+    .regalo-tarjeta {
+        padding: 22px 20px;
+        border-radius: 24px;
+        background: var(--nube);
+        box-shadow: var(--sombra-suave);
+    }
+    .regalo-icono {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--cielo-medio);
+        font-size: 1.25rem;
+    }
+    .regalo-tarjeta h3 {
+        margin: 8px 0 4px;
+        font-family: 'Fraunces', serif;
+        font-weight: 500;
+        font-size: 1.35rem;
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+        color: var(--tinta-suave);
+    }
+    .mesas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 12px 0 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 14px 12px;
+        border-radius: 18px;
+        background: var(--crema);
+    }
+    .mesa-nombre {
+        font-weight: 700;
+        letter-spacing: 0.04em;
+    }
+    .mesa-codigo {
+        font-size: 0.85rem;
+        color: var(--tinta-suave);
+    }
+    .mesa-codigo strong {
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.06em;
+        color: var(--tinta);
+    }
+    .mesa-botones {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 2px;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 8px 16px;
+        border: 1px solid var(--acento-fuerte);
+        border-radius: 999px;
+        font: inherit;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .boton-copiar {
+        background: transparent;
+        color: var(--acento-fuerte);
+    }
+    .boton-copiar.copiado {
+        border-color: var(--salvia);
+        background: var(--salvia);
+        color: #FFFFFF;
+    }
+    .mesa-enlace {
+        background: var(--acento-fuerte);
+        color: #FFFFFF;
+    }
+
+    /* ============================================
+       LLUVIA DE PAÑALES ("¿Cuál me toca?")
+       ============================================ */
+    .pantalla-panales {
+        background: linear-gradient(180deg, var(--crema) 0%, var(--cielo-medio) 100%);
+    }
+    .regalo-panales {
+        padding: 30px 22px 26px;
+    }
+    .regalo-panales h3 {
+        font-style: italic;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(2rem, 9vw, 2.5rem);
+        font-weight: 400;
+    }
+    .panales-tallas {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin: 18px 0;
+        padding: 0;
+        list-style: none;
+    }
+    .panales-tallas li {
+        display: flex;
+        flex-direction: column;
+        padding: 12px 8px;
+        border: 1px solid var(--borde);
+        border-radius: 16px;
+        background: var(--crema);
+        transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
+    }
+    .panales-rango {
+        font-family: 'Fraunces', serif;
+        font-weight: 600;
+        font-size: 1.15rem;
+    }
+    .panales-talla {
+        font-size: 0.8rem;
+        color: var(--tinta-suave);
+    }
+    .panales-tallas li.te-toca {
+        border-color: var(--acento-fuerte);
+        background: var(--acento-fuerte);
+        color: #FFFFFF;
+        transform: scale(1.05);
+    }
+    .panales-tallas li.te-toca .panales-talla {
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .panales-buscador {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--acento-fuerte);
+    }
+    .panales-buscador input {
+        padding: 13px 14px;
+        border: 1px solid var(--borde);
+        border-radius: 14px;
+        background: var(--crema);
+        font: inherit;
+        font-size: 1rem;
+        letter-spacing: 0;
+        text-align: center;
+        text-transform: none;
+        color: var(--tinta);
+    }
+    .panales-buscador input:focus {
+        outline: none;
+        border-color: var(--acento-fuerte);
+        box-shadow: 0 0 0 3px rgba(91, 98, 163, 0.15);
+    }
+    .regalo-panales .panales-resultado {
+        min-height: 1.6em;
+        margin-top: 12px;
+        font-family: 'Fraunces', serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--tinta);
+    }
+
+    /* ============================================
+       GALERIA (fotos tipo polaroid)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-content: center;
+        gap: 22px 16px;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 60px 22px;
+    }
+    .galeria img {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        padding: 8px 8px 30px;
+        border-radius: 4px;
+        background: #FFFFFF;
+        box-shadow: 0 12px 26px rgba(46, 53, 88, 0.12);
+        transform: rotate(-2deg);
+    }
+    .galeria img:nth-child(even) {
+        transform: rotate(2.5deg) translateY(12px);
+    }
+
+    /* ============================================
+       RSVP
+       ============================================ */
+    .rsvp {
+        padding: 64px 18px;
+        background: linear-gradient(180deg, var(--crema) 0%, var(--cielo-alto) 100%);
+    }
+    .rsvp::before {
+        content: "";
+        display: block;
+        width: 44px;
+        height: 46px;
+        margin: 0 auto 8px;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='6 6 50 52'%3E%3Cpath d='M32 8A24 24 0 1 0 54.16 41.24A20 20 0 0 1 32 8Z' fill='%23F2D48A'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .rsvp h2 {
+        margin: 0 0 6px;
+        font-family: 'Fraunces', serif;
+        font-style: italic;
+        font-weight: 400;
+        font-variation-settings: "SOFT" 100, "WONK" 1;
+        font-size: clamp(2.2rem, 10vw, 3rem);
+        line-height: 1.1;
+    }
+    .rsvp > p {
+        margin: 4px 0;
+        color: var(--tinta-suave);
+    }
+    #total-confirmados {
+        font-weight: 700;
+        color: var(--acento-fuerte);
+    }
+    .fecha-limite {
+        font-size: 0.85rem;
+        font-style: italic;
+    }
+
+    /* --- Formulario --- */
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: 100%;
+        max-width: 420px;
+        margin: 24px auto 0;
+        padding: 28px 22px;
+        border-radius: 26px;
+        background: var(--nube);
+        box-shadow: var(--sombra);
+    }
+    #form-rsvp input,
+    #form-rsvp textarea {
+        padding: 13px 14px;
+        border: 1px solid var(--borde);
+        border-radius: 14px;
+        background: var(--crema);
+        font-family: 'Nunito', sans-serif;
+        font-size: 1rem;
+        color: var(--tinta);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--acento-fuerte);
+        box-shadow: 0 0 0 3px rgba(91, 98, 163, 0.15);
+    }
+    #form-rsvp textarea {
+        min-height: 84px;
+        resize: vertical;
+    }
+    #form-rsvp button {
+        padding: 15px;
+        border: none;
+        border-radius: 999px;
+        background: var(--acento-fuerte);
+        box-shadow: 0 10px 22px rgba(46, 53, 88, 0.2);
+        font-family: 'Nunito', sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #FFFFFF;
+        cursor: pointer;
+        transition: transform 0.15s ease, filter 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        filter: brightness(1.08);
+        transform: translateY(-2px);
+    }
+
+    /* --- Botones tipo pildora (Si / No / Tal vez) --- */
+    .opciones-asistencia {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        flex: 1;
+        min-width: 90px;
+        padding: 10px 12px;
+        border: 1px solid var(--borde);
+        border-radius: 999px;
+        background: var(--crema);
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-align: center;
+        color: var(--tinta);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--acento-fuerte);
+        background: var(--acento-fuerte);
+        color: #FFFFFF;
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--acento-fuerte);
+        outline-offset: 2px;
+    }
+
+    /* --- Campo con label visible (acompanantes) --- */
+    .campo-con-label {
+        text-align: left;
+    }
+    .campo-con-label label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.8rem;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        width: 100%;
+    }
+
+    #rsvp-status {
+        margin-top: 16px;
+        font-weight: 600;
+        color: var(--acento-fuerte);
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (flotante)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border: none;
+        border-radius: 50%;
+        background: var(--noche);
+        box-shadow: 0 8px 20px rgba(46, 53, 88, 0.3);
+        font-size: 1.2rem;
+        color: var(--luna);
+        cursor: pointer;
+    }
+
+    /* ============================================
+       CONFETI (revelación de la votación)
+       ============================================ */
+    .confeti {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .confeti i {
+        position: absolute;
+        top: -20px;
+        width: 9px;
+        height: 14px;
+        border-radius: 2px;
+        box-shadow: 0 0 0 0.5px rgba(46, 53, 88, 0.08);
+        animation-name: caer;
+        animation-timing-function: cubic-bezier(0.25, 0.6, 0.5, 1);
+        animation-fill-mode: forwards;
+    }
+    .confeti i:nth-child(3n) {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    @keyframes mecer {
+        from { transform: translateX(-50%) rotate(-4deg); }
+        to { transform: translateX(-50%) rotate(4deg); }
+    }
+    @keyframes titilar {
+        0%, 100% { opacity: 0.3; transform: scale(0.7); }
+        50% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes derivar {
+        from { transform: translateX(-10px); }
+        to { transform: translateX(10px); }
+    }
+    @keyframes flotar {
+        from { transform: translateY(0); }
+        to { transform: translateY(-10px); }
+    }
+    @keyframes rebotar {
+        0%, 100% { transform: translate(-50%, 0); }
+        50% { transform: translate(-50%, 6px); }
+    }
+    @keyframes latido {
+        0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(242, 212, 138, 0.35)); }
+        50% { transform: scale(1.1); filter: drop-shadow(0 0 14px rgba(242, 212, 138, 0.8)); }
+    }
+    @keyframes aparecer {
+        from { opacity: 0; transform: scale(0.6); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes caer {
+        to { transform: translate3d(var(--deriva, 0), 110vh, 0) rotate(var(--giro, 360deg)); }
+    }
+
+    /* Quien pide "reducir movimiento" en su celular ve todo quieto */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+        .animar-entrada {
+            opacity: 1;
+            transform: none;
+        }
+        .colgante {
+            transform: translateX(-50%);
+        }
+    }
+</style>
+{% endblock %}

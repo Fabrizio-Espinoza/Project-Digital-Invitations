@@ -288,7 +288,8 @@
     .acciones-rapidas {
         display: flex;
         justify-content: center;
-        gap: 32px;
+        /* gap fluido: con el botón "Agendar" son 4 botones y deben caber en una fila en celular */
+        gap: clamp(10px, calc((100vw - 340px) / 3), 32px);
         padding: 10px 24px 60px;
         flex-wrap: wrap;
     }

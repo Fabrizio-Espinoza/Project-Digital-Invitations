@@ -105,6 +105,12 @@ Usar http://<ip>:8000/static/... completa.
 Música no sonaba sola
 Navegadores bloquean autoplay de audio con sonido, sobre todo en móvil.
 Botón flotante (position: fixed) que el usuario toca para reproducir/pausar.
+Botón de música a veces no pausaba
+El listener del botón se registraba dentro de actualizarCountdown(), que corre cada segundo (un listener nuevo por segundo).
+Sacar el bloque de música fuera del countdown para registrarlo una sola vez.
+Countdown 6 horas antes de la hora real
+TIME_ZONE = 'UTC': la hora capturada en el admin se tomaba como UTC.
+TIME_ZONE = 'America/Mexico_City' (revisar la hora de invitaciones capturadas antes del cambio).
 5. Convenciones acordadas
 Estructura de carpetas
 • Templates: invitaciones/templates/invitaciones/temas/<slug_tema>.html (una plantilla visual = un archivo).
@@ -126,10 +132,38 @@ Terminado:
 • Motor Django completo (modelos, admin, vistas, urls) funcionando de punta a punta.
 • Primera plantilla de boda ("Terracota Velada") con diseño floral real, tipografía script + serif, scroll tipo pantalla-por-pantalla, RSVP en vivo, countdown, botones de ubicación (ceremonia/recepción separadas), vestimenta con color, itinerario, mesa de regalos, nota de niños, música con botón de reproducción manual.
 • Probado end-to-end en compu y en iPhone real (por WiFi local).
+• Segunda plantilla: baby shower "Diez Lunas" (ver sección 7), con votación en vivo, calendario .ics y demo creada por comando.
 Pendiente dentro de Fase 1:
-• Segunda plantilla visual (XV años o graduación), con estilo opuesto a la de boda — para completar "1-2 plantillas pulidas" del roadmap.
+• Estilizar en la plantilla de boda las secciones nuevas del motor (regalos con lista, lluvia de sobres) si algún cliente de boda las pide; la votación no aparece ahí porque soporta_votacion=False.
+• Revelar el resultado de la votación desde un botón del admin en vez de editar el JSON (hoy: "resultado": "nina" dentro de "votacion").
 • PWA: manifest.json + service worker (aún no se ha tocado esta parte).
 • Decidir si musica_url pasa de URLField a FileField para que la carga de canciones sea vía admin en vez de URLs manuales.
 • Decidir si los campos de contenido_extra (ceremonia/recepción, vestimenta, etc.) se formalizan como campos de admin dedicados antes de vender a clientes reales, para evitar que alguien edite JSON a mano.
 • Créditos/atribución pendientes por confirmar en los assets gratuitos de Flaticon usados (iconos), según la licencia exacta de cada uno descargado.
 No iniciado todavía: Fase 2 (precios), Fase 3 (Meta Ads), Fase 4 (venta por WhatsApp).
+7. Plantilla Baby Shower "Diez Lunas" (baby-shower-lunas-01)
+Concepto: un embarazo dura 280 días = diez lunas de 28. Cielo lavanda al atardecer con un móvil de cuna (luna, estrellas, nube, corazón) meciéndose, y una pantalla de noche donde las lunas se llenan según la semana real del embarazo. Todo el arte es SVG propio dentro del template (sin imágenes descargadas → sin dudas de licencia). Tipografía: Fraunces (itálica "suave") + Nunito. Paleta neutra por defecto (tendencia 2026), variantes con contenido_extra.paleta = "rosa" | "azul".
+Pantallas (cada una aparece solo si hay datos):
+1. Hero — "Baby Shower" + anfitriones + mensaje.
+2. Dulce espera — semana actual, 10 lunas con su fase, días que faltan, tamaño del bebé comparado con una fruta. Se recalcula con la fecha de hoy del invitado.
+3. Info — tarjeta con Día/Hora, Lugar (+ dirección), vestimenta con varios colores, countdown y botones Confirmar / Ubicación / Agendar.
+4. Juego en vivo "¿Niña o niño?" — votos con barras que se llenan; resultados visibles al votar. Solo premium + plantilla con soporta_votacion. Al poner el resultado en el admin, a todos los que tienen la invitación abierta les aparece "¡Es niña!" con confeti en ≤ 8 s (mismo polling del RSVP).
+5. Regalos — mesas de regalos (con botón "Copiar número" de evento Liverpool) y lluvia de sobres.
+6. Lluvia de pañales — tabla de tallas por inicial del apellido + buscador "¿Cuál me toca?".
+7. Galería (polaroids) y RSVP (el mensaje se pide como "deseo o consejo para el bebé").
+Motor (sirve para cualquier plantilla futura):
+• Modelo Voto + Plantilla.soporta_votacion (default False). Endpoints: <slug>/votar/, <slug>/votar/conteo/.
+• <slug>/calendario.ics — botón "Agendar" en todas las plantillas (recordatorio 1 día antes, duración 4 h).
+• Evento con un solo lugar: usa las columnas lugar_nombre / lugar_mapa_url (antes no se mostraban).
+• Bloque theme_color para el color de la barra del navegador.
+Claves de contenido_extra (todas opcionales):
+• fecha_probable_parto: "2027-02-06" (activa "Dulce espera")
+• bebe_nombre: "Emilia" (si no hay, dice "al bebé")
+• lugar_direccion: "Av. Francisco Sosa 215, Coyoacán"
+• dresscode_colores: ["#EBB7C5", "#A9C8E8"] (lista; dresscode_color sigue funcionando)
+• votacion: {"pregunta", "subtitulo", "opciones": [{"clave", "texto", "color", "revelacion"}], "resultado": ""}
+• mesas_regalos: [{"nombre", "codigo", "url"}]
+• lluvia_sobres: "texto"
+• lluvia_panales: [{"desde": "A", "hasta": "F", "talla": "Etapa 1"}, ...]
+• paleta: "rosa" | "azul" (solo Diez Lunas)
+Demo: python manage.py crear_demo_baby_shower → /invitaciones/baby-shower-demo/ (fechas relativas a hoy, se puede correr de nuevo).

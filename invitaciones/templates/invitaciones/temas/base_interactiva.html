@@ -10,6 +10,13 @@
   invitacion.contenido_extra, no como columnas fijas en el modelo. Por eso
   cada seccion nueva de aqui abajo esta envuelta en un  que revisa
   si ese dato existe antes de mostrar la seccion completa.
+
+  Secciones pensadas para baby shower (tambien opcionales por dato):
+  - "Dulce espera" (diez lunas): aparece si hay fecha_probable_parto.
+  - Votacion en vivo ("¿Niña o niño?"): solo premium + plantilla que la soporte.
+  - Regalos: mesas_regalos (lista), lluvia_sobres, lluvia_panales.
+  Si la invitacion no trae esas claves, la seccion no se pinta; por eso
+  una plantilla que no las estiliza (ej. la boda) se ve igual que antes.
 -->
 <!DOCTYPE html>
 <html lang="es">
@@ -21,7 +28,8 @@
 
     <!-- PWA: esto es lo que permite "instalar" la invitación como app -->
     <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#000000">
+    <!-- color de la barra del navegador en el celular; cada tema pone el suyo -->
+    <meta name="theme-color" content="{% block theme_color %}#000000{% endblock %}">
 
     {% block estilos %}
     <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
@@ -38,6 +46,7 @@
                 {% if plantilla.tipo_evento == "boda" %}¡Nos casamos!
                 {% elif plantilla.tipo_evento == "xv" %}¡Es mi fiesta!
                 {% elif plantilla.tipo_evento == "graduacion" %}¡Lo logré!
+                {% elif plantilla.tipo_evento == "baby_shower" %}Baby Shower
                 {% else %}Estás invitado
                 {% endif %}
             </p>
@@ -48,6 +57,34 @@
             {% endif %}
         </div>
     </section>
+
+    {% if invitacion.contenido_extra.fecha_probable_parto %}
+    <!--
+      "Dulce espera": un embarazo dura 280 dias = diez lunas de 28. El JS de
+      abajo calcula, con la fecha de HOY del invitado, en que semana va el
+      embarazo, dibuja las 10 lunas con su fase real y compara el tamaño del
+      bebe con una fruta. Se actualiza solo cada dia que abren la invitacion.
+    -->
+    <section class="pantalla-bebe animar-entrada" id="dulce-espera"
+             data-fecha-parto="{{ invitacion.contenido_extra.fecha_probable_parto }}"
+             data-nombre="{{ invitacion.contenido_extra.bebe_nombre|default:'' }}">
+        <div class="marco-decorativo-bebe">
+            {% block decoracion_bebe %}{% endblock %}
+        </div>
+        <div class="pantalla-contenido">
+            <p class="bebe-eyebrow">La dulce espera</p>
+            <p class="bebe-semanas">
+                <span class="bebe-semana-numero" id="bebe-semana">--</span>
+                <span class="bebe-semana-label">semanas de 40</span>
+            </p>
+            <div class="lunas" id="lunas" role="img" aria-label="Diez lunas de embarazo"></div>
+            <p class="lunas-leyenda" id="lunas-leyenda"></p>
+            <p class="bebe-faltan" id="bebe-faltan"></p>
+            <p class="bebe-tamano" id="bebe-tamano"></p>
+            <p class="bebe-nota">Un embarazo dura 280 días: diez lunas de 28.</p>
+        </div>
+    </section>
+    {% endif %}
 
     <div class="pantalla-info animar-entrada">
         <div class="marco-decorativo-info">
@@ -81,13 +118,28 @@
                 </div>
                 {% endif %}
             </section>
+            {% elif invitacion.lugar_nombre %}
+            <!-- evento con un solo lugar (baby shower, fiesta): usa las columnas comunes -->
+            <section class="lugares">
+                <div class="lugar-item">
+                    <span class="detalle-label">Lugar</span>
+                    <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
+                    {% if invitacion.contenido_extra.lugar_direccion %}
+                    <span class="lugar-direccion">{{ invitacion.contenido_extra.lugar_direccion }}</span>
+                    {% endif %}
+                </div>
+            </section>
             {% endif %}
 
             {% if invitacion.contenido_extra.dresscode %}
             <section class="vestimenta">
                 <span class="detalle-label">Código de vestimenta</span>
                 <div class="vestimenta-valor">
-                    {% if invitacion.contenido_extra.dresscode_color %}
+                    {% if invitacion.contenido_extra.dresscode_colores %}
+                    {% for color in invitacion.contenido_extra.dresscode_colores %}
+                    <span class="vestimenta-color" style="background:{{ color }}"></span>
+                    {% endfor %}
+                    {% elif invitacion.contenido_extra.dresscode_color %}
                     <span class="vestimenta-color" style="background:{{ invitacion.contenido_extra.dresscode_color }}"></span>
                     {% endif %}
                     <span class="detalle-valor">{{ invitacion.contenido_extra.dresscode }}</span>
@@ -121,6 +173,16 @@
                     <span>Recepción</span>
                 </a>
                 {% endif %}
+                {% if invitacion.lugar_mapa_url and not invitacion.contenido_extra.lugar_ceremonia_mapa_url and not invitacion.contenido_extra.lugar_recepcion_mapa_url %}
+                <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+                    <span class="icono-circulo">📍</span>
+                    <span>Ubicación</span>
+                </a>
+                {% endif %}
+                <a href="{% url 'invitaciones:calendario' invitacion.slug %}" class="accion-icono">
+                    <span class="icono-circulo">📅</span>
+                    <span>Agendar</span>
+                </a>
             </section>
         </div>
     </div>
@@ -150,6 +212,119 @@
         {% elif invitacion.contenido_extra.admite_ninos == True %}
         <p class="nota-ninos">¡Los niños son bienvenidos!</p>
         {% endif %}
+    </section>
+    {% endif %}
+
+    {% if mostrar_votacion %}
+    <!--
+      Votacion en vivo (ej. "¿Niña o niño?"). Las opciones salen de
+      contenido_extra.votacion; cada boton lleva su color en --color-opcion
+      para que el tema pinte las barras sin conocer las opciones de antemano.
+      Cuando el anfitrion pone "resultado" en el admin, el polling lo detecta
+      y la revelacion aparece en todos los celulares sin recargar.
+    -->
+    <section class="pantalla-votacion animar-entrada" id="votacion">
+        <div class="pantalla-contenido">
+            <p class="votacion-eyebrow">Juego en vivo</p>
+            <h2 class="votacion-pregunta">{{ votacion.pregunta|default:"¿Qué opinas?" }}</h2>
+            {% if votacion.subtitulo %}
+            <p class="votacion-subtitulo">{{ votacion.subtitulo }}</p>
+            {% endif %}
+
+            <div class="votacion-revelacion" id="votacion-revelacion" hidden>
+                <span class="revelacion-eyebrow">¡Ya lo sabemos!</span>
+                <strong class="revelacion-texto" id="revelacion-texto"></strong>
+                <span class="revelacion-detalle" id="revelacion-detalle"></span>
+            </div>
+
+            <div class="votacion-opciones" id="votacion-opciones">
+                {% for opcion in votacion.opciones %}
+                <button type="button" class="votacion-opcion" aria-pressed="false"
+                        data-opcion="{{ opcion.clave }}"
+                        data-revelacion="{{ opcion.revelacion|default:opcion.texto }}"
+                        style="--color-opcion: {{ opcion.color|default:'#CCCCCC' }}">
+                    <span class="opcion-relleno" aria-hidden="true"></span>
+                    <span class="opcion-texto">{{ opcion.texto }}</span>
+                    <span class="opcion-porcentaje"></span>
+                    <span class="opcion-mi-voto">Tu voto</span>
+                </button>
+                {% endfor %}
+            </div>
+
+            <p class="votacion-ayuda">Toca tu predicción: los resultados se ven al votar.</p>
+            <p class="votacion-total"><span id="votacion-total">…</span> predicciones</p>
+            <p class="votacion-status" id="votacion-status" aria-live="polite"></p>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if invitacion.contenido_extra.mesas_regalos or invitacion.contenido_extra.lluvia_sobres %}
+    <section class="pantalla-regalos animar-entrada" id="regalos">
+        <div class="pantalla-contenido">
+            <h2 class="regalos-titulo">Regalos</h2>
+            <p class="regalos-intro">Tu presencia es nuestro mejor regalo; si además deseas tener un detalle, aquí te dejamos algunas ideas.</p>
+
+            {% if invitacion.contenido_extra.mesas_regalos %}
+            <article class="regalo-tarjeta">
+                <span class="regalo-icono" aria-hidden="true">🎁</span>
+                <h3>Mesa de regalos</h3>
+                <ul class="mesas-lista">
+                    {% for mesa in invitacion.contenido_extra.mesas_regalos %}
+                    <li class="mesa-item">
+                        <span class="mesa-nombre">{{ mesa.nombre }}</span>
+                        {% if mesa.codigo %}
+                        <span class="mesa-codigo">No. de evento <strong>{{ mesa.codigo }}</strong></span>
+                        {% endif %}
+                        <span class="mesa-botones">
+                            {% if mesa.codigo %}
+                            <button type="button" class="boton-copiar" data-copiar="{{ mesa.codigo }}">Copiar número</button>
+                            {% endif %}
+                            {% if mesa.url %}
+                            <a href="{{ mesa.url }}" target="_blank" rel="noopener" class="mesa-enlace">Ver mesa</a>
+                            {% endif %}
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </article>
+            {% endif %}
+
+            {% if invitacion.contenido_extra.lluvia_sobres %}
+            <article class="regalo-tarjeta">
+                <span class="regalo-icono" aria-hidden="true">✉️</span>
+                <h3>Lluvia de sobres</h3>
+                <p>{{ invitacion.contenido_extra.lluvia_sobres }}</p>
+            </article>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    {% if invitacion.contenido_extra.lluvia_panales %}
+    <!-- Pantalla propia: con mesa + sobres + pañales juntos no cabe en un celular.
+         Tradicion: la talla depende de la inicial del apellido; el buscador le
+         dice a cada invitado cual le toca, sin tener que leer la tabla. -->
+    <section class="pantalla-panales animar-entrada" id="panales">
+        <div class="pantalla-contenido">
+            <article class="regalo-tarjeta regalo-panales">
+                <span class="regalo-icono" aria-hidden="true">🧷</span>
+                <h3>Lluvia de pañales</h3>
+                <p>Lleva la talla que corresponde a la inicial de tu apellido:</p>
+                <ul class="panales-tallas">
+                    {% for fila in invitacion.contenido_extra.lluvia_panales %}
+                    <li data-desde="{{ fila.desde|upper }}" data-hasta="{{ fila.hasta|upper }}" data-talla="{{ fila.talla }}">
+                        <span class="panales-rango">{{ fila.desde|upper }} – {{ fila.hasta|upper }}</span>
+                        <span class="panales-talla">{{ fila.talla }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <label class="panales-buscador">
+                    <span>¿Cuál me toca?</span>
+                    <input type="text" id="panales-apellido" placeholder="Escribe tu apellido" autocomplete="family-name">
+                </label>
+                <p class="panales-resultado" id="panales-resultado" aria-live="polite"></p>
+            </article>
+        </div>
     </section>
     {% endif %}
 
@@ -193,7 +368,7 @@
                 <input type="number" id="num_acompanantes" name="num_acompanantes" min="0" value="0">
             </div>
 
-            <textarea name="mensaje" placeholder="Mensaje (opcional)"></textarea>
+            <textarea name="mensaje" placeholder="{% if plantilla.tipo_evento == 'baby_shower' %}Un deseo o consejo para el bebé (opcional){% else %}Mensaje (opcional){% endif %}"></textarea>
             <button type="submit">Enviar</button>
         </form>
         <p id="rsvp-status"></p>
@@ -203,6 +378,17 @@
     {% block decoracion_inferior %}{% endblock %}
 
     <script>
+        // --- Datos que comparten los módulos de abajo (RSVP y votación) ---
+        const slug = "{{ invitacion.slug }}";
+
+        // Django exige este token en cada POST para protegerse de ataques CSRF.
+        // Lo lee de la cookie 'csrftoken' que el navegador ya trae (Django la puso ahí sola,
+        // gracias a @ensure_csrf_cookie en la vista).
+        function getCSRFToken() {
+            const match = document.cookie.match(/csrftoken=([^;]+)/);
+            return match ? match[1] : '';
+        }
+
         // --- Arreglo para un bug de iOS Safari: cuando scroll-snap está activo,
         // saltar a un #ancla a veces "rebota" de vuelta a la sección anterior.
         // La solución: apagar el snap justo antes de saltar, y prenderlo de
@@ -225,27 +411,8 @@
         // --- Countdown ---
         const fechaEvento = new Date(document.getElementById('countdown').dataset.fecha);
         function actualizarCountdown() {
-            // --- Música: el navegador bloquea el autoplay, así que esperamos
-// un clic real del usuario antes de reproducir. Cada clic alterna
-// entre reproducir y pausar (por eso la variable "sonando").
-{% if mostrar_musica and invitacion.musica_url %}
-const musica = document.getElementById('musica-fondo');
-const botonMusica = document.getElementById('boton-musica');
-let sonando = false;
-
-botonMusica.addEventListener('click', () => {
-    if (sonando) {
-        musica.pause();
-        botonMusica.textContent = '🎵';
-    } else {
-        musica.play();
-        botonMusica.textContent = '⏸';
-    }
-    sonando = !sonando;
-});
-{% endif %}
-            const diff = fechaEvento - new Date();
-            if (diff <= 0) return;
+            // Math.max(…, 0): llegado el día, el contador se queda en ceros en vez de congelarse
+            const diff = Math.max(fechaEvento - new Date(), 0);
             const dias = Math.floor(diff / 86400000);
             const horas = Math.floor((diff % 86400000) / 3600000);
             const min = Math.floor((diff % 3600000) / 60000);
@@ -258,6 +425,29 @@ botonMusica.addEventListener('click', () => {
         setInterval(actualizarCountdown, 1000);
         actualizarCountdown();
 
+        // --- Música: el navegador bloquea el autoplay, así que esperamos
+        // un clic real del usuario antes de reproducir. Cada clic alterna
+        // entre reproducir y pausar (por eso la variable "sonando").
+        // Ojo: este bloque vivía DENTRO de actualizarCountdown(), que corre cada
+        // segundo, y registraba un listener nuevo por segundo; después de un rato
+        // un solo toque pausaba y volvía a reproducir a la vez. Va aquí, una sola vez.
+        {% if mostrar_musica and invitacion.musica_url %}
+        const musica = document.getElementById('musica-fondo');
+        const botonMusica = document.getElementById('boton-musica');
+        let sonando = false;
+
+        botonMusica.addEventListener('click', () => {
+            if (sonando) {
+                musica.pause();
+                botonMusica.textContent = '🎵';
+            } else {
+                musica.play();
+                botonMusica.textContent = '⏸';
+            }
+            sonando = !sonando;
+        });
+        {% endif %}
+
         // --- Animación de entrada al hacer scroll (sin librerías) ---
         const observador = new IntersectionObserver((entradas) => {
             entradas.forEach(entrada => {
@@ -269,18 +459,301 @@ botonMusica.addEventListener('click', () => {
         }, { threshold: 0.15 });
         document.querySelectorAll('.animar-entrada').forEach(el => observador.observe(el));
 
-        {% if mostrar_rsvp %}
-        // --- RSVP: envío por fetch (sin recargar) + polling para el conteo "en vivo" ---
-        const slug = "{{ invitacion.slug }}";
+        // --- Dulce espera: diez lunas ---
+        const seccionBebe = document.getElementById('dulce-espera');
+        if (seccionBebe) {
+            const DIAS_EMBARAZO = 280;
+            const DIAS_POR_LUNA = 28;
+            // Tamaño aproximado del bebé por semana cumplida (la misma idea que usan
+            // las apps de embarazo), con frutas y verduras que se ubican en México.
+            const TAMANOS = {
+                4: 'una semilla de amapola', 5: 'una semilla de ajonjolí', 6: 'una lenteja',
+                7: 'un arándano', 8: 'una frambuesa', 9: 'una uva', 10: 'una fresa',
+                11: 'un higo', 12: 'un limón', 13: 'una tuna', 14: 'un durazno',
+                15: 'una manzana', 16: 'un aguacate', 17: 'una pera', 18: 'un pimiento morrón',
+                19: 'un mango', 20: 'un plátano', 21: 'una zanahoria', 22: 'un camote',
+                23: 'una toronja', 24: 'un elote', 25: 'una coliflor', 26: 'una lechuga',
+                27: 'un brócoli', 28: 'una berenjena', 29: 'una calabaza', 30: 'una col',
+                31: 'un coco', 32: 'una jícama', 33: 'una piña', 34: 'un melón chino',
+                35: 'un melón valenciano', 36: 'una papaya maradol', 37: 'un manojo de acelgas',
+                38: 'un poro', 39: 'una sandía chica', 40: 'una sandía',
+            };
 
-        // Django exige este token en cada POST para protegerse de ataques CSRF.
-        // Lo lee de la cookie 'csrftoken' que el navegador ya trae (Django la puso ahí sola,
-        // gracias a @ensure_csrf_cookie en la vista).
-        function getCSRFToken() {
-            const match = document.cookie.match(/csrftoken=([^;]+)/);
-            return match ? match[1] : '';
+            // Dibuja una luna con su fase real: 0 = luna nueva (solo sombra), 1 = llena.
+            // La luz es media circunferencia + media elipse (el "terminador"); el ancho
+            // de esa elipse sale de la fase, igual que en la luna de verdad.
+            function svgLuna(fase, esActual) {
+                const c = 22, r = 20;
+                let luz = '';
+                if (fase >= 1) {
+                    luz = `<circle class="luna-luz" cx="${c}" cy="${c}" r="${r}"/>`;
+                } else if (fase > 0) {
+                    const rx = (r * Math.abs(1 - 2 * fase)).toFixed(2);
+                    const barrido = fase > 0.5 ? 1 : 0;
+                    luz = `<path class="luna-luz" d="M${c} ${c - r}A${r} ${r} 0 0 1 ${c} ${c + r}A${rx} ${r} 0 0 ${barrido} ${c} ${c - r}Z"/>`;
+                }
+                // cráteres muy tenues: sin ellos una luna llena parece un simple círculo
+                const crateres = '<g class="luna-crateres" fill="#000" fill-opacity="0.07">' +
+                    '<circle cx="15" cy="17" r="3.5"/><circle cx="27" cy="27" r="4.5"/>' +
+                    '<circle cx="26" cy="13" r="2.2"/><circle cx="14" cy="28" r="2"/></g>';
+                return `<svg class="luna${esActual ? ' luna-actual' : ''}" viewBox="0 0 44 44" aria-hidden="true">` +
+                       `<circle class="luna-sombra" cx="${c}" cy="${c}" r="${r}"/>${luz}${crateres}</svg>`;
+            }
+
+            // "2026-12-10" se arma a mano como fecha LOCAL: new Date("2026-12-10")
+            // la tomaría como medianoche UTC y en México mostraría un día antes.
+            const [anio, mes, dia] = seccionBebe.dataset.fechaParto.split('-').map(Number);
+            const parto = new Date(anio, mes - 1, dia);
+            if (isNaN(parto)) {
+                seccionBebe.remove();
+            } else {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const faltan = Math.round((parto - hoy) / 86400000);
+                const transcurridos = Math.min(Math.max(DIAS_EMBARAZO - faltan, 0), DIAS_EMBARAZO);
+                const semanas = Math.floor(transcurridos / 7);
+                const lunaActual = Math.min(Math.floor(transcurridos / DIAS_POR_LUNA), 9);
+                const nombre = seccionBebe.dataset.nombre;
+                const conocerA = nombre ? `a ${nombre}` : 'al bebé';
+
+                let lunas = '';
+                for (let i = 0; i < 10; i++) {
+                    const fase = Math.min(Math.max((transcurridos - i * DIAS_POR_LUNA) / DIAS_POR_LUNA, 0), 1);
+                    lunas += svgLuna(fase, i === lunaActual && faltan > 0);
+                }
+                const contenedorLunas = document.getElementById('lunas');
+                contenedorLunas.innerHTML = lunas;
+                contenedorLunas.setAttribute('aria-label', `Luna ${lunaActual + 1} de 10`);
+
+                document.getElementById('bebe-semana').textContent = semanas;
+                if (semanas === 1) seccionBebe.querySelector('.bebe-semana-label').textContent = 'semana de 40';
+                document.getElementById('lunas-leyenda').textContent = faltan > 0
+                    ? `Vamos en la luna ${lunaActual + 1} de 10`
+                    : 'Las diez lunas están completas';
+
+                // textContent + append (no innerHTML): el nombre lo escribe el cliente
+                // en el admin y así nunca se interpreta como HTML.
+                const faltanEl = document.getElementById('bebe-faltan');
+                if (faltan > 0) {
+                    const numero = document.createElement('strong');
+                    numero.textContent = faltan;
+                    faltanEl.append(faltan === 1 ? 'Falta ' : 'Faltan ', numero,
+                        ` ${faltan === 1 ? 'día' : 'días'} para conocer ${conocerA}`);
+                    let semanaFruta = semanas;
+                    while (semanaFruta > 4 && !TAMANOS[semanaFruta]) semanaFruta--;
+                    document.getElementById('bebe-tamano').textContent =
+                        `Hoy es del tamaño de ${TAMANOS[Math.max(semanaFruta, 4)]}`;
+                } else {
+                    faltanEl.textContent = `¡Ya es tiempo de conocer ${conocerA}!`;
+                }
+            }
         }
 
+        {% if mostrar_votacion %}
+        // --- Votación en vivo ("¿Niña o niño?") ---
+        const seccionVotacion = document.getElementById('votacion');
+        const botonesVoto = [...seccionVotacion.querySelectorAll('.votacion-opcion')];
+        const estadoVotacion = document.getElementById('votacion-status');
+        const URL_VOTAR = "{% url 'invitaciones:votar' invitacion.slug %}";
+        const URL_CONTEO_VOTOS = "{% url 'invitaciones:conteo_votos' invitacion.slug %}";
+        const CLAVE_MI_VOTO = `voto-${slug}`;
+        let ultimoResumen = null;
+        let votacionALaVista = false;
+        let confetiLanzado = false;
+
+        // localStorage recuerda en ESTE celular que ya votó. Safari en modo privado
+        // puede bloquearlo; el try/catch hace que la votación funcione igual.
+        function leerMiVoto() {
+            try { return localStorage.getItem(CLAVE_MI_VOTO); } catch (e) { return null; }
+        }
+        function guardarMiVoto(opcion) {
+            try { localStorage.setItem(CLAVE_MI_VOTO, opcion); } catch (e) { /* sin memoria local */ }
+        }
+
+        // Los porcentajes se ven después de votar (o al revelar): así nadie
+        // se deja llevar por lo que ya votó la mayoría.
+        function pintarVotacion(resumen) {
+            ultimoResumen = resumen;
+            const miVoto = leerMiVoto();
+            const verResultados = Boolean(miVoto || resumen.resultado);
+            document.getElementById('votacion-total').textContent = resumen.total;
+            seccionVotacion.classList.toggle('con-resultados', verResultados);
+
+            botonesVoto.forEach(boton => {
+                const clave = boton.dataset.opcion;
+                const porcentaje = resumen.total
+                    ? Math.round((resumen.conteos[clave] || 0) * 100 / resumen.total) : 0;
+                boton.style.setProperty('--porcentaje', porcentaje + '%');
+                boton.querySelector('.opcion-porcentaje').textContent = verResultados ? porcentaje + '%' : '';
+                boton.classList.toggle('es-mi-voto', clave === miVoto);
+                boton.classList.toggle('es-ganadora', clave === resumen.resultado);
+                boton.setAttribute('aria-pressed', clave === miVoto ? 'true' : 'false');
+                boton.disabled = verResultados;
+            });
+            if (resumen.resultado) mostrarRevelacion(resumen);
+        }
+
+        function opcionGanadora(resumen) {
+            return botonesVoto.find(boton => boton.dataset.opcion === resumen.resultado);
+        }
+
+        function mostrarRevelacion(resumen) {
+            const ganadora = opcionGanadora(resumen);
+            if (!ganadora) return;
+            const acertaron = resumen.total
+                ? Math.round(resumen.conteos[resumen.resultado] * 100 / resumen.total) : 0;
+            document.getElementById('revelacion-texto').textContent = ganadora.dataset.revelacion;
+            document.getElementById('revelacion-detalle').textContent =
+                resumen.total ? `${acertaron}% de los invitados lo adivinó` : '';
+            document.getElementById('votacion-revelacion').hidden = false;
+            seccionVotacion.classList.add('revelada');
+            estadoVotacion.textContent = '';
+            if (votacionALaVista) celebrar(ganadora);
+        }
+
+        // Confeti sin librerías: papelitos con posición, color, giro y velocidad
+        // al azar. La caída (keyframes) vive en el CSS de cada tema.
+        function celebrar(ganadora) {
+            if (confetiLanzado || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            confetiLanzado = true;
+            const color = getComputedStyle(ganadora).getPropertyValue('--color-opcion').trim() || '#F2D48A';
+            const colores = [color, color, '#FFFFFF', '#F2D48A'];
+            const capa = document.createElement('div');
+            capa.className = 'confeti';
+            capa.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < 80; i++) {
+                const papel = document.createElement('i');
+                papel.style.left = Math.random() * 100 + '%';
+                papel.style.background = colores[i % colores.length];
+                papel.style.animationDelay = Math.random() * 0.9 + 's';
+                papel.style.animationDuration = 2.6 + Math.random() * 1.8 + 's';
+                papel.style.setProperty('--giro', Math.round(Math.random() * 720 - 360) + 'deg');
+                papel.style.setProperty('--deriva', Math.round(Math.random() * 140 - 70) + 'px');
+                capa.appendChild(papel);
+            }
+            document.body.appendChild(capa);
+            setTimeout(() => capa.remove(), 6000);
+        }
+
+        // El confeti espera a que el invitado de verdad esté viendo esta pantalla.
+        new IntersectionObserver(entradas => {
+            votacionALaVista = entradas[0].isIntersecting;
+            if (votacionALaVista && ultimoResumen && ultimoResumen.resultado) {
+                const ganadora = opcionGanadora(ultimoResumen);
+                if (ganadora) celebrar(ganadora);
+            }
+        }, { threshold: 0.4 }).observe(seccionVotacion);
+
+        function actualizarVotacion() {
+            if (document.hidden) return;   // pestaña en segundo plano: no gastar datos
+            fetch(URL_CONTEO_VOTOS)
+                .then(r => r.json())
+                .then(pintarVotacion)
+                .catch(err => console.error('Error al pedir la votación:', err));
+        }
+        actualizarVotacion();
+        setInterval(actualizarVotacion, 8000);
+
+        botonesVoto.forEach(boton => {
+            boton.addEventListener('click', () => {
+                if (leerMiVoto()) return;
+                botonesVoto.forEach(b => { b.disabled = true; });
+                fetch(URL_VOTAR, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({ opcion: boton.dataset.opcion }),
+                })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                    if (ok) {
+                        guardarMiVoto(boton.dataset.opcion);
+                        estadoVotacion.textContent = '¡Listo! Tu predicción quedó registrada.';
+                    } else {
+                        estadoVotacion.textContent = data.error || 'No se pudo registrar tu voto.';
+                    }
+                    if (data.conteos) {
+                        pintarVotacion(data);
+                    } else {
+                        botonesVoto.forEach(b => { b.disabled = false; });
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al votar:', err);
+                    estadoVotacion.textContent = 'Hubo un error, intenta de nuevo.';
+                    botonesVoto.forEach(b => { b.disabled = false; });
+                });
+            });
+        });
+        {% endif %}
+
+        // --- Regalos: botón "Copiar número" de la mesa de regalos ---
+        function copiarTexto(texto) {
+            if (navigator.clipboard && window.isSecureContext) {
+                return navigator.clipboard.writeText(texto);
+            }
+            // Respaldo para http:// (ej. probar por WiFi local desde el iPhone):
+            // el portapapeles moderno solo existe en https.
+            return new Promise((resolve, reject) => {
+                const campo = document.createElement('textarea');
+                campo.value = texto;
+                campo.setAttribute('readonly', '');
+                campo.style.position = 'absolute';
+                campo.style.left = '-9999px';
+                document.body.appendChild(campo);
+                campo.select();
+                campo.setSelectionRange(0, texto.length);
+                const copiado = document.execCommand('copy');
+                campo.remove();
+                copiado ? resolve() : reject(new Error('No se pudo copiar'));
+            });
+        }
+        document.querySelectorAll('[data-copiar]').forEach(boton => {
+            const textoOriginal = boton.textContent;
+            boton.addEventListener('click', () => {
+                copiarTexto(boton.dataset.copiar)
+                    .then(() => {
+                        boton.textContent = '¡Copiado!';
+                        boton.classList.add('copiado');
+                    })
+                    .catch(() => { boton.textContent = boton.dataset.copiar; })
+                    .finally(() => setTimeout(() => {
+                        boton.textContent = textoOriginal;
+                        boton.classList.remove('copiado');
+                    }, 1800));
+            });
+        });
+
+        // --- Lluvia de pañales: "¿Cuál me toca?" según la inicial del apellido ---
+        const campoApellido = document.getElementById('panales-apellido');
+        if (campoApellido) {
+            const filasPanales = document.querySelectorAll('.panales-tallas li');
+            const resultadoPanales = document.getElementById('panales-resultado');
+            // "Ñúñez" → "N": se quitan acentos y tildes para comparar solo la letra
+            // base, tanto en lo que escribe el invitado como en los rangos del admin
+            const letraBase = texto => texto.trim()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .charAt(0).toUpperCase();
+            campoApellido.addEventListener('input', () => {
+                const inicial = letraBase(campoApellido.value);
+                let filaQueToca = null;
+                filasPanales.forEach(fila => {
+                    const toca = inicial !== ''
+                        && inicial >= letraBase(fila.dataset.desde)
+                        && inicial <= letraBase(fila.dataset.hasta);
+                    fila.classList.toggle('te-toca', toca);
+                    if (toca) filaQueToca = fila;
+                });
+                resultadoPanales.textContent = !inicial ? ''
+                    : filaQueToca ? `Te toca: ${filaQueToca.dataset.talla}`
+                    : 'Cualquier talla será bienvenida';
+            });
+        }
+
+        {% if mostrar_rsvp %}
+        // --- RSVP: envío por fetch (sin recargar) + polling para el conteo "en vivo" ---
         function actualizarConteo() {
             fetch(`/invitaciones/${slug}/rsvp/conteo/`)
                 .then(r => r.json())

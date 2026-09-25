@@ -16,6 +16,7 @@ class Plantilla(models.Model):
         ("graduacion", "Graduación"),
         ("evento", "Evento general"),
         ("fiesta", "Fiesta"),
+        ("baby_shower", "Baby Shower"),
     ]
 
     nombre = models.CharField(max_length=100)
@@ -24,6 +25,9 @@ class Plantilla(models.Model):
     soporta_rsvp = models.BooleanField(default=True)
     soporta_musica = models.BooleanField(default=True)
     soporta_galeria = models.BooleanField(default=True)
+    # default=False a propósito: la votación solo aparece en plantillas cuyo CSS
+    # ya sabe dibujarla. Las plantillas existentes (boda) quedan igual que antes.
+    soporta_votacion = models.BooleanField(default=False)
     vista_previa_url = models.URLField(blank=True)
 
     def __str__(self):
@@ -116,3 +120,19 @@ class Confirmacion(models.Model):
 
     class Meta:
         ordering = ["-creada_en"]
+
+
+class Voto(models.Model):
+    """
+    Cada predicción del juego de votación en vivo (ej. "¿Niña o niño?" en un
+    baby shower). La opción se guarda como texto — la 'clave' definida en
+    invitacion.contenido_extra["votacion"]["opciones"] — en vez de choices
+    fijas: así cada invitación define sus propias opciones sin migraciones,
+    igual que el resto de datos por tipo de evento.
+    """
+    invitacion = models.ForeignKey(Invitacion, on_delete=models.CASCADE, related_name="votos")
+    opcion = models.CharField(max_length=40)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-creado_en"]

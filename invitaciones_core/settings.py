@@ -105,7 +105,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'es-mx'
 
-TIME_ZONE = 'UTC'
+# Hora del centro de México: las fechas que se capturan en el admin se
+# interpretan en esta zona. Con 'UTC' el countdown y el archivo de calendario
+# (.ics) apuntaban 6 horas antes de la hora real del evento.
+TIME_ZONE = 'America/Mexico_City'
 
 USE_I18N = True
 
