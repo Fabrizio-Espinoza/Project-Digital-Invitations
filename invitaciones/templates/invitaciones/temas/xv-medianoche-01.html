@@ -125,6 +125,30 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        padding: 0;
+    }
+    .boton-musica svg {
+        width: 22px;
+        height: 22px;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    .boton-musica.sonando::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        border: 1px solid var(--rosa);
+        animation: latido 2s ease-out infinite;
+    }
+    @keyframes latido {
+        from { transform: scale(1);   opacity: 0.8; }
+        to   { transform: scale(1.6); opacity: 0; }
     }
 
     /* ============================================
@@ -449,6 +473,11 @@
         box-shadow: 0 0 14px rgba(226, 194, 125, 0.25);
         transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .icono-svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
     .accion-icono:hover .icono-circulo {
         background: var(--degradado);
         color: var(--bg);
@@ -738,7 +767,8 @@
        ACCESIBILIDAD: menos movimiento
        ============================================ */
     @media (prefers-reduced-motion: reduce) {
-        .estrellas {
+        .estrellas,
+        .boton-musica.sonando::after {
             animation: none;
         }
         .animar-entrada {

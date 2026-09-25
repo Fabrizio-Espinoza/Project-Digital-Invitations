@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block decoracion_superior %}
-<img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt="">
+<img src="{% static 'invitaciones/img/marco-rosas-diagonal.jpg' %}" class="marco-img" alt="">
 {% endblock %}
 
 {% block decoracion_info %}
-<img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt="">
+<img src="{% static 'invitaciones/img/marco-rosas-diagonal.jpg' %}" class="marco-img marco-espejo" alt="">
 {% endblock %}
 
 {% block decoracion_inferior %}
@@ -14,18 +14,27 @@
 
 {% block estilos %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 
 <style>
     /* ============================================
        VARIABLES DE COLOR
+       Sacadas del marco "rosas en diagonal": --bg es EXACTAMENTE el crema
+       de la imagen, para que el marco se funda con la página sin bordes.
        ============================================ */
     :root {
-        --bg: #FBF6F0;
-        --texto: #2E2A26;
-        --terracota: #C97C5D;
-        --sauce: #5C6E58;
-        --dorado: #B8935A;
+        --bg: #F5F1E9;
+        --bg-fuera: #E7DFD2;
+        --texto: #3A322C;
+        --terracota: #C0694A;
+        --terracota-hover: #A9573A;
+        --durazno: #F2C3A4;
+        --sauce: #6B7D6C;
+        --pampa: #B8997A;
+        --linea: #E3D8C8;
+        --velo: rgba(245, 241, 233, 0.86);
+        --ancho-max: 480px;
     }
 
     * {
@@ -34,9 +43,17 @@
 
     /* ============================================
        BASE / GENERAL
+       En celular la invitación ocupa toda la pantalla. En compu se muestra
+       como una "tarjeta" vertical centrada, porque el marco es 9:16 y
+       estirado a lo ancho se deformaría o recortaría las flores.
        ============================================ */
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--bg-fuera);
+    }
     body {
-        margin: 0;
+        margin: 0 auto;
+        max-width: var(--ancho-max);
         background: var(--bg);
         color: var(--texto);
         font-family: 'Jost', sans-serif;
@@ -44,10 +61,8 @@
         text-align: center;
         line-height: 1.6;
         overflow-x: hidden;
-    }
-
-    html {
-        scroll-snap-type: y mandatory;
+        box-shadow: 0 0 60px rgba(58, 50, 44, 0.12);
+        -webkit-font-smoothing: antialiased;
     }
 
     /* ============================================
@@ -67,38 +82,41 @@
     }
 
     /* ============================================
-   BOTÓN DE MÚSICA (flotante)
-   ============================================ */
-.boton-musica {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 10;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: none;
-    background: var(--terracota);
-    color: #fff;
-    font-size: 1.3rem;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    /* ============================================
        ANIMACION DE ENTRADA AL HACER SCROLL
        ============================================ */
     .animar-entrada {
         opacity: 0;
         transform: translateY(18px);
-        transition: opacity 0.7s ease, transform 0.7s ease;
+        transition: opacity 0.9s ease, transform 0.9s ease;
     }
     .animar-entrada.visible {
         opacity: 1;
         transform: translateY(0);
+    }
+
+    /* ============================================
+       MARCO FLORAL (compartido por todas las pantallas)
+       La imagen va de fondo con position:absolute; el contenido va encima
+       con position:relative + z-index:1. "cover" llena la pantalla completa
+       y "marco-espejo" la voltea para que las flores cambien de esquina
+       de una pantalla a la siguiente.
+       ============================================ */
+    .marco-decorativo,
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .marco-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .marco-espejo {
+        transform: scaleX(-1);
     }
 
     /* ============================================
@@ -109,72 +127,90 @@
         overflow: hidden;
         padding: 40px 24px;
     }
-    .marco-decorativo {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
+    .hero.visible .marco-img {
+        animation: respirar 18s ease-in-out infinite alternate;
     }
-    .marco-decorativo img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-    .floral-superior {
-        width: 100%;
-        max-width: 500px;
-        margin: 0 auto;
-        display: block;
+    @keyframes respirar {
+        from { transform: scale(1); }
+        to   { transform: scale(1.05); }
     }
     .hero-contenido {
         position: relative;
         z-index: 1;
-        text-align: center;
-        padding: 60px 40px;
+        padding: 40px 28px;
     }
     .eyebrow {
-        font-size: 0.8rem;
-        letter-spacing: 3px;
-        text-transform: uppercase;
+        font-family: 'Cormorant Garamond', serif;
+        font-style: italic;
+        font-size: 1.15rem;
+        letter-spacing: 1px;
         color: var(--sauce);
-        margin: 10px 0 18px;
+        margin: 0 0 6px;
     }
     .nombres {
         font-family: 'Alex Brush', cursive;
         font-weight: 400;
-        font-size: clamp(3rem, 10vw, 5rem);
+        font-size: clamp(3.4rem, 15vw, 4.6rem);
         color: var(--terracota);
-        margin: 0 0 18px;
-        line-height: 1.1;
+        margin: 0;
+        line-height: 1.05;
+        text-shadow: 0 2px 12px rgba(245, 241, 233, 0.9);
+    }
+    /* Ornamento: línea — punto — línea, hecho solo con CSS */
+    .nombres::after {
+        content: "";
+        display: block;
+        width: 150px;
+        height: 7px;
+        margin: 22px auto 0;
+        background:
+            radial-gradient(circle, var(--pampa) 3px, transparent 3.5px) center / 7px 7px no-repeat,
+            linear-gradient(var(--pampa), var(--pampa)) left center / 62px 1px no-repeat,
+            linear-gradient(var(--pampa), var(--pampa)) right center / 62px 1px no-repeat;
     }
     .mensaje {
-        max-width: 380px;
-        margin: 0 auto;
-        font-size: 0.95rem;
+        max-width: 300px;
+        margin: 20px auto 0;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1.15rem;
+        line-height: 1.5;
         color: var(--texto);
     }
+    /* Los textos del hero aparecen uno tras otro */
+    .hero .eyebrow,
+    .hero .nombres,
+    .hero .mensaje {
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity 1s ease, transform 1s ease;
+    }
+    .hero.visible .eyebrow { opacity: 1; transform: none; transition-delay: 0.2s; }
+    .hero.visible .nombres { opacity: 1; transform: none; transition-delay: 0.5s; }
+    .hero.visible .mensaje { opacity: 1; transform: none; transition-delay: 0.9s; }
 
     /* ============================================
-       PANTALLA 2: marco decorativo compartido
+       PANTALLA 2: tarjeta en forma de arco sobre el marco
+       El "velo" crema semitransparente garantiza que el texto se lea
+       aunque alguna flor quede detrás en pantallas pequeñas.
        ============================================ */
     .pantalla-info {
         position: relative;
         overflow: hidden;
-    }
-    .marco-decorativo-info {
-        position: absolute;
-        inset: 0;
-        z-index: 0;
-        pointer-events: none;
-    }
-    .marco-decorativo-info img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
+        padding: 48px 0;
+        align-items: center;
     }
     .pantalla-contenido {
         position: relative;
         z-index: 1;
+        width: min(86%, 380px);
+        padding: 56px 18px 28px;
+        background: var(--velo);
+        -webkit-backdrop-filter: blur(3px);
+        backdrop-filter: blur(3px);
+        border-radius: 190px 190px 20px 20px / 120px 120px 20px 20px;
+        outline: 1px solid var(--pampa);
+        outline-offset: -8px;
+        box-shadow: 0 12px 40px rgba(58, 50, 44, 0.08);
     }
 
     /* ============================================
@@ -183,34 +219,35 @@
     .detalles {
         display: flex;
         justify-content: center;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 24px;
-        padding: 90px 50px 10px;
+        align-items: flex-start;
+        gap: 20px;
+        padding: 0 10px 14px;
     }
     .detalle-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-width: 110px;
+        min-width: 100px;
     }
     .detalle-label {
         font-family: 'Cormorant Garamond', serif;
         font-style: italic;
-        font-size: 1.1rem;
+        font-size: 1.15rem;
         color: var(--sauce);
     }
     .detalle-valor {
-        margin-top: 4px;
-        font-size: 0.85rem;
-        letter-spacing: 1px;
+        margin-top: 2px;
+        font-size: 0.8rem;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
+        font-weight: 400;
     }
     .detalle-divisor {
         width: 1px;
         height: 40px;
-        background: var(--dorado);
-        opacity: 0.5;
+        align-self: center;
+        background: var(--pampa);
+        opacity: 0.6;
     }
 
     /* ============================================
@@ -221,14 +258,16 @@
         justify-content: center;
         align-items: flex-start;
         flex-wrap: wrap;
-        gap: 32px;
-        padding: 16px 24px;
+        gap: 12px 28px;
+        padding: 14px 10px;
+        border-top: 1px solid var(--linea);
     }
     .lugar-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        min-width: 130px;
+        min-width: 120px;
+        max-width: 160px;
     }
 
     /* ============================================
@@ -238,8 +277,9 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
-        padding: 10px 24px;
+        gap: 4px;
+        padding: 14px 10px;
+        border-top: 1px solid var(--linea);
     }
     .vestimenta-valor {
         display: flex;
@@ -247,10 +287,11 @@
         gap: 8px;
     }
     .vestimenta-color {
-        width: 16px;
-        height: 16px;
+        width: 14px;
+        height: 14px;
         border-radius: 50%;
-        border: 1px solid rgba(0,0,0,0.15);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        box-shadow: 0 0 0 3px var(--bg);
         display: inline-block;
     }
 
@@ -260,23 +301,31 @@
     .countdown {
         display: flex;
         justify-content: center;
-        gap: clamp(16px, 5vw, 48px);
-        padding: 30px 20px;
+        gap: 8px;
+        padding: 18px 4px;
+        border-top: 1px solid var(--linea);
     }
     .countdown div {
         display: flex;
         flex-direction: column;
         align-items: center;
+        min-width: 62px;
+        padding: 10px 4px 8px;
+        border: 1px solid var(--linea);
+        border-radius: 999px 999px 10px 10px;
+        background: rgba(255, 255, 255, 0.45);
     }
     .countdown span {
         font-family: 'Cormorant Garamond', serif;
-        font-size: clamp(2rem, 6vw, 3rem);
+        font-weight: 500;
+        font-size: clamp(1.7rem, 7vw, 2.2rem);
         color: var(--terracota);
         line-height: 1;
+        font-variant-numeric: tabular-nums;
     }
     .countdown label {
-        margin-top: 8px;
-        font-size: 0.7rem;
+        margin-top: 6px;
+        font-size: 0.62rem;
         letter-spacing: 2px;
         text-transform: uppercase;
         color: var(--sauce);
@@ -288,35 +337,37 @@
     .acciones-rapidas {
         display: flex;
         justify-content: center;
-        gap: 32px;
-        padding: 10px 24px 60px;
+        gap: 12px;
+        padding: 12px 0 0;
         flex-wrap: wrap;
     }
     .accion-icono {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         text-decoration: none;
         color: var(--texto);
-        font-size: 0.75rem;
+        font-size: 0.66rem;
         letter-spacing: 1px;
+        min-width: 76px;
         text-transform: uppercase;
     }
     .icono-circulo {
-        width: 52px;
-        height: 52px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        border: 1.5px solid var(--dorado);
+        border: 1px solid var(--terracota);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        color: var(--dorado);
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        color: var(--terracota);
+        background: rgba(255, 255, 255, 0.5);
+        transition: background 0.25s ease, color 0.25s ease, transform 0.25s ease;
     }
-    .accion-icono:hover .icono-circulo {
-        background: var(--dorado);
+    .accion-icono:hover .icono-circulo,
+    .accion-icono:active .icono-circulo {
+        background: var(--terracota);
         color: #fff;
         transform: translateY(-3px);
     }
@@ -328,11 +379,27 @@
 
     /* ============================================
        PANTALLA EXTRA (Itinerario / Mesa de regalos / Ninos)
+       El marco entra como ::before porque esta sección vive en el motor
+       y no tiene bloque de decoración propio.
        ============================================ */
     .pantalla-extra {
-        padding: 60px 24px;
-        gap: 40px;
+        position: relative;
+        overflow: hidden;
+        padding: 80px 32px;
+        gap: 32px;
         align-items: center;
+    }
+    .pantalla-extra::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: url("{% static 'invitaciones/img/marco-rosas-diagonal.jpg' %}") center / cover no-repeat;
+        opacity: 0.55;
+    }
+    .pantalla-extra > * {
+        position: relative;
+        z-index: 1;
     }
     .familia {
         display: flex;
@@ -355,27 +422,58 @@
         font-size: 0.9rem;
     }
     .itinerario {
-        max-width: 320px;
+        width: 100%;
+        max-width: 300px;
         margin: 0 auto;
     }
-    .itinerario h3 {
-        font-family: 'Cormorant Garamond', serif;
-        font-weight: 500;
-        font-size: 1.6rem;
-        margin: 0 0 20px;
+    .itinerario h3,
+    .rsvp h2 {
+        font-family: 'Alex Brush', cursive;
+        font-weight: 400;
+        font-size: 2.8rem;
+        line-height: 1.1;
         color: var(--terracota);
+        margin: 0 0 18px;
     }
+    /* Línea de tiempo vertical con un punto por cada momento */
     .itinerario-item {
+        position: relative;
         display: flex;
         justify-content: space-between;
+        align-items: baseline;
         gap: 16px;
-        padding: 10px 0;
-        border-bottom: 1px solid #E4D9C9;
+        padding: 12px 0 12px 22px;
         font-size: 0.9rem;
+        text-align: left;
     }
+    .itinerario-item::before {
+        content: "";
+        position: absolute;
+        left: 4px;
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--pampa);
+        opacity: 0.6;
+    }
+    .itinerario-item::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 50%;
+        width: 9px;
+        height: 9px;
+        margin-top: -4.5px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 1px solid var(--terracota);
+    }
+    .itinerario-item:first-of-type::before { top: 50%; }
+    .itinerario-item:last-of-type::before { bottom: 50%; }
     .itinerario-hora {
         font-family: 'Cormorant Garamond', serif;
         font-style: italic;
+        font-size: 1.1rem;
         color: var(--sauce);
         white-space: nowrap;
     }
@@ -384,25 +482,28 @@
     }
     .boton-mesa-regalos {
         display: inline-block;
-        padding: 14px 32px;
-        border: 1.5px solid var(--dorado);
+        padding: 14px 34px;
+        border: 1px solid var(--terracota);
         border-radius: 30px;
-        color: var(--dorado);
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--terracota);
         text-decoration: none;
-        font-size: 0.85rem;
-        letter-spacing: 1px;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
         text-transform: uppercase;
-        transition: background 0.2s ease, color 0.2s ease;
+        transition: background 0.25s ease, color 0.25s ease;
     }
-    .boton-mesa-regalos:hover {
-        background: var(--dorado);
+    .boton-mesa-regalos:hover,
+    .boton-mesa-regalos:active {
+        background: var(--terracota);
         color: #fff;
     }
     .nota-ninos {
-        font-size: 0.85rem;
-        color: var(--sauce);
+        font-family: 'Cormorant Garamond', serif;
         font-style: italic;
-        max-width: 300px;
+        font-size: 1.1rem;
+        color: var(--sauce);
+        max-width: 280px;
         margin: 0 auto;
     }
 
@@ -411,76 +512,100 @@
        ============================================ */
     .galeria {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        padding: 20px 24px 60px;
-        max-width: 900px;
-        margin: 0 auto;
+        grid-template-columns: repeat(2, 1fr);
+        align-content: center;
+        gap: 8px;
+        padding: 40px 20px;
     }
     .galeria img {
         width: 100%;
-        height: 220px;
+        aspect-ratio: 3 / 4;
         object-fit: cover;
-        border-radius: 2px;
+        border-radius: 999px 999px 6px 6px;
+    }
+    .galeria img:nth-child(3n + 1) {
+        grid-column: span 2;
+        aspect-ratio: 4 / 3;
+        border-radius: 6px;
     }
 
     /* ============================================
        RSVP
        ============================================ */
     .rsvp {
-        background: linear-gradient(180deg, #F3EBE1, #FBF6F0);
+        position: relative;
+        overflow: hidden;
         padding: 70px 24px;
     }
     .rsvp::before {
-        content: "❧";
-        display: block;
-        font-size: 1.8rem;
-        color: var(--dorado);
-        margin-bottom: 10px;
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: url("{% static 'invitaciones/img/marco-rosas-diagonal.jpg' %}") center / cover no-repeat;
+        transform: scaleX(-1);
+        opacity: 0.7;
+    }
+    .rsvp > * {
+        position: relative;
+        z-index: 1;
     }
     .rsvp h2 {
-        font-family: 'Cormorant Garamond', serif;
-        font-weight: 500;
-        font-size: 2rem;
-        margin: 0 0 6px;
+        margin-bottom: 4px;
     }
     .rsvp p {
+        margin: 0;
         color: var(--sauce);
     }
+    #total-confirmados {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--terracota);
+    }
     .fecha-limite {
-        font-size: 0.8rem;
+        margin-top: 4px !important;
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 1rem;
         font-style: italic;
     }
 
     /* --- Formulario --- */
     #form-rsvp {
-        background: #fff;
-        max-width: 420px;
-        margin: 30px auto 0;
-        padding: 32px 28px;
-        border-radius: 12px;
-        box-shadow: 0 10px 30px rgba(46, 42, 38, 0.08);
+        width: 100%;
+        max-width: 380px;
+        margin: 26px auto 0;
+        padding: 28px 22px;
+        background: rgba(255, 255, 255, 0.82);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+        border-radius: 16px;
+        border: 1px solid var(--linea);
+        box-shadow: 0 14px 40px rgba(58, 50, 44, 0.1);
         display: flex;
         flex-direction: column;
-        gap: 16px;
+        gap: 14px;
     }
     #form-rsvp input,
     #form-rsvp textarea {
         font-family: 'Jost', sans-serif;
-        font-size: 0.95rem;
+        font-size: 1rem; /* 16px evita que iPhone haga zoom al enfocar */
         padding: 12px 14px;
-        border: 1px solid #E4D9C9;
-        border-radius: 8px;
-        background: #FBF6F0;
+        border: 1px solid var(--linea);
+        border-radius: 10px;
+        background: var(--bg);
         color: var(--texto);
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
+    #form-rsvp input::placeholder,
+    #form-rsvp textarea::placeholder {
+        color: #A39A90;
+    }
     #form-rsvp input:focus,
-    #form-rsvp textarea:focus,
-    #form-rsvp select:focus {
+    #form-rsvp textarea:focus {
         outline: none;
         border-color: var(--terracota);
-        box-shadow: 0 0 0 3px rgba(201, 124, 93, 0.15);
+        box-shadow: 0 0 0 3px rgba(192, 105, 74, 0.15);
     }
     #form-rsvp textarea {
         resize: vertical;
@@ -488,7 +613,8 @@
     }
     #form-rsvp button {
         font-family: 'Jost', sans-serif;
-        letter-spacing: 1.5px;
+        font-weight: 400;
+        letter-spacing: 2px;
         text-transform: uppercase;
         font-size: 0.85rem;
         padding: 15px;
@@ -497,35 +623,18 @@
         background: var(--terracota);
         color: #fff;
         cursor: pointer;
-        box-shadow: 0 6px 16px rgba(201, 124, 93, 0.35);
+        box-shadow: 0 8px 20px rgba(192, 105, 74, 0.3);
         transition: transform 0.15s ease, background 0.2s ease;
     }
     #form-rsvp button:hover {
-        background: #B56947;
+        background: var(--terracota-hover);
         transform: translateY(-2px);
-    }
-
-    /* --- Select nativo (ya no se usa, pero no estorba) --- */
-    #form-rsvp select {
-        font-family: 'Jost', sans-serif;
-        font-size: 0.95rem;
-        padding: 12px 40px 12px 14px;
-        border: 1px solid #E4D9C9;
-        border-radius: 8px;
-        background-color: #FBF6F0;
-        color: var(--texto);
-        appearance: none;
-        -webkit-appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23C97C5D' stroke-width='2' fill='none'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 14px center;
     }
 
     /* --- Botones tipo pildora (Si / No / Tal vez) --- */
     .opciones-asistencia {
         display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
+        gap: 6px;
     }
     .opciones-asistencia input[type="radio"] {
         position: absolute;
@@ -534,14 +643,13 @@
     }
     .opciones-asistencia label {
         flex: 1;
-        min-width: 100px;
         text-align: center;
-        padding: 10px 12px;
-        border: 1px solid #E4D9C9;
+        padding: 10px 6px;
+        border: 1px solid var(--linea);
         border-radius: 30px;
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         color: var(--texto);
-        background: #FBF6F0;
+        background: var(--bg);
         cursor: pointer;
         transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
@@ -550,22 +658,87 @@
         border-color: var(--terracota);
         color: #fff;
     }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        box-shadow: 0 0 0 3px rgba(192, 105, 74, 0.25);
+    }
 
     /* --- Campo con label visible (acompanantes) --- */
     .campo-con-label {
+        display: flex;
+        flex-direction: column;
         text-align: left;
     }
     .campo-con-label label {
-        display: block;
         font-size: 0.8rem;
         color: var(--sauce);
         margin-bottom: 6px;
     }
 
     #rsvp-status {
-        margin-top: 16px;
-        color: var(--sauce);
-        font-size: 0.9rem;
+        margin-top: 16px !important;
+        font-family: 'Cormorant Garamond', serif;
+        font-style: italic;
+        font-size: 1.15rem;
+        color: var(--terracota) !important;
+    }
+
+    /* ============================================
+       BOTÓN DE MÚSICA (flotante)
+       En compu se alinea al borde de la tarjeta, no al de la ventana.
+       Mientras suena, un anillo "late" alrededor.
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        bottom: 20px;
+        right: max(20px, calc(50vw - var(--ancho-max) / 2 + 20px));
+        z-index: 10;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid var(--terracota);
+        background: var(--velo);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+        color: var(--terracota);
+        cursor: pointer;
+        box-shadow: 0 6px 18px rgba(58, 50, 44, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    .boton-musica svg {
+        width: 22px;
+        height: 22px;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    .boton-musica.sonando::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border-radius: 50%;
+        border: 1px solid var(--terracota);
+        animation: latido 2s ease-out infinite;
+    }
+    @keyframes latido {
+        from { transform: scale(1);   opacity: 0.7; }
+        to   { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* ============================================
+       ACCESIBILIDAD: menos movimiento si el usuario lo pidió
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        .hero.visible .marco-img,
+        .boton-musica.sonando::after {
+            animation: none;
+        }
     }
 </style>
 {% endblock %}
