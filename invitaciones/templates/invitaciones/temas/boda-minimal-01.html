@@ -5,7 +5,9 @@
 <img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt="">
 {% endblock %}
 
-{% block decoracion_info %} <img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt=""> {% endblock %}
+{% block decoracion_info %}
+<img src="{% static 'invitaciones/shades-peach-soft-orange-white-roses-flower-frame-background.png' %}" class="floral-superior" alt="">
+{% endblock %}
 
 {% block decoracion_inferior %}
 {% endblock %}
@@ -53,16 +55,38 @@
        ============================================ */
     .hero,
     .pantalla-info,
+    .pantalla-extra,
     .galeria,
     .rsvp {
         scroll-snap-align: start;
-        scroll-snap-stop: always;
         min-height: 100vh;
         min-height: 100dvh;
         display: flex;
         flex-direction: column;
         justify-content: center;
     }
+
+    /* ============================================
+   BOTÓN DE MÚSICA (flotante)
+   ============================================ */
+.boton-musica {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 10;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    background: var(--terracota);
+    color: #fff;
+    font-size: 1.3rem;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
     /* ============================================
        ANIMACION DE ENTRADA AL HACER SCROLL
@@ -92,10 +116,10 @@
         pointer-events: none;
     }
     .marco-decorativo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-}
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
     .floral-superior {
         width: 100%;
         max-width: 500px;
@@ -131,7 +155,30 @@
     }
 
     /* ============================================
-       DETALLES (Dia / Hora / Lugar)
+       PANTALLA 2: marco decorativo compartido
+       ============================================ */
+    .pantalla-info {
+        position: relative;
+        overflow: hidden;
+    }
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .marco-decorativo-info img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+    .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* ============================================
+       DETALLES (Dia / Hora)
        ============================================ */
     .detalles {
         display: flex;
@@ -139,7 +186,7 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 24px;
-             padding: 90px 50px 10px;
+        padding: 90px 50px 10px;
     }
     .detalle-item {
         display: flex;
@@ -167,13 +214,54 @@
     }
 
     /* ============================================
+       LUGARES (Ceremonia / Recepcion)
+       ============================================ */
+    .lugares {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 32px;
+        padding: 16px 24px;
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 130px;
+    }
+
+    /* ============================================
+       VESTIMENTA
+       ============================================ */
+    .vestimenta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 10px 24px;
+    }
+    .vestimenta-valor {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .vestimenta-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid rgba(0,0,0,0.15);
+        display: inline-block;
+    }
+
+    /* ============================================
        COUNTDOWN
        ============================================ */
     .countdown {
         display: flex;
         justify-content: center;
         gap: clamp(16px, 5vw, 48px);
-        padding: 40px 20px 50px;
+        padding: 30px 20px;
     }
     .countdown div {
         display: flex;
@@ -200,8 +288,8 @@
     .acciones-rapidas {
         display: flex;
         justify-content: center;
-        gap: 40px;
-        padding: 10px 24px 50px;
+        gap: 32px;
+        padding: 10px 24px 60px;
         flex-wrap: wrap;
     }
     .accion-icono {
@@ -216,14 +304,14 @@
         text-transform: uppercase;
     }
     .icono-circulo {
-        width: 56px;
-        height: 56px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
         border: 1.5px solid var(--dorado);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         color: var(--dorado);
         transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
@@ -231,6 +319,71 @@
         background: var(--dorado);
         color: #fff;
         transform: translateY(-3px);
+    }
+    .icono-svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA (Itinerario / Mesa de regalos / Ninos)
+       ============================================ */
+    .pantalla-extra {
+        padding: 60px 24px;
+        gap: 40px;
+        align-items: center;
+    }
+    .itinerario {
+        max-width: 320px;
+        margin: 0 auto;
+    }
+    .itinerario h3 {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 500;
+        font-size: 1.6rem;
+        margin: 0 0 20px;
+        color: var(--terracota);
+    }
+    .itinerario-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 10px 0;
+        border-bottom: 1px solid #E4D9C9;
+        font-size: 0.9rem;
+    }
+    .itinerario-hora {
+        font-family: 'Cormorant Garamond', serif;
+        font-style: italic;
+        color: var(--sauce);
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        text-align: right;
+    }
+    .boton-mesa-regalos {
+        display: inline-block;
+        padding: 14px 32px;
+        border: 1.5px solid var(--dorado);
+        border-radius: 30px;
+        color: var(--dorado);
+        text-decoration: none;
+        font-size: 0.85rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .boton-mesa-regalos:hover {
+        background: var(--dorado);
+        color: #fff;
+    }
+    .nota-ninos {
+        font-size: 0.85rem;
+        color: var(--sauce);
+        font-style: italic;
+        max-width: 300px;
+        margin: 0 auto;
     }
 
     /* ============================================
@@ -273,6 +426,10 @@
     }
     .rsvp p {
         color: var(--sauce);
+    }
+    .fecha-limite {
+        font-size: 0.8rem;
+        font-style: italic;
     }
 
     /* --- Formulario --- */
@@ -384,7 +541,7 @@
         color: var(--sauce);
         margin-bottom: 6px;
     }
-.pantalla-info { position: relative; overflow: hidden; } .marco-decorativo-info { position: absolute; inset: 0; z-index: 0; pointer-events: none; } .marco-decorativo-info img { width: 100%; height: 100%; object-fit: contain; } .pantalla-contenido { position: relative; z-index: 1; }
+
     #rsvp-status {
         margin-top: 16px;
         color: var(--sauce);

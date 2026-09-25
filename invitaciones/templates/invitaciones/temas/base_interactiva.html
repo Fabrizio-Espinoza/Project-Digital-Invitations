@@ -4,12 +4,18 @@
   archivo y solo sobreescribira el bloque "estilos" (y opcionalmente los
   bloques de decoracion) con su propia paleta y tipografia. Asi agregar
   un diseño nuevo no significa reescribir el RSVP ni el countdown otra vez.
+
+  Todo lo que varia segun el tipo de evento (vestimenta, ceremonia/recepcion,
+  itinerario, mesa de regalos, si se admiten ninos) vive en el campo JSON
+  invitacion.contenido_extra, no como columnas fijas en el modelo. Por eso
+  cada seccion nueva de aqui abajo esta envuelta en un  que revisa
+  si ese dato existe antes de mostrar la seccion completa.
 -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-     {% load static %}
+    {% load static %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ invitacion.titulo_evento }}</title>
 
@@ -23,7 +29,7 @@
 </head>
 <body>
 
-        <section class="hero animar-entrada">
+    <section class="hero animar-entrada">
         <div class="marco-decorativo">
             {% block decoracion_superior %}{% endblock %}
         </div>
@@ -43,7 +49,7 @@
         </div>
     </section>
 
-       <div class="pantalla-info animar-entrada">
+    <div class="pantalla-info animar-entrada">
         <div class="marco-decorativo-info">
             {% block decoracion_info %}{% endblock %}
         </div>
@@ -58,14 +64,36 @@
                     <span class="detalle-label">Hora</span>
                     <span class="detalle-valor">{{ invitacion.fecha_evento|date:"g:i A" }}</span>
                 </div>
-                {% if invitacion.lugar_nombre %}
-                <div class="detalle-divisor"></div>
-                <div class="detalle-item">
-                    <span class="detalle-label">Lugar</span>
-                    <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
+            </section>
+
+            {% if invitacion.contenido_extra.lugar_ceremonia_nombre or invitacion.contenido_extra.lugar_recepcion_nombre %}
+            <section class="lugares">
+                {% if invitacion.contenido_extra.lugar_ceremonia_nombre %}
+                <div class="lugar-item">
+                    <span class="detalle-label">Ceremonia</span>
+                    <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_ceremonia_nombre }}</span>
+                </div>
+                {% endif %}
+                {% if invitacion.contenido_extra.lugar_recepcion_nombre %}
+                <div class="lugar-item">
+                    <span class="detalle-label">Recepción</span>
+                    <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_recepcion_nombre }}</span>
                 </div>
                 {% endif %}
             </section>
+            {% endif %}
+
+            {% if invitacion.contenido_extra.dresscode %}
+            <section class="vestimenta">
+                <span class="detalle-label">Código de vestimenta</span>
+                <div class="vestimenta-valor">
+                    {% if invitacion.contenido_extra.dresscode_color %}
+                    <span class="vestimenta-color" style="background:{{ invitacion.contenido_extra.dresscode_color }}"></span>
+                    {% endif %}
+                    <span class="detalle-valor">{{ invitacion.contenido_extra.dresscode }}</span>
+                </div>
+            </section>
+            {% endif %}
 
             <section class="countdown" id="countdown" data-fecha="{{ invitacion.fecha_evento|date:'c' }}">
                 <div><span id="dias">--</span><label>Días</label></div>
@@ -81,18 +109,52 @@
                     <span>Confirmar</span>
                 </a>
                 {% endif %}
-                {% if invitacion.lugar_mapa_url %}
-                <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+                {% if invitacion.contenido_extra.lugar_ceremonia_mapa_url %}
+                <a href="{{ invitacion.contenido_extra.lugar_ceremonia_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
                     <span class="icono-circulo">📍</span>
-                    <span>Ubicación</span>
+                    <span>Ceremonia</span>
+                </a>
+                {% endif %}
+                {% if invitacion.contenido_extra.lugar_recepcion_mapa_url %}
+                <a href="{{ invitacion.contenido_extra.lugar_recepcion_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+                    <span class="icono-circulo">📍</span>
+                    <span>Recepción</span>
                 </a>
                 {% endif %}
             </section>
         </div>
     </div>
 
+    {% if invitacion.contenido_extra.itinerario or invitacion.contenido_extra.mesa_regalos_url or invitacion.contenido_extra.admite_ninos is not None %}
+    <section class="pantalla-extra animar-entrada">
+        {% if invitacion.contenido_extra.itinerario %}
+        <div class="itinerario">
+            <h3>Itinerario</h3>
+            {% for paso in invitacion.contenido_extra.itinerario %}
+            <div class="itinerario-item">
+                <span class="itinerario-hora">{{ paso.hora }}</span>
+                <span class="itinerario-evento">{{ paso.evento }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if invitacion.contenido_extra.mesa_regalos_url %}
+        <a href="{{ invitacion.contenido_extra.mesa_regalos_url }}" target="_blank" rel="noopener" class="boton-mesa-regalos">
+            Mesa de regalos
+        </a>
+        {% endif %}
+
+        {% if invitacion.contenido_extra.admite_ninos == False %}
+        <p class="nota-ninos">Agradecemos su comprensión: evento solo para adultos</p>
+        {% elif invitacion.contenido_extra.admite_ninos == True %}
+        <p class="nota-ninos">¡Los niños son bienvenidos!</p>
+        {% endif %}
+    </section>
+    {% endif %}
+
     {% if mostrar_galeria and invitacion.galeria.all %}
-<section class="galeria animar-entrada">
+    <section class="galeria animar-entrada">
         {% for foto in invitacion.galeria.all %}
             <img src="{{ foto.imagen.url }}" alt="">
         {% endfor %}
@@ -100,15 +162,19 @@
     {% endif %}
 
     {% if mostrar_musica and invitacion.musica_url %}
-    <audio autoplay loop src="{{ invitacion.musica_url }}"></audio>
-    {% endif %}
+<audio id="musica-fondo" loop src="{{ invitacion.musica_url }}"></audio>
+<button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">🎵</button>
+{% endif %}
 
     {% if mostrar_rsvp %}
     <section class="rsvp animar-entrada" id="rsvp">
         <h2>Confirma tu asistencia</h2>
         <p><span id="total-confirmados">…</span> personas ya confirmaron</p>
+        {% if invitacion.fecha_limite_rsvp %}
+        <p class="fecha-limite">Por favor confirma antes del {{ invitacion.fecha_limite_rsvp|date:"d \d\e F" }}</p>
+        {% endif %}
 
-                <form id="form-rsvp">
+        <form id="form-rsvp">
             <input type="text" name="nombre_invitado" placeholder="Tu nombre" required>
 
             <div class="opciones-asistencia">
@@ -137,9 +203,47 @@
     {% block decoracion_inferior %}{% endblock %}
 
     <script>
+        // --- Arreglo para un bug de iOS Safari: cuando scroll-snap está activo,
+        // saltar a un #ancla a veces "rebota" de vuelta a la sección anterior.
+        // La solución: apagar el snap justo antes de saltar, y prenderlo de
+        // nuevo cuando la animación de scroll ya terminó.
+        document.querySelectorAll('a[href^="#"]').forEach(link => {
+            link.addEventListener('click', function (e) {
+                const destino = document.querySelector(this.getAttribute('href'));
+                if (!destino) return;
+                e.preventDefault();
+
+                document.documentElement.style.scrollSnapType = 'none';
+                destino.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+                setTimeout(() => {
+                    document.documentElement.style.scrollSnapType = '';
+                }, 1000);
+            });
+        });
+
         // --- Countdown ---
         const fechaEvento = new Date(document.getElementById('countdown').dataset.fecha);
         function actualizarCountdown() {
+            // --- Música: el navegador bloquea el autoplay, así que esperamos
+// un clic real del usuario antes de reproducir. Cada clic alterna
+// entre reproducir y pausar (por eso la variable "sonando").
+{% if mostrar_musica and invitacion.musica_url %}
+const musica = document.getElementById('musica-fondo');
+const botonMusica = document.getElementById('boton-musica');
+let sonando = false;
+
+botonMusica.addEventListener('click', () => {
+    if (sonando) {
+        musica.pause();
+        botonMusica.textContent = '🎵';
+    } else {
+        musica.play();
+        botonMusica.textContent = '⏸';
+    }
+    sonando = !sonando;
+});
+{% endif %}
             const diff = fechaEvento - new Date();
             if (diff <= 0) return;
             const dias = Math.floor(diff / 86400000);
