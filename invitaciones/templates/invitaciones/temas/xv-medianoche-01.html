@@ -1,0 +1,777 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  "Medianoche Dorada" — primera plantilla de XV años.
+  Estilo opuesto a la boda (Terracota Velada): fondo oscuro violeta-medianoche,
+  dorado champagne + rosa, cielo de estrellas y un arco dorado con tiara.
+  Toda la decoración está dibujada con CSS y un SVG propio (sin imágenes
+  externas), así no hay licencias de assets que confirmar.
+{% endcomment %}
+
+{% block eyebrow %}✦ Mis XV Años ✦{% endblock %}
+
+{% block decoracion_superior %}
+<div class="estrellas"></div>
+<div class="estrellas estrellas-2"></div>
+<div class="arco">
+    <svg class="tiara" viewBox="0 0 120 60" aria-hidden="true">
+        <path d="M12 50 L20 22 L40 38 L60 8 L80 38 L100 22 L108 50 Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+        <path d="M12 50 Q60 60 108 50" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="20" cy="20" r="3" fill="currentColor"/>
+        <circle cx="60" cy="5" r="4" fill="currentColor"/>
+        <circle cx="100" cy="20" r="3" fill="currentColor"/>
+        <path d="M60 30 L66 38 L60 46 L54 38 Z" fill="currentColor" class="tiara-gema"/>
+    </svg>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<div class="estrellas"></div>
+<div class="estrellas estrellas-2"></div>
+<div class="marco-info">
+    <span class="esquina esquina-si"></span>
+    <span class="esquina esquina-sd"></span>
+    <span class="esquina esquina-ii"></span>
+    <span class="esquina esquina-id"></span>
+</div>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Great+Vibes&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES DE COLOR
+       ============================================ */
+    :root {
+        --bg: #120E24;
+        --bg-2: #1E1740;
+        --texto: #F3EDF7;
+        --texto-suave: #BFB3D6;
+        --rosa: #F0A6C8;
+        --dorado: #E2C27D;
+        --dorado-oscuro: #B8914A;
+        --vidrio: rgba(255, 255, 255, 0.06);
+        --borde-vidrio: rgba(226, 194, 125, 0.35);
+        --degradado: linear-gradient(135deg, var(--rosa), var(--dorado));
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--bg);
+    }
+    body {
+        margin: 0;
+        background:
+            radial-gradient(ellipse at 50% 0%, rgba(120, 80, 190, 0.35), transparent 60%),
+            radial-gradient(ellipse at 50% 100%, rgba(240, 166, 200, 0.12), transparent 55%),
+            var(--bg);
+        background-attachment: fixed;
+        color: var(--texto);
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 300;
+        text-align: center;
+        line-height: 1.6;
+        overflow-x: hidden;
+    }
+
+    /* ============================================
+       SCROLL TIPO "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (flotante)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 10;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: none;
+        background: var(--degradado);
+        color: var(--bg);
+        font-size: 1.3rem;
+        cursor: pointer;
+        box-shadow: 0 0 22px rgba(240, 166, 200, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+    }
+    .boton-musica svg {
+        width: 22px;
+        height: 22px;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    .boton-musica.sonando::after {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: 50%;
+        border: 1px solid var(--rosa);
+        animation: latido 2s ease-out infinite;
+    }
+    @keyframes latido {
+        from { transform: scale(1);   opacity: 0.8; }
+        to   { transform: scale(1.6); opacity: 0; }
+    }
+
+    /* ============================================
+       ANIMACION DE ENTRADA AL HACER SCROLL
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transform: scale(0.97);
+        transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    /* ============================================
+       CIELO DE ESTRELLAS (compartido hero / info)
+       ============================================ */
+    .estrellas {
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(1.5px 1.5px at 8% 12%, #fff, transparent),
+            radial-gradient(1px 1px at 22% 30%, #fff, transparent),
+            radial-gradient(2px 2px at 35% 8%, var(--dorado), transparent),
+            radial-gradient(1px 1px at 48% 22%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 63% 14%, #fff, transparent),
+            radial-gradient(1px 1px at 77% 6%, #fff, transparent),
+            radial-gradient(2px 2px at 90% 26%, var(--rosa), transparent),
+            radial-gradient(1px 1px at 14% 58%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 94% 62%, #fff, transparent),
+            radial-gradient(1px 1px at 6% 86%, #fff, transparent),
+            radial-gradient(2px 2px at 28% 94%, var(--dorado), transparent),
+            radial-gradient(1px 1px at 72% 90%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 86% 82%, #fff, transparent);
+        animation: titilar 4s ease-in-out infinite alternate;
+    }
+    .estrellas-2 {
+        background-image:
+            radial-gradient(1px 1px at 16% 20%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 42% 4%, var(--rosa), transparent),
+            radial-gradient(1px 1px at 56% 34%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 84% 16%, #fff, transparent),
+            radial-gradient(1px 1px at 4% 40%, #fff, transparent),
+            radial-gradient(2px 2px at 97% 44%, var(--dorado), transparent),
+            radial-gradient(1px 1px at 20% 74%, #fff, transparent),
+            radial-gradient(1.5px 1.5px at 50% 97%, #fff, transparent),
+            radial-gradient(1px 1px at 80% 72%, #fff, transparent);
+        animation-duration: 3s;
+        animation-delay: -1.5s;
+    }
+    @keyframes titilar {
+        from { opacity: 0.35; }
+        to   { opacity: 1; }
+    }
+
+    /* ============================================
+       HERO (arco dorado + tiara + nombre)
+       ============================================ */
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 40px 24px;
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .arco {
+        position: absolute;
+        top: 84px;
+        bottom: 40px;
+        left: 0;
+        right: 0;
+        width: calc(100% - 40px);
+        max-width: 440px;
+        margin: 0 auto;
+        border: 1px solid var(--dorado);
+        border-radius: 240px 240px 18px 18px;
+        box-shadow: 0 0 30px rgba(226, 194, 125, 0.15), inset 0 0 30px rgba(226, 194, 125, 0.08);
+    }
+    .arco::after {
+        content: "";
+        position: absolute;
+        inset: 8px;
+        border: 1px solid rgba(226, 194, 125, 0.4);
+        border-radius: 232px 232px 12px 12px;
+    }
+    .tiara {
+        position: absolute;
+        top: -46px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 84px;
+        color: var(--dorado);
+        filter: drop-shadow(0 0 6px rgba(226, 194, 125, 0.6));
+        z-index: 1;
+    }
+    .tiara-gema {
+        color: var(--rosa);
+        fill: var(--rosa);
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        padding: 60px 44px;
+    }
+    .eyebrow {
+        font-family: 'Cinzel', serif;
+        font-size: 0.85rem;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--dorado);
+        margin: 10px 0 12px;
+    }
+    .nombres {
+        font-family: 'Great Vibes', cursive;
+        font-weight: 400;
+        font-size: clamp(3.4rem, 14vw, 5.5rem);
+        margin: 0 0 18px;
+        line-height: 1.15;
+        background: var(--degradado);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 0 14px rgba(240, 166, 200, 0.35));
+    }
+    .mensaje {
+        max-width: 320px;
+        margin: 0 auto;
+        font-size: 0.95rem;
+        color: var(--texto-suave);
+    }
+
+    /* ============================================
+       PANTALLA 2: marco decorativo compartido
+       ============================================ */
+    .pantalla-info {
+        position: relative;
+        overflow: hidden;
+        padding: 40px 0;
+    }
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .marco-info {
+        position: absolute;
+        inset: 20px;
+        border: 1px solid rgba(226, 194, 125, 0.45);
+        border-radius: 6px;
+    }
+    .esquina {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--dorado);
+        transform: rotate(45deg);
+        box-shadow: 0 0 8px rgba(226, 194, 125, 0.8);
+    }
+    .esquina-si { top: -5px; left: -5px; }
+    .esquina-sd { top: -5px; right: -5px; }
+    .esquina-ii { bottom: -5px; left: -5px; }
+    .esquina-id { bottom: -5px; right: -5px; }
+    .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+        padding: 0 32px;
+    }
+
+    /* ============================================
+       DETALLES (Dia / Hora)
+       ============================================ */
+    .detalles {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        padding: 30px 0 10px;
+    }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .detalle-label {
+        font-family: 'Cinzel', serif;
+        font-size: 0.8rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--dorado);
+    }
+    .detalle-valor {
+        margin-top: 4px;
+        font-size: 0.95rem;
+        color: var(--texto);
+    }
+    .detalle-divisor {
+        width: 1px;
+        height: 40px;
+        background: var(--degradado);
+    }
+
+    /* ============================================
+       LUGARES (Misa / Recepcion)
+       ============================================ */
+    .lugares {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        gap: 24px;
+        padding: 16px 10px;
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 130px;
+        max-width: 200px;
+    }
+
+    /* ============================================
+       VESTIMENTA
+       ============================================ */
+    .vestimenta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 10px;
+    }
+    .vestimenta-valor {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        max-width: 300px;
+    }
+    .vestimenta-color {
+        flex-shrink: 0;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 1px solid var(--dorado);
+        display: inline-block;
+    }
+
+    /* ============================================
+       COUNTDOWN (tarjetas de vidrio)
+       ============================================ */
+    .countdown {
+        display: flex;
+        justify-content: center;
+        gap: clamp(8px, 3vw, 20px);
+        padding: 24px 0;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: clamp(62px, 18vw, 86px);
+        padding: 14px 0 10px;
+        background: var(--vidrio);
+        border: 1px solid var(--borde-vidrio);
+        border-radius: 12px;
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+    }
+    .countdown span {
+        font-family: 'Cinzel', serif;
+        font-weight: 500;
+        font-size: clamp(1.6rem, 6vw, 2.4rem);
+        color: var(--dorado);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown label {
+        margin-top: 8px;
+        font-size: 0.62rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--rosa);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (botones circulares)
+       ============================================ */
+    .acciones-rapidas {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+        padding: 10px 10px 20px;
+        flex-wrap: wrap;
+    }
+    .accion-icono {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--texto);
+        font-size: 0.72rem;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+    }
+    .icono-circulo {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 1.5px solid var(--dorado);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--dorado);
+        background: var(--vidrio);
+        box-shadow: 0 0 14px rgba(226, 194, 125, 0.25);
+        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .icono-svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+    }
+    .accion-icono:hover .icono-circulo {
+        background: var(--degradado);
+        color: var(--bg);
+        transform: translateY(-3px);
+        box-shadow: 0 0 22px rgba(240, 166, 200, 0.55);
+    }
+
+    /* ============================================
+       PANTALLA EXTRA (Padres / Padrinos / Itinerario / Regalos / Ninos)
+       ============================================ */
+    .pantalla-extra {
+        padding: 60px 24px;
+        gap: 40px;
+        align-items: center;
+    }
+
+    /* --- Padres y padrinos --- */
+    .familia {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        max-width: 340px;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .familia-rol {
+        font-family: 'Cinzel', serif;
+        font-size: 0.75rem;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--dorado);
+    }
+    .familia-nombres {
+        font-size: 0.95rem;
+        color: var(--texto);
+    }
+
+    /* --- Itinerario (linea de tiempo) --- */
+    .itinerario {
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+    }
+    .itinerario h3 {
+        font-family: 'Great Vibes', cursive;
+        font-weight: 400;
+        font-size: 2.6rem;
+        margin: 0 0 18px;
+        color: var(--rosa);
+    }
+    .itinerario-item {
+        position: relative;
+        display: flex;
+        gap: 18px;
+        padding: 0 0 18px 26px;
+        text-align: left;
+        border-left: 1px solid var(--borde-vidrio);
+        margin-left: 8px;
+    }
+    .itinerario-item:last-child {
+        border-left-color: transparent;
+        padding-bottom: 0;
+    }
+    .itinerario-item::before {
+        content: "";
+        position: absolute;
+        left: -6px;
+        top: 5px;
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: var(--degradado);
+        box-shadow: 0 0 10px rgba(240, 166, 200, 0.7);
+    }
+    .itinerario-hora {
+        font-family: 'Cinzel', serif;
+        font-size: 0.85rem;
+        color: var(--dorado);
+        white-space: nowrap;
+        min-width: 72px;
+    }
+    .itinerario-evento {
+        font-size: 0.9rem;
+    }
+
+    /* --- Mesa de regalos --- */
+    .boton-mesa-regalos {
+        display: inline-block;
+        padding: 14px 34px;
+        border-radius: 30px;
+        background: var(--degradado);
+        color: var(--bg);
+        font-weight: 500;
+        text-decoration: none;
+        font-size: 0.8rem;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        box-shadow: 0 0 20px rgba(240, 166, 200, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .boton-mesa-regalos:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 28px rgba(240, 166, 200, 0.6);
+    }
+
+    /* --- Nota de ninos --- */
+    .nota-ninos {
+        font-size: 0.85rem;
+        color: var(--texto-suave);
+        font-style: italic;
+        max-width: 300px;
+        margin: 0 auto;
+    }
+
+    /* ============================================
+       GALERIA
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        align-content: center;
+        gap: 12px;
+        padding: 40px 24px 60px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .galeria img {
+        width: 100%;
+        height: 220px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--borde-vidrio);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ============================================
+       RSVP
+       ============================================ */
+    .rsvp {
+        padding: 70px 24px;
+    }
+    .rsvp::before {
+        content: "✦";
+        display: block;
+        font-size: 1.6rem;
+        color: var(--dorado);
+        margin-bottom: 6px;
+        text-shadow: 0 0 12px rgba(226, 194, 125, 0.8);
+    }
+    .rsvp h2 {
+        font-family: 'Great Vibes', cursive;
+        font-weight: 400;
+        font-size: 2.8rem;
+        margin: 0 0 6px;
+        color: var(--rosa);
+    }
+    .rsvp p {
+        color: var(--texto-suave);
+    }
+    #total-confirmados {
+        font-family: 'Cinzel', serif;
+        color: var(--dorado);
+        font-weight: 600;
+    }
+    .fecha-limite {
+        font-size: 0.8rem;
+        font-style: italic;
+    }
+
+    /* --- Formulario --- */
+    #form-rsvp {
+        background: var(--vidrio);
+        border: 1px solid var(--borde-vidrio);
+        width: 100%;
+        max-width: 420px;
+        margin: 26px auto 0;
+        padding: 30px 24px;
+        border-radius: 16px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    #form-rsvp input,
+    #form-rsvp textarea {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 0.95rem;
+        padding: 12px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--texto);
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #form-rsvp input::placeholder,
+    #form-rsvp textarea::placeholder {
+        color: var(--texto-suave);
+        opacity: 0.7;
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--rosa);
+        box-shadow: 0 0 0 3px rgba(240, 166, 200, 0.2);
+    }
+    #form-rsvp textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    #form-rsvp button {
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        padding: 15px;
+        border: none;
+        border-radius: 30px;
+        background: var(--degradado);
+        color: var(--bg);
+        cursor: pointer;
+        box-shadow: 0 0 20px rgba(240, 166, 200, 0.4);
+        transition: transform 0.15s ease, box-shadow 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 28px rgba(240, 166, 200, 0.6);
+    }
+
+    /* --- Botones tipo pildora (Si / No / Tal vez) --- */
+    .opciones-asistencia {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        flex: 1;
+        min-width: 90px;
+        text-align: center;
+        padding: 10px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 30px;
+        font-size: 0.85rem;
+        color: var(--texto);
+        background: rgba(0, 0, 0, 0.25);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--degradado);
+        border-color: transparent;
+        color: var(--bg);
+        font-weight: 500;
+    }
+
+    /* --- Campo con label visible (acompanantes) --- */
+    .campo-con-label {
+        text-align: left;
+    }
+    .campo-con-label label {
+        display: block;
+        font-size: 0.8rem;
+        color: var(--texto-suave);
+        margin-bottom: 6px;
+    }
+    .campo-con-label input {
+        width: 100%;
+    }
+
+    #rsvp-status {
+        margin-top: 16px;
+        color: var(--dorado);
+        font-size: 0.9rem;
+    }
+
+    /* ============================================
+       ACCESIBILIDAD: menos movimiento
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        .estrellas,
+        .boton-musica.sonando::after {
+            animation: none;
+        }
+        .animar-entrada {
+            transition: none;
+        }
+    }
+</style>
+{% endblock %}

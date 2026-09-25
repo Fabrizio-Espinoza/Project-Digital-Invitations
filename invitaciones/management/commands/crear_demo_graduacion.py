@@ -8,7 +8,7 @@ from invitaciones.models import Invitacion, Plantilla
 
 class Command(BaseCommand):
     """
-    Crea (o actualiza) la plantilla "Medianoche Dorada" y una invitación de
+    Crea (o actualiza) la plantilla "Laurel de Oro" y una invitación de
     graduación de ejemplo, para ver el diseño sin capturar nada en el admin.
 
         python manage.py crear_demo_graduacion
@@ -23,7 +23,8 @@ class Command(BaseCommand):
         plantilla, _ = Plantilla.objects.update_or_create(
             slug_tema="graduacion-editorial-01",
             defaults={
-                "nombre": "Medianoche Dorada",
+                "nombre": "Laurel de Oro",
+                "color_tema": "#0B1424",
                 "tipo_evento": "graduacion",
                 "soporta_rsvp": True,
                 "soporta_musica": True,
@@ -48,10 +49,10 @@ class Command(BaseCommand):
                     "carrera": "Licenciatura en Arquitectura",
                     "institucion": "Universidad Iberoamericana",
                     "generacion": "2022 — 2026",
-                    "lugar_ceremonia_label": "Ceremonia",
+                    "lugar_ceremonia_etiqueta": "Ceremonia",
                     "lugar_ceremonia_nombre": "Auditorio Sor Juana",
                     "lugar_ceremonia_mapa_url": "https://maps.google.com/?q=Universidad+Iberoamericana+CDMX",
-                    "lugar_recepcion_label": "Celebración",
+                    "lugar_recepcion_etiqueta": "Celebración",
                     "lugar_recepcion_nombre": "Terraza Polanco",
                     "lugar_recepcion_mapa_url": "https://maps.google.com/?q=Polanco+CDMX",
                     "dresscode": "Formal · Etiqueta",
@@ -62,7 +63,7 @@ class Command(BaseCommand):
                         {"hora": "8:30 PM", "evento": "Cena"},
                         {"hora": "10:00 PM", "evento": "¡A bailar!"},
                     ],
-                    "mesa_regalos_label": "Lluvia de sobres",
+                    "mesa_regalos_etiqueta": "Lluvia de sobres",
                     "mesa_regalos_url": "https://www.liverpool.com.mx/tienda/mesa-de-regalos",
                 },
             },
