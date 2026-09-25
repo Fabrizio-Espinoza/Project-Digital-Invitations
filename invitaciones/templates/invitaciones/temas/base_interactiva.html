@@ -19,9 +19,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ invitacion.titulo_evento }}</title>
 
-    <!-- PWA: esto es lo que permite "instalar" la invitación como app -->
-    <link rel="manifest" href="/static/manifest.json">
-    <meta name="theme-color" content="#000000">
+    <!-- PWA: esto es lo que permite "instalar" la invitación como app.
+         El manifest se genera por invitación (nombre, ícono y colores propios). -->
+    <link rel="manifest" href="{% url 'invitaciones:manifest' invitacion.slug %}">
+    <meta name="theme-color" content="{{ plantilla.color_tema }}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ iconos_pwa.192 }}">
+    <!-- iPhone no lee los íconos del manifest: usa estas etiquetas propias de Apple -->
+    <link rel="apple-touch-icon" href="{{ iconos_pwa.180 }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ invitacion.anfitriones }}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     {% block estilos %}
     <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
@@ -35,6 +43,7 @@
         </div>
         <div class="hero-contenido">
             <p class="eyebrow">
+                {% block eyebrow %}
                 {% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}
                 {% elif plantilla.tipo_evento == "boda" %}¡Nos casamos!
                 {% elif plantilla.tipo_evento == "xv" %}¡Es mi fiesta!
@@ -42,12 +51,17 @@
                 {% elif plantilla.tipo_evento == "fiesta" %}¡Hay fiesta!
                 {% else %}Estás invitado
                 {% endif %}
+                {% endblock %}
             </p>
 
             <h1 class="nombres">{{ invitacion.anfitriones }}</h1>
             {% if invitacion.mensaje_bienvenida %}
             <p class="mensaje">{{ invitacion.mensaje_bienvenida }}</p>
             {% endif %}
+
+            {% block hero_extra %}
+            <!-- datos propios del tipo de evento (ej. carrera/generación en graduación) -->
+            {% endblock %}
         </div>
     </section>
 
@@ -72,13 +86,13 @@
             <section class="lugares">
                 {% if invitacion.contenido_extra.lugar_ceremonia_nombre %}
                 <div class="lugar-item">
-                    <span class="detalle-label">Ceremonia</span>
+                    <span class="detalle-label">{{ invitacion.contenido_extra.lugar_ceremonia_etiqueta|default:"Ceremonia" }}</span>
                     <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_ceremonia_nombre }}</span>
                 </div>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_recepcion_nombre %}
                 <div class="lugar-item">
-                    <span class="detalle-label">Recepción</span>
+                    <span class="detalle-label">{{ invitacion.contenido_extra.lugar_recepcion_etiqueta|default:"Recepción" }}</span>
                     <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_recepcion_nombre }}</span>
                 </div>
                 {% endif %}
@@ -116,25 +130,25 @@
             <section class="acciones-rapidas">
                 {% if mostrar_rsvp %}
                 <a href="#rsvp" class="accion-icono">
-                    <span class="icono-circulo">✓</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
                     <span>Confirmar</span>
                 </a>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_ceremonia_mapa_url %}
                 <a href="{{ invitacion.contenido_extra.lugar_ceremonia_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
-                    <span>Ceremonia</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                    <span>{{ invitacion.contenido_extra.lugar_ceremonia_etiqueta|default:"Ceremonia" }}</span>
                 </a>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_recepcion_mapa_url %}
                 <a href="{{ invitacion.contenido_extra.lugar_recepcion_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
-                    <span>Recepción</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                    <span>{{ invitacion.contenido_extra.lugar_recepcion_etiqueta|default:"Recepción" }}</span>
                 </a>
                 {% endif %}
                 {% if invitacion.lugar_mapa_url and not invitacion.contenido_extra.lugar_ceremonia_mapa_url and not invitacion.contenido_extra.lugar_recepcion_mapa_url %}
                 <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
                     <span>Ubicación</span>
                 </a>
                 {% endif %}
@@ -142,8 +156,25 @@
         </div>
     </div>
 
-    {% if invitacion.contenido_extra.itinerario or invitacion.contenido_extra.mesa_regalos_url or invitacion.contenido_extra.admite_ninos is not None %}
+    {% if invitacion.contenido_extra.padres or invitacion.contenido_extra.padrinos or invitacion.contenido_extra.itinerario or invitacion.contenido_extra.mesa_regalos_url or invitacion.contenido_extra.admite_ninos is not None %}
     <section class="pantalla-extra animar-entrada">
+        {% if invitacion.contenido_extra.padres or invitacion.contenido_extra.padrinos %}
+        <div class="familia">
+            {% if invitacion.contenido_extra.padres %}
+            <div class="familia-grupo">
+                <span class="familia-rol">{{ invitacion.contenido_extra.padres_etiqueta|default:"Con la bendición de mis padres" }}</span>
+                <span class="familia-nombres">{{ invitacion.contenido_extra.padres }}</span>
+            </div>
+            {% endif %}
+            {% for padrino in invitacion.contenido_extra.padrinos %}
+            <div class="familia-grupo">
+                <span class="familia-rol">{{ padrino.rol }}</span>
+                <span class="familia-nombres">{{ padrino.nombres }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {% if invitacion.contenido_extra.itinerario %}
         <div class="itinerario">
             <h3>Itinerario</h3>
@@ -158,7 +189,7 @@
 
         {% if invitacion.contenido_extra.mesa_regalos_url %}
         <a href="{{ invitacion.contenido_extra.mesa_regalos_url }}" target="_blank" rel="noopener" class="boton-mesa-regalos">
-            Mesa de regalos
+            {{ invitacion.contenido_extra.mesa_regalos_etiqueta|default:"Mesa de regalos" }}
         </a>
         {% endif %}
 
@@ -180,7 +211,10 @@
 
     {% if mostrar_musica and invitacion.musica_url %}
 <audio id="musica-fondo" loop src="{{ invitacion.musica_url }}"></audio>
-<button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">🎵</button>
+<button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">
+    <svg class="icono-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
+    <svg class="icono-pausa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+</button>
 {% endif %}
 
     {% if mostrar_rsvp %}
@@ -239,19 +273,19 @@
             });
         });
 
-        {% if mostrar_musica and invitacion.musica_url %}
         // --- Música: el navegador bloquea el autoplay, así que esperamos
         // un clic real del usuario antes de reproducir. Cada clic alterna
-        // entre reproducir y pausar. El listener se registra UNA sola vez
-        // (antes vivía dentro del countdown y se duplicaba cada segundo).
-        // La clase "sonando" en el botón deja que cada plantilla lo anime
-        // con CSS (ej. un vinil que gira) sin tocar este JS.
+        // entre reproducir y pausar; la clase "sonando" le dice al CSS
+        // qué ícono mostrar (nota musical o pausa) o qué animar (ej. un
+        // vinil que gira). El estado se lee del propio <audio> (eventos
+        // play/pause), así el botón nunca se desfasa si el navegador
+        // rechaza el play().
+        {% if mostrar_musica and invitacion.musica_url %}
         const musica = document.getElementById('musica-fondo');
         const botonMusica = document.getElementById('boton-musica');
 
         function pintarBotonMusica() {
             const sonando = !musica.paused;
-            botonMusica.textContent = sonando ? '⏸' : '🎵';
             botonMusica.classList.toggle('sonando', sonando);
             botonMusica.setAttribute('aria-label', sonando ? 'Pausar música' : 'Reproducir música');
         }
@@ -283,6 +317,7 @@
         }
         setInterval(actualizarCountdown, 1000);
         actualizarCountdown();
+
 
         // --- Animación de entrada al hacer scroll (sin librerías) ---
         const observador = new IntersectionObserver((entradas) => {
@@ -352,6 +387,18 @@
             });
         });
         {% endif %}
+
+        // --- PWA: registrar el service worker ---
+        // Solo funciona en HTTPS (o en localhost). Por WiFi local con
+        // http://<ip>:8000 el navegador simplemente no lo registra, y la
+        // invitación sigue funcionando normal, solo sin modo offline.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker
+                    .register("{% url 'invitaciones:service_worker' %}")
+                    .catch(err => console.error('No se pudo registrar el service worker:', err));
+            });
+        }
     </script>
 
     {% block scripts_tema %}

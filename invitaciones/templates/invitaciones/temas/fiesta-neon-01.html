@@ -784,6 +784,12 @@
         color: var(--lima);
         font-size: 0.85rem;
     }
+    .icono-svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+        stroke-width: 2.4;
+    }
 
     /* ============================================
        PANTALLA EXTRA: "el plan" en formato line-up
@@ -1242,6 +1248,11 @@
     }
     .boton-musica.sonando::after {
         animation: girar 2.4s linear infinite;
+    }
+    /* El motor trae íconos SVG (nota / pausa); en el vinil se usan los
+       símbolos ▶ / ❚❚ del ::before, así que los del motor se ocultan */
+    .boton-musica svg {
+        display: none;
     }
     .boton-musica::before {
         content: "▶";
