@@ -35,9 +35,11 @@
         </div>
         <div class="hero-contenido">
             <p class="eyebrow">
-                {% if plantilla.tipo_evento == "boda" %}¡Nos casamos!
+                {% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}
+                {% elif plantilla.tipo_evento == "boda" %}¡Nos casamos!
                 {% elif plantilla.tipo_evento == "xv" %}¡Es mi fiesta!
                 {% elif plantilla.tipo_evento == "graduacion" %}¡Lo logré!
+                {% elif plantilla.tipo_evento == "fiesta" %}¡Hay fiesta!
                 {% else %}Estás invitado
                 {% endif %}
             </p>
@@ -81,6 +83,15 @@
                 </div>
                 {% endif %}
             </section>
+            {% elif invitacion.lugar_nombre %}
+            <!-- Evento de un solo lugar (fiestas, eventos): usa las columnas
+                 lugar_nombre / lugar_mapa_url del modelo en vez del JSON -->
+            <section class="lugares">
+                <div class="lugar-item">
+                    <span class="detalle-label">Lugar</span>
+                    <span class="detalle-valor">{{ invitacion.lugar_nombre }}</span>
+                </div>
+            </section>
             {% endif %}
 
             {% if invitacion.contenido_extra.dresscode %}
@@ -119,6 +130,12 @@
                 <a href="{{ invitacion.contenido_extra.lugar_recepcion_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
                     <span class="icono-circulo">📍</span>
                     <span>Recepción</span>
+                </a>
+                {% endif %}
+                {% if invitacion.lugar_mapa_url and not invitacion.contenido_extra.lugar_ceremonia_mapa_url and not invitacion.contenido_extra.lugar_recepcion_mapa_url %}
+                <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
+                    <span class="icono-circulo">📍</span>
+                    <span>Ubicación</span>
                 </a>
                 {% endif %}
             </section>
@@ -222,28 +239,37 @@
             });
         });
 
+        {% if mostrar_musica and invitacion.musica_url %}
+        // --- Música: el navegador bloquea el autoplay, así que esperamos
+        // un clic real del usuario antes de reproducir. Cada clic alterna
+        // entre reproducir y pausar. El listener se registra UNA sola vez
+        // (antes vivía dentro del countdown y se duplicaba cada segundo).
+        // La clase "sonando" en el botón deja que cada plantilla lo anime
+        // con CSS (ej. un vinil que gira) sin tocar este JS.
+        const musica = document.getElementById('musica-fondo');
+        const botonMusica = document.getElementById('boton-musica');
+
+        function pintarBotonMusica() {
+            const sonando = !musica.paused;
+            botonMusica.textContent = sonando ? '⏸' : '🎵';
+            botonMusica.classList.toggle('sonando', sonando);
+            botonMusica.setAttribute('aria-label', sonando ? 'Pausar música' : 'Reproducir música');
+        }
+
+        botonMusica.addEventListener('click', () => {
+            if (musica.paused) {
+                musica.play().catch(err => console.error('No se pudo reproducir la música:', err));
+            } else {
+                musica.pause();
+            }
+        });
+        musica.addEventListener('play', pintarBotonMusica);
+        musica.addEventListener('pause', pintarBotonMusica);
+        {% endif %}
+
         // --- Countdown ---
         const fechaEvento = new Date(document.getElementById('countdown').dataset.fecha);
         function actualizarCountdown() {
-            // --- Música: el navegador bloquea el autoplay, así que esperamos
-// un clic real del usuario antes de reproducir. Cada clic alterna
-// entre reproducir y pausar (por eso la variable "sonando").
-{% if mostrar_musica and invitacion.musica_url %}
-const musica = document.getElementById('musica-fondo');
-const botonMusica = document.getElementById('boton-musica');
-let sonando = false;
-
-botonMusica.addEventListener('click', () => {
-    if (sonando) {
-        musica.pause();
-        botonMusica.textContent = '🎵';
-    } else {
-        musica.play();
-        botonMusica.textContent = '⏸';
-    }
-    sonando = !sonando;
-});
-{% endif %}
             const diff = fechaEvento - new Date();
             if (diff <= 0) return;
             const dias = Math.floor(diff / 86400000);
@@ -313,6 +339,12 @@ botonMusica.addEventListener('click', () => {
                 document.getElementById('rsvp-status').textContent = '¡Gracias por confirmar!';
                 document.getElementById('total-confirmados').textContent = data.total_confirmados;
                 e.target.reset();
+                // Aviso para las plantillas: cada tema puede reaccionar a una
+                // confirmación exitosa (confeti, vibración, etc.) escuchando
+                // este evento, sin reescribir el envío del RSVP.
+                document.dispatchEvent(new CustomEvent('rsvp:enviado', {
+                    detail: { asistencia: payload.asistencia, total_confirmados: data.total_confirmados },
+                }));
             })
             .catch(err => {
                 console.error('Error al enviar RSVP:', err);
@@ -321,5 +353,10 @@ botonMusica.addEventListener('click', () => {
         });
         {% endif %}
     </script>
+
+    {% block scripts_tema %}
+    <!-- JS decorativo propio de cada plantilla (ej. confeti). La lógica
+         del RSVP/countdown NO va aquí: vive arriba, una sola vez. -->
+    {% endblock %}
 </body>
 </html>
