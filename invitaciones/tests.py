@@ -186,3 +186,10 @@ class DemoFiestaTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Cumpleaños #30")
         self.assertContains(respuesta, "/static/invitaciones/pwa/fiesta-neon-01-180.png")
+
+
+class DemoXVTests(TestCase):
+    def test_crear_demo_xv_usa_la_hora_local(self):
+        call_command("crear_demo_xv", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-xv-valentina")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 19)

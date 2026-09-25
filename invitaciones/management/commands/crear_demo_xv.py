@@ -23,7 +23,9 @@ class Command(BaseCommand):
             defaults={"nombre": "Medianoche Dorada", "tipo_evento": "xv", "color_tema": "#120E24"},
         )
 
-        fecha = (timezone.now() + timedelta(days=60)).replace(hour=19, minute=0, second=0, microsecond=0)
+        # localtime (no now): now() viene en UTC, y "19:00 UTC" se mostraba
+        # como 1:00 PM en México. Con localtime las 7:00 PM son hora local.
+        fecha = (timezone.localtime() + timedelta(days=60)).replace(hour=19, minute=0, second=0, microsecond=0)
 
         invitacion, creada = Invitacion.objects.update_or_create(
             slug="demo-xv-valentina",
