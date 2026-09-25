@@ -132,7 +132,7 @@ Terminado:
 • Motor Django completo (modelos, admin, vistas, urls) funcionando de punta a punta.
 • Primera plantilla de boda ("Terracota Velada") con diseño floral real, tipografía script + serif, scroll tipo pantalla-por-pantalla, RSVP en vivo, countdown, botones de ubicación (ceremonia/recepción separadas), vestimenta con color, itinerario, mesa de regalos, nota de niños, música con botón de reproducción manual.
 • Probado end-to-end en compu y en iPhone real (por WiFi local).
-• Segunda plantilla: baby shower "Diez Lunas" (ver sección 7), con votación en vivo, calendario .ics y demo creada por comando.
+• Plantilla de baby shower "Diez Lunas" (ver sección 7), con votación en vivo, calendario .ics y demo creada por comando; integrada con XV, graduación, fiesta y la PWA.
 Pendiente dentro de Fase 1:
 • Estilizar en la plantilla de boda las secciones nuevas del motor (regalos con lista, lluvia de sobres) si algún cliente de boda las pide; la votación no aparece ahí porque soporta_votacion=False.
 • Revelar el resultado de la votación desde un botón del admin en vez de editar el JSON (hoy: "resultado": "nina" dentro de "votacion").
@@ -152,10 +152,10 @@ Pantallas (cada una aparece solo si hay datos):
 6. Lluvia de pañales — tabla de tallas por inicial del apellido + buscador "¿Cuál me toca?".
 7. Galería (polaroids) y RSVP (el mensaje se pide como "deseo o consejo para el bebé").
 Motor (sirve para cualquier plantilla futura):
-• Modelo Voto + Plantilla.soporta_votacion (default False). Endpoints: <slug>/votar/, <slug>/votar/conteo/.
-• <slug>/calendario.ics — botón "Agendar" en todas las plantillas (recordatorio 1 día antes, duración 4 h).
+• Modelo Voto + Plantilla.soporta_votacion (default False), migración 0003. Endpoints: <slug>/votar/, <slug>/votar/conteo/ (excluidos de la caché del service worker, igual que /rsvp/).
+• <slug>/calendario.ics — botón "Agendar" (ícono SVG) en todas las plantillas (recordatorio 1 día antes, duración 4 h). Con 4 botones, boda/XV/graduación los acomodan 2 × 2 en celular.
 • Evento con un solo lugar: usa las columnas lugar_nombre / lugar_mapa_url (antes no se mostraban).
-• Bloque theme_color para el color de la barra del navegador.
+• Bloque theme_color: por defecto usa plantilla.color_tema; Diez Lunas lo cambia según la paleta. Ícono de app propio en static/invitaciones/pwa/baby-shower-lunas-01-*.png.
 Claves de contenido_extra (todas opcionales):
 • fecha_probable_parto: "2027-02-06" (activa "Dulce espera")
 • bebe_nombre: "Emilia" (si no hay, dice "al bebé")

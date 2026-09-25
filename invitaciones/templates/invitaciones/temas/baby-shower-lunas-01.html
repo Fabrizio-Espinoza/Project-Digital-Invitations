@@ -718,6 +718,11 @@
         color: var(--acento-fuerte);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+    .icono-svg {
+        display: block;
+        width: 22px;
+        height: 22px;
+    }
     .accion-icono:hover .icono-circulo,
     .accion-icono:active .icono-circulo {
         transform: translateY(-3px);
@@ -1381,9 +1386,29 @@
         border-radius: 50%;
         background: var(--noche);
         box-shadow: 0 8px 20px rgba(46, 53, 88, 0.3);
-        font-size: 1.2rem;
+        padding: 0;
         color: var(--luna);
         cursor: pointer;
+    }
+    .boton-musica svg {
+        width: 22px;
+        height: 22px;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    /* mientras suena, un halo de luz de luna "respira" alrededor del botón */
+    .boton-musica.sonando::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        border: 1.5px solid var(--luna);
+        animation: halo-musica 2.2s ease-out infinite;
     }
 
     /* ============================================
@@ -1439,6 +1464,10 @@
     @keyframes latido {
         0%, 100% { transform: scale(1); filter: drop-shadow(0 0 6px rgba(242, 212, 138, 0.35)); }
         50% { transform: scale(1.1); filter: drop-shadow(0 0 14px rgba(242, 212, 138, 0.8)); }
+    }
+    @keyframes halo-musica {
+        from { transform: scale(1); opacity: 0.8; }
+        to { transform: scale(1.6); opacity: 0; }
     }
     @keyframes aparecer {
         from { opacity: 0; transform: scale(0.6); }

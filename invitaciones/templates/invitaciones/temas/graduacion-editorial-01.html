@@ -1,0 +1,1091 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  Plantilla "Laurel de Oro" — graduación.
+  Estilo opuesto a la boda: fondo azul medianoche, oro tipo foil y tipografía
+  editorial de alto contraste (Bodoni Moda + Manrope), inspirada en títulos
+  universitarios y papelería impresa con hot-stamping.
+
+  Toda la decoración es SVG/CSS dibujado a mano aquí mismo (laurel, birrete,
+  marco): cero imágenes externas, cero dudas de licencia comercial.
+
+  Claves opcionales de contenido_extra que usa este tema (además de las del motor):
+    carrera      -> "Licenciatura en Arquitectura"
+    institucion  -> "Universidad Iberoamericana"
+    generacion   -> "2022 — 2026"
+{% endcomment %}
+
+{% block eyebrow %}¡Lo logré!{% endblock %}
+
+{% block decoracion_superior %}
+<!-- Corona de laurel reutilizable: se define una vez como <symbol> y se usa con <use> -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+        <linearGradient id="oro-foil" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8E6A2B"/>
+            <stop offset="0.45" stop-color="#F3DFA2"/>
+            <stop offset="0.7" stop-color="#C9A45C"/>
+            <stop offset="1" stop-color="#8E6A2B"/>
+        </linearGradient>
+        <symbol id="rama-laurel" viewBox="0 0 110 200">
+            <path d="M100 192 Q6 118 72 12" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <ellipse cx="73.4" cy="178.8" rx="12.6" ry="4.9" transform="rotate(-174.7 73.4 178.8)"/>
+            <ellipse cx="84.1" cy="167.5" rx="12.6" ry="4.9" transform="rotate(-98.7 84.1 167.5)"/>
+            <ellipse cx="58.6" cy="160.3" rx="12.1" ry="4.7" transform="rotate(-166.7 58.6 160.3)"/>
+            <ellipse cx="70.2" cy="151.0" rx="12.1" ry="4.7" transform="rotate(-90.7 70.2 151.0)"/>
+            <ellipse cx="47.7" cy="141.1" rx="11.7" ry="4.5" transform="rotate(-157.3 47.7 141.1)"/>
+            <ellipse cx="60.2" cy="134.0" rx="11.7" ry="4.5" transform="rotate(-81.3 60.2 134.0)"/>
+            <ellipse cx="40.9" cy="121.1" rx="11.2" ry="4.3" transform="rotate(-146.8 40.9 121.1)"/>
+            <ellipse cx="53.9" cy="116.7" rx="11.2" ry="4.3" transform="rotate(-70.8 53.9 116.7)"/>
+            <ellipse cx="38.1" cy="100.8" rx="10.7" ry="4.1" transform="rotate(-135.8 38.1 100.8)"/>
+            <ellipse cx="51.1" cy="99.0" rx="10.7" ry="4.1" transform="rotate(-59.8 51.1 99.0)"/>
+            <ellipse cx="39.1" cy="80.1" rx="10.2" ry="3.9" transform="rotate(-125.1 39.1 80.1)"/>
+            <ellipse cx="51.6" cy="80.7" rx="10.2" ry="3.9" transform="rotate(-49.1 51.6 80.7)"/>
+            <ellipse cx="43.7" cy="59.1" rx="9.7" ry="3.7" transform="rotate(-115.2 43.7 59.1)"/>
+            <ellipse cx="55.3" cy="61.7" rx="9.7" ry="3.7" transform="rotate(-39.2 55.3 61.7)"/>
+            <ellipse cx="51.7" cy="37.8" rx="9.2" ry="3.5" transform="rotate(-106.7 51.7 37.8)"/>
+            <ellipse cx="62.3" cy="41.9" rx="9.2" ry="3.5" transform="rotate(-30.7 62.3 41.9)"/>
+            <ellipse cx="63.2" cy="16.0" rx="8.7" ry="3.4" transform="rotate(-99.5 63.2 16.0)"/>
+            <ellipse cx="72.7" cy="21.1" rx="8.7" ry="3.4" transform="rotate(-23.5 72.7 21.1)"/>
+            <ellipse cx="72.0" cy="7.0" rx="3.2" ry="8" transform="rotate(31.9 72.0 12.0)"/>
+        </symbol>
+        <symbol id="corona-laurel" viewBox="0 0 220 200">
+            <use href="#rama-laurel" x="0" y="0" width="110" height="200"/>
+            <g transform="translate(220 0) scale(-1 1)">
+                <use href="#rama-laurel" x="0" y="0" width="110" height="200"/>
+            </g>
+        </symbol>
+    </defs>
+</svg>
+
+<!-- Año gigante calado de fondo (sale solo de la fecha del evento) -->
+<span class="anio-fondo" aria-hidden="true">{{ invitacion.fecha_evento|date:"Y" }}</span>
+
+<!-- Marco doble tipo diploma con esquinas -->
+<div class="marco-diploma">
+    <span class="esquina esquina-si"></span>
+    <span class="esquina esquina-sd"></span>
+    <span class="esquina esquina-ii"></span>
+    <span class="esquina esquina-id"></span>
+</div>
+
+<!-- Polvo dorado flotando (puro CSS) -->
+<div class="polvo-dorado" aria-hidden="true">
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+</div>
+
+<div class="indicador-scroll" aria-hidden="true">
+    <span>Desliza</span>
+    <i></i>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<div class="hero-emblema" aria-hidden="true">
+    <svg class="corona" viewBox="0 0 220 200"><use href="#corona-laurel"/></svg>
+    <svg class="birrete" viewBox="0 0 64 52">
+        <polygon points="32,4 62,17 32,30 2,17"/>
+        <path d="M14 22.5 V33 C14 38.5 22 42.5 32 42.5 S50 38.5 50 33 V22.5 L32 30.3 Z"/>
+        <path d="M32 17 L54 22 V36" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <path d="M51.5 35 h5 l1.5 11 h-8 z"/>
+    </svg>
+</div>
+
+{% if invitacion.contenido_extra.carrera or invitacion.contenido_extra.institucion %}
+<div class="hero-titulo-academico">
+    {% if invitacion.contenido_extra.carrera %}
+    <p class="carrera">{{ invitacion.contenido_extra.carrera }}</p>
+    {% endif %}
+    {% if invitacion.contenido_extra.institucion %}
+    <p class="institucion">{{ invitacion.contenido_extra.institucion }}</p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if invitacion.contenido_extra.generacion %}
+<p class="sello-generacion">
+    <span>Generación</span>
+    <strong>{{ invitacion.contenido_extra.generacion }}</strong>
+</p>
+{% endif %}
+{% endblock %}
+
+{% block decoracion_info %}
+<svg class="laurel-marca-agua" viewBox="0 0 220 200" aria-hidden="true"><use href="#corona-laurel"/></svg>
+<div class="marco-hairline"></div>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<footer class="pie-grad">
+    <svg class="pie-birrete" viewBox="0 0 64 52" aria-hidden="true">
+        <polygon points="32,4 62,17 32,30 2,17"/>
+        <path d="M14 22.5 V33 C14 38.5 22 42.5 32 42.5 S50 38.5 50 33 V22.5 L32 30.3 Z"/>
+    </svg>
+    <p>{{ invitacion.anfitriones }} · {{ invitacion.fecha_evento|date:"Y" }}</p>
+</footer>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..600&family=Manrope:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES DE COLOR
+       ============================================ */
+    :root {
+        --noche: #0B1424;          /* fondo principal */
+        --noche-2: #13213A;        /* tarjetas / capas sobre la noche */
+        --marfil: #F4EEE1;         /* fondo claro de las pantallas alternas */
+        --tinta: #16202F;          /* texto sobre marfil */
+        --oro: #C9A45C;
+        --oro-claro: #EAD49A;
+        --oro-oscuro: #8E6A2B;
+        --texto-suave: rgba(244, 238, 225, 0.72);
+        --linea-oro: rgba(201, 164, 92, 0.35);
+        --foil: linear-gradient(115deg, #8E6A2B 0%, #D9B872 22%, #F6E7B8 42%, #C9A45C 60%, #9C7632 80%, #E3C987 100%);
+        --serif: 'Bodoni Moda', 'Didot', 'Times New Roman', serif;
+        --sans: 'Manrope', system-ui, sans-serif;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--noche);
+    }
+    body {
+        margin: 0;
+        background: var(--noche);
+        color: var(--marfil);
+        font-family: var(--sans);
+        font-weight: 400;
+        text-align: center;
+        line-height: 1.6;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+    ::selection {
+        background: var(--oro);
+        color: var(--noche);
+    }
+
+    /* ============================================
+       SCROLL TIPO "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (flotante)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        z-index: 10;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid var(--oro-claro);
+        background: var(--foil);
+        color: var(--noche);
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .boton-musica svg {
+        width: 20px;
+        height: 20px;
+        stroke-width: 2;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    .boton-musica.sonando {
+        animation: pulso-oro 2.4s ease-out infinite;
+    }
+    @keyframes pulso-oro {
+        0%   { box-shadow: 0 0 0 0 rgba(234, 212, 154, 0.55), 0 6px 20px rgba(0,0,0,.45); }
+        100% { box-shadow: 0 0 0 16px rgba(234, 212, 154, 0), 0 6px 20px rgba(0,0,0,.45); }
+    }
+
+    /* ============================================
+       ANIMACION DE ENTRADA AL HACER SCROLL
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transform: translateY(18px);
+        transition: opacity 0.9s ease, transform 0.9s cubic-bezier(.2,.7,.2,1);
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    /* ============================================
+       HERO (marco diploma + nombre en oro)
+       ============================================ */
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 48px 24px;
+        background:
+            radial-gradient(ellipse 80% 55% at 50% 38%, rgba(201, 164, 92, 0.10), transparent 70%),
+            radial-gradient(ellipse 120% 80% at 50% 120%, #1B2C4B 0%, transparent 60%),
+            var(--noche);
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+
+    /* --- Año calado gigante al fondo --- */
+    .anio-fondo {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--serif);
+        font-weight: 700;
+        font-size: clamp(9rem, 48vw, 22rem);
+        line-height: 1;
+        letter-spacing: -0.02em;
+        color: transparent;
+        -webkit-text-stroke: 1px rgba(201, 164, 92, 0.13);
+        white-space: nowrap;
+        user-select: none;
+    }
+
+    /* --- Marco doble tipo diploma --- */
+    .marco-diploma {
+        position: absolute;
+        inset: 16px;
+        border: 1px solid var(--linea-oro);
+    }
+    .marco-diploma::after {
+        content: "";
+        position: absolute;
+        inset: 6px;
+        border: 1px solid rgba(201, 164, 92, 0.18);
+    }
+    .esquina {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        background: var(--oro);
+        transform: rotate(45deg);
+        box-shadow: 0 0 12px rgba(234, 212, 154, 0.5);
+    }
+    .esquina-si { top: -6px;    left: -6px; }
+    .esquina-sd { top: -6px;    right: -6px; }
+    .esquina-ii { bottom: -6px; left: -6px; }
+    .esquina-id { bottom: -6px; right: -6px; }
+
+    /* --- Polvo dorado flotando --- */
+    .polvo-dorado span {
+        position: absolute;
+        bottom: -10px;
+        width: 3px;
+        height: 3px;
+        border-radius: 50%;
+        background: var(--oro-claro);
+        box-shadow: 0 0 6px var(--oro-claro);
+        opacity: 0;
+        animation: flotar 11s linear infinite;
+    }
+    .polvo-dorado span:nth-child(1)  { left: 6%;  animation-delay: 0s;   animation-duration: 12s; }
+    .polvo-dorado span:nth-child(2)  { left: 14%; animation-delay: 3s;   width: 2px; height: 2px; }
+    .polvo-dorado span:nth-child(3)  { left: 22%; animation-delay: 6s;   animation-duration: 14s; }
+    .polvo-dorado span:nth-child(4)  { left: 29%; animation-delay: 1.5s; width: 4px; height: 4px; }
+    .polvo-dorado span:nth-child(5)  { left: 36%; animation-delay: 8s; }
+    .polvo-dorado span:nth-child(6)  { left: 43%; animation-delay: 4.5s; width: 2px; height: 2px; animation-duration: 13s; }
+    .polvo-dorado span:nth-child(7)  { left: 51%; animation-delay: 9.5s; }
+    .polvo-dorado span:nth-child(8)  { left: 58%; animation-delay: 2s;   animation-duration: 15s; }
+    .polvo-dorado span:nth-child(9)  { left: 64%; animation-delay: 7s;   width: 4px; height: 4px; }
+    .polvo-dorado span:nth-child(10) { left: 71%; animation-delay: 0.8s; width: 2px; height: 2px; }
+    .polvo-dorado span:nth-child(11) { left: 77%; animation-delay: 5.5s; animation-duration: 12.5s; }
+    .polvo-dorado span:nth-child(12) { left: 83%; animation-delay: 10s; }
+    .polvo-dorado span:nth-child(13) { left: 89%; animation-delay: 3.8s; width: 2px; height: 2px; }
+    .polvo-dorado span:nth-child(14) { left: 94%; animation-delay: 6.8s; animation-duration: 14s; }
+    .polvo-dorado span:nth-child(15) { left: 10%; animation-delay: 9s;   width: 2px; height: 2px; }
+    .polvo-dorado span:nth-child(16) { left: 47%; animation-delay: 11s;  width: 4px; height: 4px; }
+    @keyframes flotar {
+        0%   { transform: translate(0, 0);          opacity: 0; }
+        12%  { opacity: 0.9; }
+        70%  { opacity: 0.6; }
+        100% { transform: translate(18px, -92vh);   opacity: 0; }
+    }
+
+    /* --- Indicador "desliza" --- */
+    .indicador-scroll {
+        position: absolute;
+        left: 50%;
+        bottom: 34px;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.62rem;
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .indicador-scroll i {
+        display: block;
+        width: 1px;
+        height: 34px;
+        background: linear-gradient(var(--oro), transparent);
+        animation: gotear 2.2s ease-in-out infinite;
+        transform-origin: top;
+    }
+    @keyframes gotear {
+        0%   { transform: scaleY(0); opacity: 1; }
+        60%  { transform: scaleY(1); opacity: 1; }
+        100% { transform: scaleY(1); opacity: 0; }
+    }
+
+    /* --- Contenido del hero --- */
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 28px 70px;
+    }
+    .eyebrow {
+        order: -1;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 0 0 22px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.42em;
+        text-transform: uppercase;
+        color: var(--oro-claro);
+    }
+    .eyebrow::before,
+    .eyebrow::after {
+        content: "";
+        width: 34px;
+        height: 1px;
+        background: var(--oro);
+        opacity: 0.7;
+    }
+    .nombres {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(2.9rem, 12.5vw, 5.6rem);
+        line-height: 0.98;
+        letter-spacing: -0.01em;
+        margin: 0 0 20px;
+        max-width: 11ch;
+        color: var(--oro-claro);
+        background: var(--foil);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+                background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: brillo-foil 7s ease-in-out infinite alternate;
+        text-wrap: balance;
+    }
+    @keyframes brillo-foil {
+        from { background-position: 0% 50%; }
+        to   { background-position: 100% 50%; }
+    }
+    .mensaje {
+        order: 3;
+        max-width: 340px;
+        margin: 24px auto 0;
+        font-size: 0.92rem;
+        font-weight: 300;
+        color: var(--texto-suave);
+    }
+
+    /* --- Emblema: corona de laurel + birrete --- */
+    .hero-emblema {
+        order: -2;
+        position: relative;
+        width: 108px;
+        height: 98px;
+        margin-bottom: 18px;
+        color: var(--oro);
+    }
+    .hero-emblema .corona {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        fill: var(--oro);
+        opacity: 0.9;
+    }
+    .hero-emblema .birrete {
+        position: absolute;
+        left: 50%;
+        top: 48%;
+        width: 44px;
+        transform: translate(-50%, -50%);
+        fill: url(#oro-foil);
+        color: var(--oro-claro);
+        filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+    }
+
+    /* --- Carrera / institución --- */
+    .hero-titulo-academico {
+        order: 1;
+        max-width: 340px;
+    }
+    .carrera {
+        margin: 0;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1.15rem;
+        color: var(--marfil);
+        line-height: 1.35;
+    }
+    .institucion {
+        margin: 8px 0 0;
+        font-size: 0.68rem;
+        font-weight: 500;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--texto-suave);
+    }
+
+    /* --- Sello de generación --- */
+    .sello-generacion {
+        order: 2;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 22px 0 0;
+        padding: 8px 18px;
+        border: 1px solid var(--linea-oro);
+        border-radius: 999px;
+        font-size: 0.66rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .sello-generacion strong {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        color: var(--oro-claro);
+    }
+
+    /* ============================================
+       PANTALLA 2: INFO (marfil, contraste editorial)
+       ============================================ */
+    .pantalla-info {
+        position: relative;
+        overflow: hidden;
+        background: var(--marfil);
+        color: var(--tinta);
+    }
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .marco-hairline {
+        position: absolute;
+        inset: 16px;
+        border: 1px solid rgba(142, 106, 43, 0.28);
+    }
+    .laurel-marca-agua {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: min(88vw, 480px);
+        transform: translate(-50%, -50%);
+        fill: var(--oro);
+        opacity: 0.07;
+    }
+    .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+        padding: 64px 28px 56px;
+    }
+
+    /* ============================================
+       DETALLES (Dia / Hora)
+       ============================================ */
+    .detalles {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 18px;
+        padding: 0 0 26px;
+    }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+    }
+    .detalles .detalle-valor {
+        font-size: clamp(1rem, 4.6vw, 1.3rem);
+        white-space: nowrap;
+    }
+    .detalle-label {
+        font-size: 0.64rem;
+        font-weight: 600;
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--oro-oscuro);
+    }
+    .detalle-valor {
+        margin-top: 6px;
+        font-family: var(--serif);
+        font-size: 1.25rem;
+        line-height: 1.25;
+        color: var(--tinta);
+    }
+    .detalle-divisor {
+        width: 1px;
+        height: 46px;
+        background: var(--oro);
+        opacity: 0.6;
+    }
+
+    /* ============================================
+       LUGARES (Ceremonia / Celebracion)
+       ============================================ */
+    .lugares {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 18px 28px;
+        max-width: 440px;
+        margin: 0 auto;
+        padding: 22px 0;
+        border-top: 1px solid rgba(142, 106, 43, 0.25);
+        border-bottom: 1px solid rgba(142, 106, 43, 0.25);
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .lugar-item .detalle-valor {
+        font-size: 1.05rem;
+    }
+
+    /* ============================================
+       VESTIMENTA
+       ============================================ */
+    .vestimenta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 22px 0 6px;
+    }
+    .vestimenta-valor {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .vestimenta-valor .detalle-valor {
+        margin-top: 0;
+        font-style: italic;
+    }
+    .vestimenta-color {
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        border: 2px solid var(--marfil);
+        box-shadow: 0 0 0 1px var(--oro);
+        display: inline-block;
+    }
+
+    /* ============================================
+       COUNTDOWN (tarjetas medianoche)
+       ============================================ */
+    .countdown {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 76px));
+        justify-content: center;
+        gap: 10px;
+        padding: 26px 0;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 4px 12px;
+        background: var(--noche);
+        border: 1px solid rgba(201, 164, 92, 0.4);
+        border-radius: 4px;
+        box-shadow: 0 10px 24px rgba(11, 20, 36, 0.18);
+    }
+    .countdown span {
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(1.7rem, 7vw, 2.3rem);
+        font-variant-numeric: tabular-nums lining-nums;
+        line-height: 1;
+        color: var(--oro-claro);
+    }
+    .countdown label {
+        margin-top: 8px;
+        font-size: 0.56rem;
+        font-weight: 500;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--texto-suave);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (iconos lineales en oro)
+       ============================================ */
+    .acciones-rapidas {
+        display: flex;
+        justify-content: center;
+        gap: 26px;
+        flex-wrap: wrap;
+        padding: 6px 0 0;
+    }
+    /* Con 4 botones (Confirmar + 2 lugares + Agendar) no caben en una fila del
+       celular: se acomodan 2 × 2 en vez de dejar "Agendar" huérfano abajo */
+    @media (max-width: 480px) {
+        .acciones-rapidas:has(> :nth-child(4)) {
+            display: grid;
+            grid-template-columns: repeat(2, auto);
+            justify-content: center;
+            column-gap: 48px;
+        }
+    }
+    .accion-icono {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+        color: var(--tinta);
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+    .icono-circulo {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        border: 1px solid var(--oro);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+    }
+    .icono-svg {
+        width: 22px;
+        height: 22px;
+        display: block;
+        color: var(--oro-oscuro);
+        transition: color 0.25s ease;
+    }
+    .accion-icono:hover .icono-circulo,
+    .accion-icono:focus-visible .icono-circulo {
+        background: var(--noche);
+        border-color: var(--noche);
+        transform: translateY(-3px);
+    }
+    .accion-icono:hover .icono-svg,
+    .accion-icono:focus-visible .icono-svg {
+        color: var(--oro-claro);
+    }
+
+    /* ============================================
+       PANTALLA EXTRA (Itinerario / Mesa de regalos / Ninos)
+       ============================================ */
+    .pantalla-extra {
+        padding: 72px 28px;
+        gap: 36px;
+        align-items: center;
+        background:
+            radial-gradient(ellipse 90% 45% at 50% 0%, #1B2C4B, transparent 70%),
+            var(--noche);
+    }
+    .familia {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        max-width: 340px;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .familia-rol {
+        font-size: 0.64rem;
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .familia-nombres {
+        font-family: var(--serif);
+        font-size: 1.1rem;
+        color: var(--marfil);
+    }
+    .itinerario {
+        width: 100%;
+        max-width: 340px;
+        margin: 0 auto;
+    }
+    .itinerario h3 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-style: italic;
+        font-size: 2.1rem;
+        margin: 0 0 30px;
+        color: var(--oro-claro);
+    }
+    .itinerario h3::after {
+        content: "";
+        display: block;
+        width: 40px;
+        height: 1px;
+        margin: 14px auto 0;
+        background: var(--oro);
+    }
+    /* línea de tiempo vertical con puntos dorados */
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 82px 1fr;
+        align-items: baseline;
+        gap: 22px;
+        padding: 0 0 24px;
+        text-align: left;
+    }
+    .itinerario-item::before {
+        content: "";
+        position: absolute;
+        left: 92px;
+        top: 0.55em;
+        bottom: -0.55em;
+        width: 1px;
+        background: var(--linea-oro);
+    }
+    .itinerario-item:last-child::before {
+        display: none;
+    }
+    .itinerario-item::after {
+        content: "";
+        position: absolute;
+        left: 88px;
+        top: 0.45em;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--noche);
+        border: 1px solid var(--oro);
+        box-shadow: inset 0 0 0 2px var(--noche), inset 0 0 0 5px var(--oro);
+    }
+    .itinerario-hora {
+        font-family: var(--serif);
+        font-size: 1.05rem;
+        font-variant-numeric: lining-nums;
+        color: var(--oro);
+        text-align: right;
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        font-size: 0.9rem;
+        color: var(--marfil);
+        padding-left: 4px;
+    }
+    .boton-mesa-regalos {
+        display: inline-block;
+        padding: 15px 34px;
+        border: 1px solid var(--oro);
+        color: var(--oro-claro);
+        text-decoration: none;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    .boton-mesa-regalos:hover {
+        background: var(--oro);
+        color: var(--noche);
+    }
+    .nota-ninos {
+        max-width: 300px;
+        margin: 0 auto;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 0.95rem;
+        color: var(--texto-suave);
+    }
+
+    /* ============================================
+       GALERIA (marfil, estilo editorial)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        padding: 64px 20px;
+        background: var(--marfil);
+        align-content: center;
+    }
+    .galeria img {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        filter: saturate(0.9) contrast(1.02);
+        outline: 1px solid rgba(142, 106, 43, 0.35);
+        outline-offset: 4px;
+    }
+    .galeria img:first-child {
+        grid-column: 1 / -1;
+        aspect-ratio: 16 / 10;
+    }
+    @media (min-width: 720px) {
+        .galeria {
+            grid-template-columns: repeat(3, 1fr);
+            max-width: 960px;
+            margin: 0 auto;
+        }
+    }
+
+    /* ============================================
+       RSVP (medianoche + formulario de lujo)
+       ============================================ */
+    .rsvp {
+        position: relative;
+        padding: 72px 22px 48px;
+        background:
+            radial-gradient(ellipse 90% 50% at 50% 100%, #1B2C4B, transparent 70%),
+            var(--noche);
+    }
+    .rsvp::before {
+        content: "R · S · V · P";
+        display: block;
+        margin-bottom: 14px;
+        font-size: 0.66rem;
+        font-weight: 600;
+        letter-spacing: 0.4em;
+        color: var(--oro);
+    }
+    .rsvp h2 {
+        font-family: var(--serif);
+        font-weight: 400;
+        font-size: clamp(2rem, 8vw, 2.6rem);
+        line-height: 1.1;
+        margin: 0 0 12px;
+        color: var(--marfil);
+    }
+    .rsvp p {
+        margin: 4px 0;
+        font-size: 0.88rem;
+        color: var(--texto-suave);
+    }
+    #total-confirmados {
+        font-family: var(--serif);
+        font-size: 1.2rem;
+        color: var(--oro-claro);
+    }
+    .fecha-limite {
+        font-family: var(--serif);
+        font-style: italic;
+    }
+
+    /* --- Formulario --- */
+    #form-rsvp {
+        width: 100%;
+        max-width: 420px;
+        margin: 30px auto 0;
+        padding: 30px 24px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
+        border: 1px solid rgba(201, 164, 92, 0.3);
+        border-radius: 6px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+    #form-rsvp input,
+    #form-rsvp textarea {
+        font-family: var(--sans);
+        font-size: 16px; /* 16px evita que iOS haga zoom al enfocar */
+        padding: 12px 2px;
+        border: none;
+        border-bottom: 1px solid rgba(244, 238, 225, 0.25);
+        border-radius: 0;
+        background: transparent;
+        color: var(--marfil);
+        transition: border-color 0.25s ease;
+    }
+    #form-rsvp input::placeholder,
+    #form-rsvp textarea::placeholder {
+        color: rgba(244, 238, 225, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--oro-claro);
+    }
+    #form-rsvp textarea {
+        resize: vertical;
+        min-height: 70px;
+    }
+    #form-rsvp button {
+        margin-top: 6px;
+        font-family: var(--sans);
+        font-weight: 600;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        font-size: 0.74rem;
+        padding: 17px;
+        border: none;
+        border-radius: 2px;
+        background: var(--foil);
+        background-size: 200% 100%;
+        color: var(--noche);
+        cursor: pointer;
+        box-shadow: 0 10px 26px rgba(201, 164, 92, 0.25);
+        transition: background-position 0.6s ease, transform 0.15s ease;
+    }
+    #form-rsvp button:hover {
+        background-position: 100% 50%;
+        transform: translateY(-2px);
+    }
+
+    /* --- Botones tipo pildora (Si / No / Tal vez) --- */
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        text-align: center;
+        padding: 11px 6px;
+        border: 1px solid rgba(201, 164, 92, 0.35);
+        border-radius: 2px;
+        font-size: 0.78rem;
+        color: var(--texto-suave);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--oro);
+        border-color: var(--oro);
+        color: var(--noche);
+        font-weight: 600;
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--oro-claro);
+        outline-offset: 2px;
+    }
+
+    /* --- Campo con label visible (acompanantes) --- */
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        text-align: left;
+    }
+    .campo-con-label label {
+        font-size: 0.8rem;
+        color: var(--texto-suave);
+    }
+    .campo-con-label input {
+        width: 72px;
+        text-align: center;
+    }
+
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 16px;
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: 1rem;
+        color: var(--oro-claro);
+    }
+
+    /* ============================================
+       PIE (firma final)
+       ============================================ */
+    .pie-grad {
+        scroll-snap-align: end; /* sin esto el snap "mandatory" no deja llegar al pie */
+        padding: 28px 24px 40px;
+        background: var(--noche);
+        border-top: 1px solid rgba(201, 164, 92, 0.15);
+    }
+    .pie-birrete {
+        width: 28px;
+        fill: var(--oro);
+        opacity: 0.8;
+    }
+    .pie-grad p {
+        margin: 6px 0 0;
+        font-size: 0.62rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(244, 238, 225, 0.45);
+    }
+
+    /* ============================================
+       ACCESIBILIDAD: menos movimiento si el usuario lo pide
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        .polvo-dorado,
+        .indicador-scroll i {
+            display: none;
+        }
+        .nombres,
+        .boton-musica.sonando {
+            animation: none;
+        }
+        .animar-entrada {
+            transition: none;
+            opacity: 1;
+            transform: none;
+        }
+    }
+</style>
+{% endblock %}

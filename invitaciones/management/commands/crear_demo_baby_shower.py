@@ -34,6 +34,8 @@ class Command(BaseCommand):
                 "soporta_musica": True,
                 "soporta_galeria": True,
                 "soporta_votacion": True,
+                # color del cielo del hero: barra del celular y pantalla de carga de la PWA
+                "color_tema": "#DCE1F3",
             },
         )
 

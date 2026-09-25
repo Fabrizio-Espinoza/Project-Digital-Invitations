@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("invitaciones", "0001_initial"),
+        ("invitaciones", "0002_plantilla_color_tema"),
     ]
 
     operations = [

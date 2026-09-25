@@ -29,6 +29,10 @@ class Plantilla(models.Model):
     # ya sabe dibujarla. Las plantillas existentes (boda) quedan igual que antes.
     soporta_votacion = models.BooleanField(default=False)
     vista_previa_url = models.URLField(blank=True)
+    # Color de fondo del diseño en hex (ej. "#FBF6F0"). Lo usa la PWA para
+    # pintar la barra de estado del celular y la pantalla de carga al abrir
+    # la invitación desde el ícono, así no hay un "flash" de otro color.
+    color_tema = models.CharField(max_length=7, default="#FFFFFF")
 
     def __str__(self):
         return f"{self.nombre} ({self.get_tipo_evento_display()})"

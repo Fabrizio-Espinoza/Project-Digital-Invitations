@@ -26,10 +26,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ invitacion.titulo_evento }}</title>
 
-    <!-- PWA: esto es lo que permite "instalar" la invitación como app -->
-    <link rel="manifest" href="/static/manifest.json">
-    <!-- color de la barra del navegador en el celular; cada tema pone el suyo -->
-    <meta name="theme-color" content="{% block theme_color %}#000000{% endblock %}">
+    <!-- PWA: esto es lo que permite "instalar" la invitación como app.
+         El manifest se genera por invitación (nombre, ícono y colores propios). -->
+    <link rel="manifest" href="{% url 'invitaciones:manifest' invitacion.slug %}">
+    <!-- color de la barra del navegador: el de la plantilla (color_tema), salvo que
+         el tema lo cambie según la invitación (ej. Diez Lunas en paleta rosa/azul) -->
+    <meta name="theme-color" content="{% block theme_color %}{{ plantilla.color_tema }}{% endblock %}">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ iconos_pwa.192 }}">
+    <!-- iPhone no lee los íconos del manifest: usa estas etiquetas propias de Apple -->
+    <link rel="apple-touch-icon" href="{{ iconos_pwa.180 }}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="{{ invitacion.anfitriones }}">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
     {% block estilos %}
     <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
@@ -43,18 +52,26 @@
         </div>
         <div class="hero-contenido">
             <p class="eyebrow">
-                {% if plantilla.tipo_evento == "boda" %}¡Nos casamos!
+                {% block eyebrow %}
+                {% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}
+                {% elif plantilla.tipo_evento == "boda" %}¡Nos casamos!
                 {% elif plantilla.tipo_evento == "xv" %}¡Es mi fiesta!
                 {% elif plantilla.tipo_evento == "graduacion" %}¡Lo logré!
+                {% elif plantilla.tipo_evento == "fiesta" %}¡Hay fiesta!
                 {% elif plantilla.tipo_evento == "baby_shower" %}Baby Shower
                 {% else %}Estás invitado
                 {% endif %}
+                {% endblock %}
             </p>
 
             <h1 class="nombres">{{ invitacion.anfitriones }}</h1>
             {% if invitacion.mensaje_bienvenida %}
             <p class="mensaje">{{ invitacion.mensaje_bienvenida }}</p>
             {% endif %}
+
+            {% block hero_extra %}
+            <!-- datos propios del tipo de evento (ej. carrera/generación en graduación) -->
+            {% endblock %}
         </div>
     </section>
 
@@ -107,19 +124,20 @@
             <section class="lugares">
                 {% if invitacion.contenido_extra.lugar_ceremonia_nombre %}
                 <div class="lugar-item">
-                    <span class="detalle-label">Ceremonia</span>
+                    <span class="detalle-label">{{ invitacion.contenido_extra.lugar_ceremonia_etiqueta|default:"Ceremonia" }}</span>
                     <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_ceremonia_nombre }}</span>
                 </div>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_recepcion_nombre %}
                 <div class="lugar-item">
-                    <span class="detalle-label">Recepción</span>
+                    <span class="detalle-label">{{ invitacion.contenido_extra.lugar_recepcion_etiqueta|default:"Recepción" }}</span>
                     <span class="detalle-valor">{{ invitacion.contenido_extra.lugar_recepcion_nombre }}</span>
                 </div>
                 {% endif %}
             </section>
             {% elif invitacion.lugar_nombre %}
-            <!-- evento con un solo lugar (baby shower, fiesta): usa las columnas comunes -->
+            <!-- Evento de un solo lugar (fiestas, baby shower, eventos): usa las columnas
+                 lugar_nombre / lugar_mapa_url del modelo en vez del JSON -->
             <section class="lugares">
                 <div class="lugar-item">
                     <span class="detalle-label">Lugar</span>
@@ -157,38 +175,56 @@
             <section class="acciones-rapidas">
                 {% if mostrar_rsvp %}
                 <a href="#rsvp" class="accion-icono">
-                    <span class="icono-circulo">✓</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
                     <span>Confirmar</span>
                 </a>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_ceremonia_mapa_url %}
                 <a href="{{ invitacion.contenido_extra.lugar_ceremonia_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
-                    <span>Ceremonia</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                    <span>{{ invitacion.contenido_extra.lugar_ceremonia_etiqueta|default:"Ceremonia" }}</span>
                 </a>
                 {% endif %}
                 {% if invitacion.contenido_extra.lugar_recepcion_mapa_url %}
                 <a href="{{ invitacion.contenido_extra.lugar_recepcion_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
-                    <span>Recepción</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                    <span>{{ invitacion.contenido_extra.lugar_recepcion_etiqueta|default:"Recepción" }}</span>
                 </a>
                 {% endif %}
                 {% if invitacion.lugar_mapa_url and not invitacion.contenido_extra.lugar_ceremonia_mapa_url and not invitacion.contenido_extra.lugar_recepcion_mapa_url %}
                 <a href="{{ invitacion.lugar_mapa_url }}" target="_blank" rel="noopener" class="accion-icono">
-                    <span class="icono-circulo">📍</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
                     <span>Ubicación</span>
                 </a>
                 {% endif %}
+                <!-- .ics generado al vuelo: el invitado agrega el evento a su calendario con un toque -->
                 <a href="{% url 'invitaciones:calendario' invitacion.slug %}" class="accion-icono">
-                    <span class="icono-circulo">📅</span>
+                    <span class="icono-circulo"><svg class="icono-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16M12 13v4M10 15h4"/></svg></span>
                     <span>Agendar</span>
                 </a>
             </section>
         </div>
     </div>
 
-    {% if invitacion.contenido_extra.itinerario or invitacion.contenido_extra.mesa_regalos_url or invitacion.contenido_extra.admite_ninos is not None %}
+    {% if invitacion.contenido_extra.padres or invitacion.contenido_extra.padrinos or invitacion.contenido_extra.itinerario or invitacion.contenido_extra.mesa_regalos_url or invitacion.contenido_extra.admite_ninos is not None %}
     <section class="pantalla-extra animar-entrada">
+        {% if invitacion.contenido_extra.padres or invitacion.contenido_extra.padrinos %}
+        <div class="familia">
+            {% if invitacion.contenido_extra.padres %}
+            <div class="familia-grupo">
+                <span class="familia-rol">{{ invitacion.contenido_extra.padres_etiqueta|default:"Con la bendición de mis padres" }}</span>
+                <span class="familia-nombres">{{ invitacion.contenido_extra.padres }}</span>
+            </div>
+            {% endif %}
+            {% for padrino in invitacion.contenido_extra.padrinos %}
+            <div class="familia-grupo">
+                <span class="familia-rol">{{ padrino.rol }}</span>
+                <span class="familia-nombres">{{ padrino.nombres }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         {% if invitacion.contenido_extra.itinerario %}
         <div class="itinerario">
             <h3>Itinerario</h3>
@@ -203,7 +239,7 @@
 
         {% if invitacion.contenido_extra.mesa_regalos_url %}
         <a href="{{ invitacion.contenido_extra.mesa_regalos_url }}" target="_blank" rel="noopener" class="boton-mesa-regalos">
-            Mesa de regalos
+            {{ invitacion.contenido_extra.mesa_regalos_etiqueta|default:"Mesa de regalos" }}
         </a>
         {% endif %}
 
@@ -338,7 +374,10 @@
 
     {% if mostrar_musica and invitacion.musica_url %}
 <audio id="musica-fondo" loop src="{{ invitacion.musica_url }}"></audio>
-<button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">🎵</button>
+<button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">
+    <svg class="icono-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
+    <svg class="icono-pausa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+</button>
 {% endif %}
 
     {% if mostrar_rsvp %}
@@ -408,6 +447,34 @@
             });
         });
 
+        // --- Música: el navegador bloquea el autoplay, así que esperamos
+        // un clic real del usuario antes de reproducir. Cada clic alterna
+        // entre reproducir y pausar; la clase "sonando" le dice al CSS
+        // qué ícono mostrar (nota musical o pausa) o qué animar (ej. un
+        // vinil que gira). El estado se lee del propio <audio> (eventos
+        // play/pause), así el botón nunca se desfasa si el navegador
+        // rechaza el play().
+        {% if mostrar_musica and invitacion.musica_url %}
+        const musica = document.getElementById('musica-fondo');
+        const botonMusica = document.getElementById('boton-musica');
+
+        function pintarBotonMusica() {
+            const sonando = !musica.paused;
+            botonMusica.classList.toggle('sonando', sonando);
+            botonMusica.setAttribute('aria-label', sonando ? 'Pausar música' : 'Reproducir música');
+        }
+
+        botonMusica.addEventListener('click', () => {
+            if (musica.paused) {
+                musica.play().catch(err => console.error('No se pudo reproducir la música:', err));
+            } else {
+                musica.pause();
+            }
+        });
+        musica.addEventListener('play', pintarBotonMusica);
+        musica.addEventListener('pause', pintarBotonMusica);
+        {% endif %}
+
         // --- Countdown ---
         const fechaEvento = new Date(document.getElementById('countdown').dataset.fecha);
         function actualizarCountdown() {
@@ -425,28 +492,6 @@
         setInterval(actualizarCountdown, 1000);
         actualizarCountdown();
 
-        // --- Música: el navegador bloquea el autoplay, así que esperamos
-        // un clic real del usuario antes de reproducir. Cada clic alterna
-        // entre reproducir y pausar (por eso la variable "sonando").
-        // Ojo: este bloque vivía DENTRO de actualizarCountdown(), que corre cada
-        // segundo, y registraba un listener nuevo por segundo; después de un rato
-        // un solo toque pausaba y volvía a reproducir a la vez. Va aquí, una sola vez.
-        {% if mostrar_musica and invitacion.musica_url %}
-        const musica = document.getElementById('musica-fondo');
-        const botonMusica = document.getElementById('boton-musica');
-        let sonando = false;
-
-        botonMusica.addEventListener('click', () => {
-            if (sonando) {
-                musica.pause();
-                botonMusica.textContent = '🎵';
-            } else {
-                musica.play();
-                botonMusica.textContent = '⏸';
-            }
-            sonando = !sonando;
-        });
-        {% endif %}
 
         // --- Animación de entrada al hacer scroll (sin librerías) ---
         const observador = new IntersectionObserver((entradas) => {
@@ -786,6 +831,12 @@
                 document.getElementById('rsvp-status').textContent = '¡Gracias por confirmar!';
                 document.getElementById('total-confirmados').textContent = data.total_confirmados;
                 e.target.reset();
+                // Aviso para las plantillas: cada tema puede reaccionar a una
+                // confirmación exitosa (confeti, vibración, etc.) escuchando
+                // este evento, sin reescribir el envío del RSVP.
+                document.dispatchEvent(new CustomEvent('rsvp:enviado', {
+                    detail: { asistencia: payload.asistencia, total_confirmados: data.total_confirmados },
+                }));
             })
             .catch(err => {
                 console.error('Error al enviar RSVP:', err);
@@ -793,6 +844,23 @@
             });
         });
         {% endif %}
+
+        // --- PWA: registrar el service worker ---
+        // Solo funciona en HTTPS (o en localhost). Por WiFi local con
+        // http://<ip>:8000 el navegador simplemente no lo registra, y la
+        // invitación sigue funcionando normal, solo sin modo offline.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker
+                    .register("{% url 'invitaciones:service_worker' %}")
+                    .catch(err => console.error('No se pudo registrar el service worker:', err));
+            });
+        }
     </script>
+
+    {% block scripts_tema %}
+    <!-- JS decorativo propio de cada plantilla (ej. confeti). La lógica
+         del RSVP/countdown NO va aquí: vive arriba, una sola vez. -->
+    {% endblock %}
 </body>
 </html>
