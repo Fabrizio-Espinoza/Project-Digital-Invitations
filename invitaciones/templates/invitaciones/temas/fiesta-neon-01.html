@@ -818,6 +818,32 @@
         position: relative;
         z-index: 1;
     }
+    /* Sin itinerario (lo normal en una fiesta), la pantalla se quedaría con
+       una sola línea. Entonces el "¡Que se arme!" deja de ser textura de
+       fondo y se vuelve el protagonista: una pantalla-póster de pausa entre
+       el boleto y el RSVP. :has() revisa si existe el bloque de itinerario;
+       en navegadores viejos que no lo entienden se queda como textura. */
+    .pantalla-extra:not(:has(.itinerario))::before {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: rotate(-4deg);
+        font-size: clamp(4rem, 24vw, 10rem);
+        line-height: 0.92;
+        color: var(--tinta);
+        -webkit-text-stroke: 0;
+        text-shadow: 5px 5px 0 var(--rosa);
+    }
+    .pantalla-extra.visible:not(:has(.itinerario))::before {
+        animation: pegar-poster 0.7s 0.15s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+    }
+    .pantalla-extra:not(:has(.itinerario)) .nota-ninos {
+        border: 2.5px solid var(--tinta);
+        background: var(--tinta);
+        color: var(--lima);
+        font-weight: 700;
+        box-shadow: 4px 4px 0 var(--rosa);
+    }
     .itinerario {
         width: min(100%, 440px);
     }
@@ -1311,6 +1337,10 @@
     @keyframes pegar-sticker {
         from { opacity: 0; transform: scale(1.8) rotate(-14deg); }
         to { opacity: 1; transform: scale(1) rotate(-3deg); }
+    }
+    @keyframes pegar-poster {
+        from { opacity: 0; transform: scale(1.5) rotate(-12deg); }
+        to { opacity: 1; transform: scale(1) rotate(-4deg); }
     }
     @keyframes subir {
         from { opacity: 0; transform: translateY(30px); }

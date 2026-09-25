@@ -91,6 +91,19 @@ class MotorInvitacionesTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "¡Nos casamos!")
 
+    def test_itinerario_solo_aparece_si_viene_en_el_json(self):
+        sin_itinerario = self.crear_invitacion(
+            "fiesta-neon-01", "fiesta",
+            contenido_extra={"admite_ninos": False},
+        )
+        con_itinerario = self.crear_invitacion(
+            "fiesta-neon-01", "fiesta",
+            contenido_extra={"itinerario": [{"hora": "9:00 PM", "evento": "Llegada"}]},
+        )
+
+        self.assertNotContains(self.abrir(sin_itinerario), "<h3>Itinerario</h3>")
+        self.assertContains(self.abrir(con_itinerario), "<h3>Itinerario</h3>")
+
     def test_musica_solo_se_muestra_en_nivel_premium(self):
         invitacion = self.crear_invitacion(
             "fiesta-neon-01", "fiesta",
