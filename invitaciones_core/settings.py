@@ -117,6 +117,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# Media = archivos que suben los usuarios desde el admin (fotos de galería).
+# Sin esto Django las guardaba en la raíz del proyecto y su URL daba 404.
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration

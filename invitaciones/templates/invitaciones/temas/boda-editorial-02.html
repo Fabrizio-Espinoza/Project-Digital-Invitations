@@ -1,0 +1,1238 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  COBALTO EDITORIAL — segunda plantilla de boda.
+
+  Concepto: la invitación como una revista de moda. La portada tiene cabecera,
+  líneas de portada y código de barras; cada pantalla siguiente es una
+  "página" con su folio (número de página) abajo.
+
+  Es el opuesto deliberado de "Terracota Velada":
+    Terracota -> cálida, floral, centrada, letra script, esquinas redondas, sombras suaves.
+    Cobalto   -> fría, tipográfica, asimétrica, serif Didone, esquinas rectas, plana.
+
+  Paleta 60-30-10: papel marfil (60 %) · azul cobalto (30 %) · tinta casi negra (10 %).
+  Tipografía: Bodoni Moda (títulos) + Schibsted Grotesk (etiquetas y texto).
+  Ambas son de Google Fonts con licencia OFL: libres para uso comercial.
+  No usa imágenes de terceros: todo es CSS, SVG y fuentes.
+
+  Si la invitación tiene fotos en la galería, la primera se vuelve la foto
+  de portada teñida de cobalto (monotono), como una revista de verdad.
+{% endcomment %}
+
+{% block color_tema %}#1F3FA3{% endblock %}
+
+{% block decoracion_superior %}
+{% if mostrar_galeria %}{% with portada=invitacion.galeria.all|first %}{% if portada %}
+<div class="portada-foto"><img src="{{ portada.imagen.url }}" alt=""></div>
+{% endif %}{% endwith %}{% endif %}
+
+<div class="portada-cabecera">
+    <span>Edición especial</span>
+    <span>N.º 01 · {{ invitacion.fecha_evento|date:"F Y"|capfirst }}</span>
+</div>
+
+<div class="portada-pie">
+    <div class="portada-fecha">
+        <span class="kicker">{{ invitacion.fecha_evento|date:"l"|capfirst }}</span>
+        <span class="portada-fecha-num">{{ invitacion.fecha_evento|date:"d.m.y" }}</span>
+        {% if invitacion.lugar_nombre %}<span class="kicker">{{ invitacion.lugar_nombre }}</span>{% endif %}
+    </div>
+    <div class="portada-codigo" aria-hidden="true">
+        <span class="kicker">Precio: tu presencia</span>
+        <span class="codigo-barras">
+            <svg viewBox="0 0 95 34" preserveAspectRatio="none"><rect x="0" width="1" height="34"/><rect x="2" width="1" height="34"/><rect x="4" width="2" height="30"/><rect x="9" width="1" height="30"/><rect x="11" width="1" height="30"/><rect x="14" width="3" height="30"/><rect x="19" width="2" height="30"/><rect x="23" width="1" height="30"/><rect x="26" width="1" height="30"/><rect x="30" width="1" height="30"/><rect x="34" width="2" height="30"/><rect x="37" width="1" height="30"/><rect x="40" width="3" height="30"/><rect x="44" width="1" height="30"/><rect x="46" width="1" height="34"/><rect x="48" width="1" height="34"/><rect x="50" width="2" height="30"/><rect x="53" width="2" height="30"/><rect x="57" width="3" height="30"/><rect x="62" width="1" height="30"/><rect x="64" width="2" height="30"/><rect x="67" width="2" height="30"/><rect x="71" width="1" height="30"/><rect x="75" width="1" height="30"/><rect x="78" width="2" height="30"/><rect x="82" width="2" height="30"/><rect x="85" width="2" height="30"/><rect x="88" width="2" height="30"/><rect x="92" width="1" height="34"/><rect x="94" width="1" height="34"/></svg>
+            <span>7 501704 {{ invitacion.fecha_evento|date:"dmy" }}</span>
+        </span>
+    </div>
+</div>
+
+<div class="cinta" aria-hidden="true">
+    <div class="cinta-pista">
+        {% for vuelta in "1234" %}
+        <span>Guarda la fecha</span>
+        <svg class="estrella" viewBox="0 0 10 10"><path d="M5 0C5.4 3.6 6.4 4.6 10 5 6.4 5.4 5.4 6.4 5 10 4.6 6.4 3.6 5.4 0 5 3.6 4.6 4.6 3.6 5 0Z"/></svg>
+        <span>{{ invitacion.fecha_evento|date:"l j \d\e F \d\e Y"|lower|capfirst }}</span>
+        <svg class="estrella" viewBox="0 0 10 10"><path d="M5 0C5.4 3.6 6.4 4.6 10 5 6.4 5.4 5.4 6.4 5 10 4.6 6.4 3.6 5.4 0 5 3.6 4.6 4.6 3.6 5 0Z"/></svg>
+        {% if invitacion.lugar_nombre %}
+        <span>{{ invitacion.lugar_nombre }}</span>
+        <svg class="estrella" viewBox="0 0 10 10"><path d="M5 0C5.4 3.6 6.4 4.6 10 5 6.4 5.4 5.4 6.4 5 10 4.6 6.4 3.6 5.4 0 5 3.6 4.6 4.6 3.6 5 0Z"/></svg>
+        {% endif %}
+        <span>Todos los detalles en la pág. 02</span>
+        <svg class="estrella" viewBox="0 0 10 10"><path d="M5 0C5.4 3.6 6.4 4.6 10 5 6.4 5.4 5.4 6.4 5 10 4.6 6.4 3.6 5.4 0 5 3.6 4.6 4.6 3.6 5 0Z"/></svg>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="pagina-cabecera">
+    <p class="kicker">Todo lo que necesitas saber</p>
+    <h2 class="pagina-titulo">El gran <em>día</em></h2>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..700;1,6..96,400..700&family=Schibsted+Grotesk:wght@400..700&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 · 30 · 10 */
+        --papel: #F2EDE4;
+        --papel-hondo: #E7E0D2;
+        --cobalto: #1F3FA3;
+        --cobalto-noche: #11265F;
+        --tinta: #16181D;
+
+        --bruma: #AEBDEB;
+        --tinta-suave: rgba(22, 24, 29, 0.64);
+        --linea: rgba(22, 24, 29, 0.16);
+        --linea-clara: rgba(242, 237, 228, 0.3);
+        --en-vivo: #FF6B57;
+
+        --serif: 'Bodoni Moda', 'Bodoni 72', Didot, 'Times New Roman', serif;
+        --sans: 'Schibsted Grotesk', 'Helvetica Neue', Arial, sans-serif;
+
+        /* estilos de texto reutilizables (tokens) */
+        --t-kicker: 600 0.66rem/1.35 var(--sans);
+        --t-boton: 600 0.74rem/1 var(--sans);
+        --t-titulo: 400 clamp(2.3rem, 11vw, 3.4rem)/0.95 var(--serif);
+        /* Bodoni Moda adelgaza sus trazos finos segun el tamano (eje "opsz").
+           En automatico, a tamano display la "e" pierde su barra y "Mateo"
+           se lee "Matco". Regla: opsz ~30-40 % del tamano real en pantalla. */
+        --opsz-nombres: "opsz" 24;
+        --opsz-titulo: "opsz" 18;
+
+        --margen: clamp(1.25rem, 6vw, 2.5rem);
+        --ancho: 34rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+        --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .09 0 0 0 0 .1 0 0 0 0 .12 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+        --flecha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 12h17M14 6l6 6-6 6' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+        --flecha-diagonal: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 18 18 6M8.5 6H18v9.5' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+        --flecha-abajo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3v17M6 14l6 6 6-6' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--tinta);
+        font-family: var(--sans);
+        font-size: 1rem;
+        line-height: 1.55;
+        overflow-x: hidden;
+        counter-reset: pagina;
+        font-kerning: normal;
+        hanging-punctuation: first;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(31, 63, 163, 0.15);
+    }
+    ::selection {
+        background: var(--cobalto);
+        color: var(--papel);
+    }
+    .kicker {
+        margin: 0;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA" + FOLIOS
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        counter-increment: pagina;
+    }
+    /* folio = pie de página de revista: "VALENTINA & MATEO · 02" */
+    .pantalla-info::after,
+    .pantalla-extra::after,
+    .galeria::after,
+    .rsvp::after {
+        content: var(--folio, "Edición de boda") "  ·  " counter(pagina, decimal-leading-zero);
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: max(1.1rem, env(safe-area-inset-bottom));
+        text-align: center;
+        font: 500 0.6rem/1 var(--sans);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        white-space: pre;
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (vinilo flotante)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        top: max(0.8rem, env(safe-area-inset-top));
+        right: max(0.8rem, env(safe-area-inset-right));
+        z-index: 20;
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        font-size: 0;            /* esconde el emoji que escribe el motor */
+        color: transparent;
+        cursor: pointer;
+        box-shadow: 0 0 0 1px rgba(242, 237, 228, 0.35), 0 4px 12px rgba(6, 14, 45, 0.25);
+    }
+    /* el disco (gira) */
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle, var(--papel) 0 6%, var(--cobalto) 7% 31%, transparent 32%),
+            conic-gradient(from 20deg, transparent 0 12%, rgba(255, 255, 255, 0.16) 18%, transparent 26% 62%, rgba(255, 255, 255, 0.12) 68%, transparent 76%),
+            repeating-radial-gradient(circle, #1B1D22 0 1.5px, #2B2E35 1.5px 2.5px);
+        animation: girar 3.2s linear infinite paused;
+    }
+    .boton-musica.sonando::before {
+        animation-play-state: running;
+    }
+    /* triangulo de "play" (quieto; se esconde mientras suena) */
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0.5rem;
+        height: 0.58rem;
+        translate: -38% -50%;
+        background: var(--papel);
+        clip-path: polygon(0 0, 100% 50%, 0 100%);
+        transition: opacity 0.25s ease;
+    }
+    .boton-musica.sonando::after {
+        opacity: 0;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--papel);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    /* cada elemento define su propio --retraso para entrar escalonado */
+    .visible :is(.portada-cabecera, .nombre, .amp, .mensaje, .portada-pie, .pagina-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .itinerario-item) {
+        animation: aparecer 0.9s var(--curva) var(--retraso, 0s) both;
+    }
+    .visible .eyebrow {
+        animation: sello 0.7s var(--curva) 0.75s both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.9rem; }
+    }
+    @keyframes sello {
+        from { opacity: 0; scale: 1.5; }
+    }
+    @keyframes girar {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes cinta {
+        to { transform: translateX(-50%); }
+    }
+    @keyframes latido {
+        50% { opacity: 0.3; scale: 0.7; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; color: var(--bruma); }
+    }
+
+    /* ============================================
+       PORTADA (hero)
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        padding: max(0.9rem, env(safe-area-inset-top)) var(--margen) 0;
+        background: var(--cobalto);
+        color: var(--papel);
+        overflow: hidden;
+    }
+    /* "display: contents" hace que la decoracion participe directo en el
+       flex de la portada: asi cabecera, nombres y pie se acomodan solos
+       sin encimarse, midan lo que midan. */
+    .marco-decorativo {
+        display: contents;
+    }
+
+    /* --- Foto de portada (solo si hay galeria) --- */
+    .portada-foto {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        background: #4466CC;   /* un cobalto mas claro: las luces de la foto se alcanzan a ver */
+    }
+    .portada-foto img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        filter: grayscale(1) contrast(1.1) brightness(1.1);
+        mix-blend-mode: multiply;   /* blanco -> cobalto, negro -> negro */
+    }
+    .portada-foto::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, rgba(17, 38, 95, 0.55) 0%, transparent 25%, transparent 45%, rgba(17, 38, 95, 0.9) 100%);
+    }
+
+    /* --- Cabecera de la revista --- */
+    .portada-cabecera {
+        --retraso: 0.05s;
+        order: 0;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.55rem 0 0.75rem;
+        border-bottom: 1px solid var(--linea-clara);
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+    body:has(.boton-musica) .portada-cabecera {
+        margin-right: 3.4rem;   /* deja espacio al vinilo */
+    }
+
+    /* --- Nombres + sticker + mensaje --- */
+    .hero-contenido {
+        order: 1;
+        flex: 1;
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 44rem;   /* en escritorio los nombres no se separan de mas */
+        margin-inline: auto;
+        display: grid;
+        /* minmax(0, 1fr): la columna NO crece con un nombre largo; asi el JS
+           detecta que no cabe y reduce la letra en vez de desbordar */
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-areas: "sello" "nombres" "mensaje";
+        align-content: center;
+        padding: clamp(1.25rem, 4vh, 3rem) 0 clamp(1rem, 3vh, 2.5rem);
+    }
+    .hero:has(.portada-foto) .hero-contenido {
+        align-content: end;   /* con foto, los nombres bajan para no tapar caras */
+    }
+    /* sticker de portada: fila propia arriba a la derecha, encimado apenas
+       sobre el primer nombre para que nunca tape letras */
+    .eyebrow {
+        grid-area: sello;
+        justify-self: end;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        width: 5.3rem;
+        aspect-ratio: 1;
+        margin: 0 0 -0.7rem;
+        padding: 0.7rem;
+        border-radius: 50%;
+        background: var(--papel);
+        color: var(--cobalto);
+        outline: 1px dashed rgba(31, 63, 163, 0.5);
+        outline-offset: -0.35rem;
+        font: italic 500 0.92rem/1.05 var(--serif);
+        text-align: center;
+        rotate: -12deg;
+    }
+    .nombres {
+        grid-area: nombres;
+        margin: 0;
+        font-family: var(--serif);
+        font-weight: 400;
+        font-variation-settings: var(--opsz-nombres);
+        /* limitado por ancho (vw) Y por alto (svh): en celulares bajitos no empuja el pie fuera */
+        font-size: clamp(3rem, min(21vw, 12.5vh), 8.5rem);
+        font-size: clamp(3rem, min(21vw, 12.5svh), 8.5rem);
+        line-height: 0.9;
+        letter-spacing: -0.025em;
+        text-wrap: balance;
+    }
+    .nombre {
+        --retraso: 0.15s;
+        display: block;
+        width: max-content;   /* para que el JS pueda medir el ancho real */
+    }
+    .nombre:last-child {
+        --retraso: 0.45s;
+        margin-left: auto;
+    }
+    .amp {
+        --retraso: 0.3s;
+        display: block;
+        padding-left: 18%;
+        font-style: italic;
+        font-size: 0.7em;
+        line-height: 0.95;
+        color: var(--bruma);
+    }
+    .mensaje {
+        --retraso: 0.6s;
+        grid-area: mensaje;
+        max-width: 36ch;
+        margin: clamp(1rem, 3.5vh, 2rem) 0 0;
+        font: italic 400 1rem/1.5 var(--serif);
+        color: rgba(242, 237, 228, 0.88);
+        text-wrap: pretty;
+    }
+    .mensaje::before {
+        content: "";
+        display: block;
+        width: 2.5rem;
+        height: 1px;
+        margin-bottom: 0.9rem;
+        background: var(--bruma);
+    }
+
+    /* --- Pie de portada: fecha + codigo de barras --- */
+    .portada-pie {
+        --retraso: 0.7s;
+        order: 2;
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 1rem;
+        padding: 0.9rem 0 1.1rem;
+        border-top: 1px solid var(--linea-clara);
+    }
+    .portada-fecha {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .portada-fecha-num {
+        font: 400 clamp(2.3rem, 11vw, 3.4rem)/1 var(--serif);
+        letter-spacing: -0.01em;
+        font-variant-numeric: lining-nums;
+    }
+    .portada-codigo {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.45rem;
+        text-align: right;
+    }
+    .codigo-barras {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.4rem 0.5rem 0.25rem;
+        background: var(--papel);
+        color: var(--tinta);
+        font: 500 0.5rem/1 var(--sans);
+        letter-spacing: 0.12em;
+    }
+    .codigo-barras svg {
+        display: block;
+        width: 4.6rem;
+        height: 1.7rem;
+        fill: currentColor;
+    }
+
+    /* --- Cinta (marquesina) al pie de la portada --- */
+    .cinta {
+        order: 3;
+        position: relative;
+        z-index: 1;
+        margin-inline: calc(50% - 50vw);
+        padding: 0.7rem 0 max(0.7rem, env(safe-area-inset-bottom));
+        overflow: hidden;
+        background: var(--papel);
+        color: var(--cobalto);
+    }
+    .cinta-pista {
+        display: flex;
+        align-items: center;
+        width: max-content;
+        font: italic 400 1.02rem/1 var(--serif);
+        white-space: nowrap;
+        animation: cinta 45s linear infinite;
+    }
+    .cinta-pista > * {
+        margin-right: 1.1rem;   /* margen (no gap) para que el loop no brinque */
+    }
+    .estrella {
+        width: 0.6rem;
+        height: 0.6rem;
+        fill: currentColor;
+    }
+
+    /* ============================================
+       PANTALLA 2: EL GRAN DIA
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3.5rem var(--margen) 3.5rem;
+        background-color: var(--papel);
+        background-image: var(--grano);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 1.1rem;
+    }
+    .pagina-cabecera {
+        --retraso: 0.05s;
+        color: var(--cobalto);
+    }
+    .pagina-titulo {
+        margin: 0.4rem 0 0;
+        font: var(--t-titulo);
+        font-variation-settings: var(--opsz-titulo);
+        letter-spacing: -0.02em;
+        color: var(--tinta);
+    }
+    .pagina-titulo em {
+        font-style: italic;
+        color: var(--cobalto);
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+        counter-reset: dato;
+    }
+
+    /* ============================================
+       DETALLES: indice numerado (Dia, Hora, Lugares, Vestimenta)
+       ============================================ */
+    /* Dia y Hora comparten renglon, como dos columnas de tabla */
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border-top: 1.5px solid var(--tinta);
+    }
+    .detalles .detalle-item:last-child {
+        padding-left: 0.9rem;
+        border-left: 1px solid var(--linea);
+    }
+    .lugares {
+        --retraso: 0.25s;
+    }
+    .detalle-divisor {
+        display: none;
+    }
+    /* cada dato: numero | etiqueta arriba, valor abajo (asi el valor usa todo el ancho) */
+    .detalle-item,
+    .lugar-item,
+    .vestimenta {
+        counter-increment: dato;
+        display: grid;
+        grid-template-columns: 1.7rem 1fr;
+        align-items: baseline;
+        column-gap: 0.35rem;
+        row-gap: 0.2rem;
+        padding: 0.62rem 0 0.68rem;
+        border-bottom: 1px solid var(--linea);
+    }
+    .detalle-item::before,
+    .lugar-item::before,
+    .vestimenta::before {
+        content: counter(dato, decimal-leading-zero);
+        font: italic 400 0.9rem/1 var(--serif);
+        color: var(--cobalto);
+    }
+    .detalle-label {
+        font: var(--t-kicker);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .detalle-valor {
+        grid-column: 2;
+        font: 500 1.02rem/1.3 var(--serif);
+        text-wrap: pretty;
+    }
+    /* Django escribe "17 de Abril"; en español el mes va en minúscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+
+    /* ============================================
+       VESTIMENTA (muestra de color tipo Pantone)
+       ============================================ */
+    .vestimenta {
+        --retraso: 0.35s;
+    }
+    .vestimenta-valor {
+        grid-column: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .vestimenta-color {
+        flex: none;
+        width: 1.05rem;
+        height: 1.4rem;
+        box-shadow: inset 0 -0.4rem 0 var(--papel), 0 0 0 1px var(--linea);
+    }
+
+    /* ============================================
+       COUNTDOWN (bloque cobalto, cifras tabulares)
+       ============================================ */
+    /* una sola franja: los dias grandes, horas/min/seg al lado */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: 1.7fr 1fr 1fr 1fr;
+        margin-top: 1.1rem;
+        background: var(--cobalto);
+        color: var(--papel);
+        font-variant-numeric: lining-nums tabular-nums;   /* los digitos no "bailan" al cambiar */
+    }
+    .countdown::before {
+        content: "Faltan";
+        grid-column: 1 / -1;
+        padding: 0.8rem 0.75rem 0;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--bruma);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 0.3rem 0.75rem 0.75rem;
+        border-left: 1px solid var(--linea-clara);
+    }
+    .countdown div:first-child {
+        border-left: 0;
+    }
+    .countdown span {
+        font: 400 1.7rem/1 var(--serif);
+    }
+    .countdown div:first-child span {
+        font-size: clamp(2.6rem, 12vw, 3.4rem);
+        letter-spacing: -0.03em;
+    }
+    .countdown label {
+        margin-top: 0.4rem;
+        font: var(--t-kicker);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--bruma);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (botones rectos con flecha)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    .icono-circulo {
+        display: none;   /* reemplazamos los emojis por flechas dibujadas */
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        padding: 0 1rem;
+        border: 1px solid var(--tinta);
+        color: var(--tinta);
+        text-decoration: none;
+        font: var(--t-boton);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    .accion-icono::after {
+        content: "";
+        flex: none;
+        width: 1rem;
+        height: 1rem;
+        background: currentColor;
+        -webkit-mask: var(--flecha-diagonal) center / contain no-repeat;
+        mask: var(--flecha-diagonal) center / contain no-repeat;
+    }
+    .accion-icono:hover {
+        background: var(--tinta);
+        color: var(--papel);
+    }
+    .accion-icono[href="#rsvp"] {
+        grid-column: 1 / -1;
+        border-color: var(--cobalto);
+        background: var(--cobalto);
+        color: var(--papel);
+    }
+    .accion-icono[href="#rsvp"]::after {
+        -webkit-mask-image: var(--flecha-abajo);
+        mask-image: var(--flecha-abajo);
+    }
+    .accion-icono[href="#rsvp"]:hover {
+        background: var(--cobalto-noche);
+    }
+    .accion-icono:only-child,
+    .accion-icono[href="#rsvp"] + .accion-icono:last-child {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--cobalto);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA (Itinerario / Mesa de regalos / Ninos)
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.8rem;
+        padding: 3.5rem var(--margen) 3.75rem;
+        background-color: var(--papel-hondo);
+        background-image: var(--grano);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .pantalla-extra:has(.itinerario)::before {
+        content: "Paso a paso";
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto -1.55rem;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--cobalto);
+    }
+    .itinerario h3 {
+        margin: 0 0 1.2rem;
+        font: var(--t-titulo);
+        font-variation-settings: var(--opsz-titulo);
+        letter-spacing: -0.02em;
+    }
+    /* linea de tiempo: hora | punto | evento */
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 6.4rem 1fr;
+        column-gap: 1.7rem;
+        align-items: baseline;
+        padding: 0.7rem 0;
+    }
+    .itinerario-item:nth-child(3) { --retraso: 0.1s; }
+    .itinerario-item:nth-child(4) { --retraso: 0.2s; }
+    .itinerario-item:nth-child(5) { --retraso: 0.3s; }
+    .itinerario-item:nth-child(n+6) { --retraso: 0.4s; }
+    .itinerario-item::before {
+        content: "";
+        position: absolute;
+        z-index: 1;
+        left: calc(6.4rem + 0.85rem - 3.5px);
+        top: 1.3rem;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--cobalto);
+        box-shadow: 0 0 0 4px var(--papel-hondo);
+    }
+    .itinerario-item::after {
+        content: "";
+        position: absolute;
+        left: calc(6.4rem + 0.85rem - 0.5px);
+        top: 0;
+        bottom: 0;
+        width: 1px;
+        background: var(--linea);
+    }
+    .itinerario-item:first-of-type::after {
+        top: 1.3rem;
+    }
+    .itinerario-item:last-child::after {
+        bottom: calc(100% - 1.3rem);
+    }
+    .itinerario-hora {
+        font: italic 400 1.2rem/1.2 var(--serif);
+        color: var(--cobalto);
+        text-align: right;
+        white-space: nowrap;
+        font-variant-numeric: lining-nums tabular-nums;
+    }
+    .itinerario-evento {
+        font: 400 1rem/1.35 var(--sans);
+    }
+    .boton-mesa-regalos {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 3.4rem;
+        padding: 0 1.25rem;
+        background: var(--tinta);
+        color: var(--papel);
+        text-decoration: none;
+        font: var(--t-boton);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: background 0.25s ease;
+    }
+    .boton-mesa-regalos::after {
+        content: "";
+        width: 1rem;
+        height: 1rem;
+        background: currentColor;
+        -webkit-mask: var(--flecha-diagonal) center / contain no-repeat;
+        mask: var(--flecha-diagonal) center / contain no-repeat;
+    }
+    .boton-mesa-regalos:hover {
+        background: var(--cobalto);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--cobalto);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        margin-block: 0;
+        padding-left: 1rem;
+        border-left: 2px solid var(--cobalto);
+        font: italic 400 1.02rem/1.45 var(--serif);
+        color: var(--tinta-suave);
+        text-wrap: pretty;
+    }
+
+    /* ============================================
+       GALERIA (reportaje fotografico sobre tinta)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.4rem;
+        align-content: center;
+        padding: 4.5rem max(var(--margen), (100% - 48rem) / 2) 4.5rem;
+        background: var(--tinta);
+        color: var(--papel);
+    }
+    .galeria::before {
+        content: "Portafolio";
+        grid-column: 1 / -1;
+        margin-bottom: 0.6rem;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--bruma);
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+    }
+    /* ritmo: una foto grande, dos chicas, una grande, dos chicas... */
+    .galeria img:nth-of-type(3n+1) {
+        grid-column: 1 / -1;
+        aspect-ratio: 4 / 3;
+    }
+    .galeria img:nth-of-type(3n+2):last-of-type {
+        grid-column: 1 / -1;
+        aspect-ratio: 16 / 9;
+    }
+
+    /* ============================================
+       RSVP (tarjeta de respuesta desprendible)
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3.5rem var(--margen) 3.75rem;
+        background: var(--cobalto);
+        color: var(--papel);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Tarjeta de respuesta";
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--bruma);
+    }
+    .rsvp h2 {
+        margin: 0.35rem auto 0.8rem;
+        font: var(--t-titulo);
+        font-variation-settings: var(--opsz-titulo);
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+    }
+    /* contador en vivo: el gancho para el video de Meta Ads */
+    .rsvp p:has(#total-confirmados) {
+        position: relative;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.6rem;
+        font-size: 0.95rem;
+    }
+    .rsvp p:has(#total-confirmados)::before {
+        content: "En vivo";
+        padding: 0.35rem 0.6rem 0.35rem 1.35rem;
+        border: 1px solid var(--linea-clara);
+        border-radius: 2px;
+        font: var(--t-kicker);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+    .rsvp p:has(#total-confirmados)::after {
+        content: "";
+        position: absolute;
+        left: 0.6rem;
+        top: 50%;
+        width: 0.4rem;
+        height: 0.4rem;
+        margin-top: -0.2rem;
+        border-radius: 50%;
+        background: var(--en-vivo);
+        animation: latido 1.6s ease-in-out infinite;
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 500 1.4rem/1 var(--serif);
+        font-variant-numeric: lining-nums;
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "20 de Marzo": todo a minuscula y solo la primera letra en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.5rem;
+        font: italic 400 1rem/1.4 var(--serif);
+        color: var(--bruma);
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+
+    /* --- La tarjeta (papel con borde perforado) --- */
+    #form-rsvp {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin: 1.3rem auto 0;
+        padding: 1.6rem 1.25rem 1.25rem;
+        background-color: var(--papel);
+        background-image: var(--grano);
+        color: var(--tinta);
+        box-shadow: 0 28px 50px -24px rgba(6, 14, 45, 0.6);
+    }
+    #form-rsvp::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: -5px;
+        height: 10px;
+        background: radial-gradient(circle, var(--cobalto) 3.2px, transparent 3.7px) 0 0 / 12px 10px repeat-x;
+    }
+    /* campos subrayados, como en papel (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"] {
+        width: 100%;
+        padding: 0.5rem 0;
+        border: 0;
+        border-bottom: 1px solid var(--tinta);
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 400 1.1rem/1.4 var(--serif);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        font-style: italic;
+        color: rgba(22, 24, 29, 0.42);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--cobalto);
+        box-shadow: 0 1px 0 var(--cobalto);
+    }
+    /* textarea con renglones de cuaderno */
+    #form-rsvp textarea {
+        width: 100%;
+        min-height: 4rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: repeating-linear-gradient(transparent 0 calc(2rem - 1px), var(--linea) calc(2rem - 1px) 2rem);
+        background-attachment: local;
+        color: var(--tinta);
+        font: 400 1.1rem/2rem var(--serif);
+        resize: vertical;
+    }
+
+    /* --- Si / No / Tal vez: casillas en una tabla recta --- */
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        border: 1px solid var(--tinta);
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.9rem;
+        padding: 0.4rem 0.3rem;
+        border-left: 1px solid var(--tinta);
+        font: 500 0.82rem/1.15 var(--sans);
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia label:first-of-type {
+        border-left: 0;
+    }
+    .opciones-asistencia label::before {
+        content: "";
+        flex: none;
+        width: 0.7rem;
+        height: 0.7rem;
+        border: 1px solid currentColor;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--cobalto);
+        color: var(--papel);
+    }
+    .opciones-asistencia input[type="radio"]:checked + label::before {
+        background: currentColor;
+        box-shadow: inset 0 0 0 2px var(--cobalto);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--cobalto);
+        outline-offset: 2px;
+    }
+
+    /* --- Acompanantes --- */
+    .campo-con-label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: var(--t-kicker);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        max-width: 3.5rem;
+        text-align: center;
+    }
+
+    /* --- Enviar --- */
+    #form-rsvp button {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 3.2rem;
+        margin-top: 0.2rem;
+        padding: 0 1.25rem;
+        border: 0;
+        border-radius: 0;
+        background: var(--cobalto);
+        color: var(--papel);
+        font: var(--t-boton);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.25s ease;
+    }
+    #form-rsvp button::after {
+        content: "";
+        width: 1.1rem;
+        height: 1.1rem;
+        background: currentColor;
+        -webkit-mask: var(--flecha) center / contain no-repeat;
+        mask: var(--flecha) center / contain no-repeat;
+    }
+    #form-rsvp button:hover {
+        background: var(--cobalto-noche);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--cobalto);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.5em;
+        margin-top: 1rem;
+        font: italic 400 1.05rem/1.4 var(--serif);
+        color: var(--papel);
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles finos.
+    (function () {
+        // --- 1. Nombres en tres lineas: "Valentina / & / Mateo" ---
+        // Se separa por el conector que escribio el cliente (&, y, e) para respetarlo.
+        const titulo = document.querySelector('.nombres');
+        const texto = titulo ? titulo.textContent.trim() : '';
+        const partes = texto.split(/\s+(&|y|e)\s+/i);
+        if (partes.length === 3) {
+            titulo.textContent = '';
+            [['nombre', partes[0]], ['amp', partes[1]], ['nombre', partes[2]]].forEach(([clase, contenido]) => {
+                const span = document.createElement('span');
+                span.className = clase;
+                span.textContent = contenido;
+                titulo.appendChild(span);
+            });
+        }
+
+        // Folio de cada pagina ("Valentina & Mateo · 02"): CSS no puede leer
+        // texto del HTML, asi que se lo pasamos como variable.
+        if (texto) {
+            document.documentElement.style.setProperty('--folio', '"' + texto.replace(/["\\]/g, '\\$&') + '"');
+        }
+
+        // --- 2. El nombre mas largo debe caber en UNA linea, mida lo que mida ---
+        function ajustarNombres() {
+            const nombres = titulo ? titulo.querySelectorAll('.nombre') : [];
+            if (!nombres.length) return;
+            titulo.style.fontSize = '';
+            const disponible = titulo.clientWidth;
+            const masAncho = Math.max(...Array.from(nombres, n => n.offsetWidth));
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            if (masAncho > disponible) {
+                tamano = Math.floor(tamano * disponible / masAncho);
+                titulo.style.fontSize = tamano + 'px';
+            }
+            // tamano optico ~30 % del tamano real (entre 12 y 24): si la letra
+            // se achica, los trazos finos se engruesan y la "e" se sigue leyendo
+            const opsz = Math.round(Math.min(24, Math.max(12, tamano * 0.3)));
+            titulo.style.fontVariationSettings = '"opsz" ' + opsz;
+        }
+        ajustarNombres();
+        if (document.fonts) document.fonts.ready.then(ajustarNombres);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombres(); });
+        });
+
+        // --- 3. El vinilo gira solo mientras la cancion suena ---
+        const musica = document.getElementById('musica-fondo');
+        const boton = document.getElementById('boton-musica');
+        if (musica && boton) {
+            musica.addEventListener('play', () => boton.classList.add('sonando'));
+            musica.addEventListener('pause', () => boton.classList.remove('sonando'));
+        }
+
+        // --- 4. El contador de confirmados "late" cuando llega alguien nuevo ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+    })();
+</script>
+{% endblock %}

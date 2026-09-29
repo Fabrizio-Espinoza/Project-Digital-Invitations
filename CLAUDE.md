@@ -20,6 +20,7 @@ Modelos de datos (app invitaciones)
 Patrón "motor + plantillas"
 • base_interactiva.html es el motor: contiene TODA la estructura HTML, la lógica JS (countdown, RSVP por fetch, animaciones de scroll) y los {% block %} de Django para decoración y estilos. Se escribe una sola vez.
 • Cada plantilla visual (ej. boda-minimal-01.html) hace {% extends %} del motor y solo sobreescribe bloques de estilos ({% block estilos %}) y decoración ({% block decoracion_superior %}, decoracion_info, decoracion_inferior) — nunca reescribe el RSVP ni el countdown.
+• Bloques opcionales extra del motor: {% block color_tema %} (color de la barra del navegador en el celular, meta theme-color) y {% block scripts_tema %} (JS decorativo del tema, corre después del motor; si falla, la invitación funciona igual).
 • La vista (views.py) arma el nombre del template dinámicamente a partir de plantilla.slug_tema (invitaciones/temas/{slug_tema}.html), así cada diseño nuevo es literalmente un archivo distinto, sin if/else gigantes en un solo template.
 • Flags combinadas en la vista (mostrar_rsvp, mostrar_musica, mostrar_galeria) cruzan el nivel pagado por el cliente con lo que la Plantilla soporta, para que un cliente de paquete básico nunca vea features que no pagó.
 Estructura visual final (scroll-snap por pantallas)
@@ -105,6 +106,15 @@ Usar http://<ip>:8000/static/... completa.
 Música no sonaba sola
 Navegadores bloquean autoplay de audio con sonido, sobre todo en móvil.
 Botón flotante (position: fixed) que el usuario toca para reproducir/pausar.
+La música ya no se podía pausar después de unos segundos
+El listener del botón vivía dentro de actualizarCountdown(), que corre cada segundo: se sumaba un listener nuevo por segundo.
+Sacar el bloque de música fuera de esa función (se registra una sola vez).
+Fotos de galería con 404 / guardadas en la raíz
+No existían MEDIA_URL ni MEDIA_ROOT.
+MEDIA_ROOT = BASE_DIR / 'media' + static() en urls.py cuando DEBUG.
+Títulos en Bodoni Moda se leían mal ("Mateo" → "Matco")
+El eje de tamaño óptico (opsz) en automático adelgaza los trazos finos a tamaños grandes y la barra de la "e" desaparece.
+Fijar opsz ≈ 30-40 % del tamaño real en pantalla (24 en nombres, 18 en títulos).
 5. Convenciones acordadas
 Estructura de carpetas
 • Templates: invitaciones/templates/invitaciones/temas/<slug_tema>.html (una plantilla visual = un archivo).
@@ -126,8 +136,9 @@ Terminado:
 • Motor Django completo (modelos, admin, vistas, urls) funcionando de punta a punta.
 • Primera plantilla de boda ("Terracota Velada") con diseño floral real, tipografía script + serif, scroll tipo pantalla-por-pantalla, RSVP en vivo, countdown, botones de ubicación (ceremonia/recepción separadas), vestimenta con color, itinerario, mesa de regalos, nota de niños, música con botón de reproducción manual.
 • Probado end-to-end en compu y en iPhone real (por WiFi local).
+• Segunda plantilla de boda ("Cobalto Editorial", boda-editorial-02.html): concepto de revista de moda, opuesta a Terracota (fría, tipográfica, asimétrica). Paleta marfil/cobalto/tinta, Bodoni Moda + Schibsted Grotesk (OFL, sin assets de terceros). Si hay galería, la primera foto se vuelve portada en monotono cobalto. Demo: python manage.py crear_demo_cobalto [--host http://<ip>:8000].
 Pendiente dentro de Fase 1:
-• Segunda plantilla visual (XV años o graduación), con estilo opuesto a la de boda — para completar "1-2 plantillas pulidas" del roadmap.
+• Plantilla visual de XV años o graduación (ya hay dos de boda) — para cubrir otro tipo de evento.
 • PWA: manifest.json + service worker (aún no se ha tocado esta parte).
 • Decidir si musica_url pasa de URLField a FileField para que la carga de canciones sea vía admin en vez de URLs manuales.
 • Decidir si los campos de contenido_extra (ceremonia/recepción, vestimenta, etc.) se formalizan como campos de admin dedicados antes de vender a clientes reales, para evitar que alguien edite JSON a mano.
