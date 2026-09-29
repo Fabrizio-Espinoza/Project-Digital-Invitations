@@ -405,3 +405,23 @@ class DemoCobaltoTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-editorial-02.html")
         self.assertContains(respuesta, "/static/invitaciones/pwa/boda-editorial-02-180.png")
+
+
+class DemoTareaCumplidaTests(TestCase):
+    def test_crear_demo_graduacion_cuaderno_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_graduacion_cuaderno", stdout=StringIO())
+        call_command("crear_demo_graduacion_cuaderno", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="graduacion-cuaderno-02").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-graduacion-diego")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "graduacion")
+        self.assertTrue(invitacion.musica_url.startswith("http://192.168.1.50:8000/"))
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/graduacion-cuaderno-02.html")
+        # los datos escolares (mismas claves que "Laurel de Oro") y la etiqueta propia de los padres
+        self.assertContains(respuesta, "Ingeniería Mecatrónica")
+        self.assertContains(respuesta, "Gracias a mis papás")
+        self.assertContains(respuesta, "/static/invitaciones/pwa/graduacion-cuaderno-02-180.png")
