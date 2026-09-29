@@ -453,3 +453,26 @@ class DemoLoteriaTests(TestCase):
         respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
         # al frente va la piñata y el pastel pasa a una carta de atrás
         self.assertContains(respuesta, "El Pastel")
+
+
+class DemoEntregaEspecialTests(TestCase):
+    def test_crear_demo_baby_entrega_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_baby_entrega", stdout=StringIO())
+        call_command("crear_demo_baby_entrega", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="baby-shower-entrega-02").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-baby-entrega")
+        self.assertTrue(invitacion.plantilla.soporta_votacion)
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/baby-shower-entrega-02.html")
+        # todas las secciones de baby shower del motor, vestidas por este tema
+        for fragmento in ('id="dulce-espera"', 'id="votacion"', 'id="regalos"', 'id="panales"',
+                          'class="rastreo-estados"', "¿Qué trae el paquete?"):
+            self.assertContains(respuesta, fragmento)
+        # la guía de envío usa la fecha probable de parto como número de guía
+        guia = "Guía BB-" + invitacion.contenido_extra["fecha_probable_parto"].replace("-", "")
+        self.assertContains(respuesta, guia)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/baby-shower-entrega-02-180.png")
