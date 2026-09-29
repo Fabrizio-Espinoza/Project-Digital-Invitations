@@ -20,7 +20,7 @@ Modelos de datos (app invitaciones)
 Patrón "motor + plantillas"
 • base_interactiva.html es el motor: contiene TODA la estructura HTML, la lógica JS (countdown, RSVP por fetch, animaciones de scroll) y los {% block %} de Django para decoración y estilos. Se escribe una sola vez.
 • Cada plantilla visual (ej. boda-minimal-01.html) hace {% extends %} del motor y solo sobreescribe bloques de estilos ({% block estilos %}) y decoración ({% block decoracion_superior %}, decoracion_info, decoracion_inferior) — nunca reescribe el RSVP ni el countdown.
-• Bloques opcionales extra del motor: {% block color_tema %} (color de la barra del navegador en el celular, meta theme-color) y {% block scripts_tema %} (JS decorativo del tema, corre después del motor; si falla, la invitación funciona igual).
+• Bloques opcionales extra del motor: {% block theme_color %} (color de la barra del navegador; por defecto plantilla.color_tema) y {% block scripts_tema %} (JS decorativo del tema, corre después del motor; si falla, la invitación funciona igual).
 • La vista (views.py) arma el nombre del template dinámicamente a partir de plantilla.slug_tema (invitaciones/temas/{slug_tema}.html), así cada diseño nuevo es literalmente un archivo distinto, sin if/else gigantes en un solo template.
 • Flags combinadas en la vista (mostrar_rsvp, mostrar_musica, mostrar_galeria) cruzan el nivel pagado por el cliente con lo que la Plantilla soporta, para que un cliente de paquete básico nunca vea features que no pagó.
 Estructura visual final (scroll-snap por pantallas)
@@ -106,9 +106,12 @@ Usar http://<ip>:8000/static/... completa.
 Música no sonaba sola
 Navegadores bloquean autoplay de audio con sonido, sobre todo en móvil.
 Botón flotante (position: fixed) que el usuario toca para reproducir/pausar.
-La música ya no se podía pausar después de unos segundos
-El listener del botón vivía dentro de actualizarCountdown(), que corre cada segundo: se sumaba un listener nuevo por segundo.
-Sacar el bloque de música fuera de esa función (se registra una sola vez).
+Botón de música a veces no pausaba
+El listener del botón se registraba dentro de actualizarCountdown(), que corre cada segundo (un listener nuevo por segundo).
+Sacar el bloque de música fuera del countdown para registrarlo una sola vez.
+Countdown 6 horas antes de la hora real
+TIME_ZONE = 'UTC': la hora capturada en el admin se tomaba como UTC.
+TIME_ZONE = 'America/Mexico_City' (revisar la hora de invitaciones capturadas antes del cambio).
 Fotos de galería con 404 / guardadas en la raíz
 No existían MEDIA_URL ni MEDIA_ROOT.
 MEDIA_ROOT = BASE_DIR / 'media' + static() en urls.py cuando DEBUG.
@@ -136,11 +139,40 @@ Terminado:
 • Motor Django completo (modelos, admin, vistas, urls) funcionando de punta a punta.
 • Primera plantilla de boda ("Terracota Velada") con diseño floral real, tipografía script + serif, scroll tipo pantalla-por-pantalla, RSVP en vivo, countdown, botones de ubicación (ceremonia/recepción separadas), vestimenta con color, itinerario, mesa de regalos, nota de niños, música con botón de reproducción manual.
 • Probado end-to-end en compu y en iPhone real (por WiFi local).
+• Plantilla de baby shower "Diez Lunas" (ver sección 7), con votación en vivo, calendario .ics y demo creada por comando; integrada con XV, graduación, fiesta y la PWA.
 • Segunda plantilla de boda ("Cobalto Editorial", boda-editorial-02.html): concepto de revista de moda, opuesta a Terracota (fría, tipográfica, asimétrica). Paleta marfil/cobalto/tinta, Bodoni Moda + Schibsted Grotesk (OFL, sin assets de terceros). Si hay galería, la primera foto se vuelve portada en monotono cobalto. Demo: python manage.py crear_demo_cobalto [--host http://<ip>:8000].
 Pendiente dentro de Fase 1:
-• Plantilla visual de XV años o graduación (ya hay dos de boda) — para cubrir otro tipo de evento.
+• Estilizar en la plantilla de boda las secciones nuevas del motor (regalos con lista, lluvia de sobres) si algún cliente de boda las pide; la votación no aparece ahí porque soporta_votacion=False.
+• Revelar el resultado de la votación desde un botón del admin en vez de editar el JSON (hoy: "resultado": "nina" dentro de "votacion").
+• Estilizar en Cobalto Editorial las secciones nuevas del motor (regalos con lista, lluvia de sobres) si algún cliente de boda las pide.
 • PWA: manifest.json + service worker (aún no se ha tocado esta parte).
 • Decidir si musica_url pasa de URLField a FileField para que la carga de canciones sea vía admin en vez de URLs manuales.
 • Decidir si los campos de contenido_extra (ceremonia/recepción, vestimenta, etc.) se formalizan como campos de admin dedicados antes de vender a clientes reales, para evitar que alguien edite JSON a mano.
 • Créditos/atribución pendientes por confirmar en los assets gratuitos de Flaticon usados (iconos), según la licencia exacta de cada uno descargado.
 No iniciado todavía: Fase 2 (precios), Fase 3 (Meta Ads), Fase 4 (venta por WhatsApp).
+7. Plantilla Baby Shower "Diez Lunas" (baby-shower-lunas-01)
+Concepto: un embarazo dura 280 días = diez lunas de 28. Cielo lavanda al atardecer con un móvil de cuna (luna, estrellas, nube, corazón) meciéndose, y una pantalla de noche donde las lunas se llenan según la semana real del embarazo. Todo el arte es SVG propio dentro del template (sin imágenes descargadas → sin dudas de licencia). Tipografía: Fraunces (itálica "suave") + Nunito. Paleta neutra por defecto (tendencia 2026), variantes con contenido_extra.paleta = "rosa" | "azul".
+Pantallas (cada una aparece solo si hay datos):
+1. Hero — "Baby Shower" + anfitriones + mensaje.
+2. Dulce espera — semana actual, 10 lunas con su fase, días que faltan, tamaño del bebé comparado con una fruta. Se recalcula con la fecha de hoy del invitado.
+3. Info — tarjeta con Día/Hora, Lugar (+ dirección), vestimenta con varios colores, countdown y botones Confirmar / Ubicación / Agendar.
+4. Juego en vivo "¿Niña o niño?" — votos con barras que se llenan; resultados visibles al votar. Solo premium + plantilla con soporta_votacion. Al poner el resultado en el admin, a todos los que tienen la invitación abierta les aparece "¡Es niña!" con confeti en ≤ 8 s (mismo polling del RSVP).
+5. Regalos — mesas de regalos (con botón "Copiar número" de evento Liverpool) y lluvia de sobres.
+6. Lluvia de pañales — tabla de tallas por inicial del apellido + buscador "¿Cuál me toca?".
+7. Galería (polaroids) y RSVP (el mensaje se pide como "deseo o consejo para el bebé").
+Motor (sirve para cualquier plantilla futura):
+• Modelo Voto + Plantilla.soporta_votacion (default False), migración 0003. Endpoints: <slug>/votar/, <slug>/votar/conteo/ (excluidos de la caché del service worker, igual que /rsvp/).
+• <slug>/calendario.ics — botón "Agendar" (ícono SVG) en todas las plantillas (recordatorio 1 día antes, duración 4 h). Con 4 botones, boda/XV/graduación los acomodan 2 × 2 en celular.
+• Evento con un solo lugar: usa las columnas lugar_nombre / lugar_mapa_url (antes no se mostraban).
+• Bloque theme_color: por defecto usa plantilla.color_tema; Diez Lunas lo cambia según la paleta. Ícono de app propio en static/invitaciones/pwa/baby-shower-lunas-01-*.png.
+Claves de contenido_extra (todas opcionales):
+• fecha_probable_parto: "2027-02-06" (activa "Dulce espera")
+• bebe_nombre: "Emilia" (si no hay, dice "al bebé")
+• lugar_direccion: "Av. Francisco Sosa 215, Coyoacán"
+• dresscode_colores: ["#EBB7C5", "#A9C8E8"] (lista; dresscode_color sigue funcionando)
+• votacion: {"pregunta", "subtitulo", "opciones": [{"clave", "texto", "color", "revelacion"}], "resultado": ""}
+• mesas_regalos: [{"nombre", "codigo", "url"}]
+• lluvia_sobres: "texto"
+• lluvia_panales: [{"desde": "A", "hasta": "F", "talla": "Etapa 1"}, ...]
+• paleta: "rosa" | "azul" (solo Diez Lunas)
+Demo: python manage.py crear_demo_baby_shower → /invitaciones/baby-shower-demo/ (fechas relativas a hoy, se puede correr de nuevo).

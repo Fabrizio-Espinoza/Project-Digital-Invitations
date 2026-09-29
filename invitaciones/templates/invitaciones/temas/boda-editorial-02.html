@@ -21,8 +21,6 @@
   de portada teñida de cobalto (monotono), como una revista de verdad.
 {% endcomment %}
 
-{% block color_tema %}#1F3FA3{% endblock %}
-
 {% block decoracion_superior %}
 {% if mostrar_galeria %}{% with portada=invitacion.galeria.all|first %}{% if portada %}
 <div class="portada-foto"><img src="{{ portada.imagen.url }}" alt=""></div>
@@ -206,7 +204,6 @@
         border: 0;
         border-radius: 50%;
         background: transparent;
-        font-size: 0;            /* esconde el emoji que escribe el motor */
         color: transparent;
         cursor: pointer;
         box-shadow: 0 0 0 1px rgba(242, 237, 228, 0.35), 0 4px 12px rgba(6, 14, 45, 0.25);
@@ -241,6 +238,9 @@
     }
     .boton-musica.sonando::after {
         opacity: 0;
+    }
+    .boton-musica svg {
+        display: none;   /* el vinilo reemplaza los iconos de nota/pausa del motor */
     }
     .boton-musica:focus-visible {
         outline: 2px solid var(--papel);
@@ -709,8 +709,10 @@
         background: var(--tinta);
         color: var(--papel);
     }
+    /* renglon 1: Confirmar + Agendar; renglon 2: los mapas */
     .accion-icono[href="#rsvp"] {
-        grid-column: 1 / -1;
+        grid-row: 1;
+        grid-column: 1;
         border-color: var(--cobalto);
         background: var(--cobalto);
         color: var(--papel);
@@ -722,8 +724,17 @@
     .accion-icono[href="#rsvp"]:hover {
         background: var(--cobalto-noche);
     }
-    .accion-icono:only-child,
-    .accion-icono[href="#rsvp"] + .accion-icono:last-child {
+    .acciones-rapidas:has([href="#rsvp"]) .accion-icono[href$="calendario.ics"] {
+        grid-row: 1;
+        grid-column: 2;
+    }
+    .accion-icono[href$="calendario.ics"]::after {
+        -webkit-mask-image: var(--flecha-abajo);   /* descarga el evento al calendario */
+        mask-image: var(--flecha-abajo);
+    }
+    /* un solo mapa, o un boton que queda solo en su renglon: ocupa todo el ancho */
+    .acciones-rapidas:not(:has([target="_blank"] ~ [target="_blank"])) .accion-icono[target="_blank"],
+    .acciones-rapidas:not(:has([href="#rsvp"])) .accion-icono:last-child:nth-child(odd) {
         grid-column: 1 / -1;
     }
     .accion-icono:focus-visible {
@@ -748,7 +759,7 @@
         max-width: var(--ancho);
         margin-inline: auto;
     }
-    .pantalla-extra:has(.itinerario)::before {
+    .pantalla-extra:has(.itinerario):not(:has(.familia))::before {
         content: "Paso a paso";
         width: 100%;
         max-width: var(--ancho);
@@ -757,6 +768,32 @@
         letter-spacing: 0.2em;
         text-transform: uppercase;
         color: var(--cobalto);
+    }
+    /* padres y padrinos: "creditos" de revista, rol arriba y nombres abajo */
+    .familia {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 1.25rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--linea);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .familia-grupo:first-child:nth-last-child(odd) {
+        grid-column: 1 / -1;   /* si son impares, el primero (padres) va a todo el ancho */
+    }
+    .familia-rol {
+        font: var(--t-kicker);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--cobalto);
+    }
+    .familia-nombres {
+        font: 500 1rem/1.35 var(--serif);
+        text-wrap: balance;
     }
     .itinerario h3 {
         margin: 0 0 1.2rem;
@@ -1211,15 +1248,9 @@
             requestAnimationFrame(() => { pendiente = false; ajustarNombres(); });
         });
 
-        // --- 3. El vinilo gira solo mientras la cancion suena ---
-        const musica = document.getElementById('musica-fondo');
-        const boton = document.getElementById('boton-musica');
-        if (musica && boton) {
-            musica.addEventListener('play', () => boton.classList.add('sonando'));
-            musica.addEventListener('pause', () => boton.classList.remove('sonando'));
-        }
+        // (el vinilo gira con la clase "sonando" que ya pone el motor)
 
-        // --- 4. El contador de confirmados "late" cuando llega alguien nuevo ---
+        // --- 3. El contador de confirmados "late" cuando llega alguien nuevo ---
         const total = document.getElementById('total-confirmados');
         if (total) {
             let anterior = total.textContent;

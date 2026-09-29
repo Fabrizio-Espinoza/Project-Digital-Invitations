@@ -38,6 +38,7 @@ class Command(BaseCommand):
             defaults={
                 "nombre": "Cobalto Editorial",
                 "tipo_evento": "boda",
+                "color_tema": "#1F3FA3",   # barra del navegador en el celular
                 "soporta_rsvp": True,
                 "soporta_musica": True,
                 "soporta_galeria": True,
