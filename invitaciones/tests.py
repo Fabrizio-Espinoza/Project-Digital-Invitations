@@ -425,3 +425,31 @@ class DemoTareaCumplidaTests(TestCase):
         self.assertContains(respuesta, "Ingeniería Mecatrónica")
         self.assertContains(respuesta, "Gracias a mis papás")
         self.assertContains(respuesta, "/static/invitaciones/pwa/graduacion-cuaderno-02-180.png")
+
+
+class DemoLoteriaTests(TestCase):
+    def test_crear_demo_loteria_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_loteria", stdout=StringIO())
+        call_command("crear_demo_loteria", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="fiesta-loteria-02").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-loteria-lupita")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "fiesta")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 14)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/fiesta-loteria-02.html")
+        # la carta del festejado sale de contenido_extra
+        self.assertContains(respuesta, '<span class="carta-numero">80</span>', html=False)
+        self.assertContains(respuesta, "La Cumpleañera")
+        self.assertContains(respuesta, "/static/invitaciones/pwa/fiesta-loteria-02-180.png")
+
+    def test_carta_de_pinata_cambia_el_dibujo(self):
+        call_command("crear_demo_loteria", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-loteria-lupita")
+        invitacion.contenido_extra["carta_dibujo"] = "pinata"
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        # al frente va la piñata y el pastel pasa a una carta de atrás
+        self.assertContains(respuesta, "El Pastel")

@@ -1,0 +1,1124 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  LA LOTERIA — segunda plantilla de fiesta.
+
+  Concepto: la invitacion como cartas de Loteria mexicana. Papel picado
+  arriba, un abanico de cartas con la del festejado al frente ("80 · La
+  Cumpleañera"), los datos como cartas de una tabla que se van marcando con
+  frijolitos ("¡Corre y se va!"), y al confirmar: "¡LOTERÍA!" con lluvia de
+  papel picado.
+
+  Es el opuesto de "Noche Neón" (flyer de antro, de noche): esta es de dia,
+  familiar y para cualquier edad: cumpleaños de la abuela, comida familiar,
+  posada, fiesta patria, despedida, aniversario.
+
+  LICENCIA: solo se toma el FORMATO de la carta (numero, dibujo al centro,
+  nombre abajo, marco negro sobre papel crema), que es generico. Todas las
+  ilustraciones (pastel, sol, reloj, casa, copa, sombrero, piñata, frijol,
+  papel picado) son SVG dibujados aqui desde cero: no se copia el arte
+  registrado de ninguna loteria comercial.
+
+  Paleta de mercado: papel crema · rosa mexicano · amarillo · verde · azul ·
+  naranja, todo contorneado en tinta negra como las cartas.
+  Tipografia: Rye (cartel antiguo, para numeros y nombres de carta) +
+  Bricolage Grotesque (texto). Ambas OFL.
+
+  Claves opcionales de contenido_extra propias de este tema:
+    carta_numero -> "80"               (numero de la carta del festejado)
+    carta_titulo -> "La Cumpleañera"   (nombre de la carta)
+    carta_dibujo -> "pastel" | "pinata" (dibujo de la carta; pastel por defecto)
+{% endcomment %}
+
+{% block decoracion_superior %}
+<!-- Ilustraciones propias: se dibujan UNA vez y se reutilizan con <use> -->
+<svg class="defs-tema" aria-hidden="true" focusable="false"><defs><symbol id="l-papel" viewBox="0 0 56 68"><path fill="currentColor" fill-rule="evenodd" d="M0 0H56V62L52 67L48 62L44 67L40 62L36 67L32 62L28 67L24 62L20 67L16 62L12 67L8 62L4 67L0 62Z M24.4 30.0a3.6 3.6 0 1 0 7.2 0a3.6 3.6 0 1 0 -7.2 0Z M38.0 32.6 L36.0 32.4 L34.3 31.8 L33.2 31.0 L32.8 30.0 L33.2 29.0 L34.3 28.2 L36.0 27.6 L38.0 27.4 L40.0 27.6 L41.7 28.2 L42.8 29.0 L43.2 30.0 L42.8 31.0 L41.7 31.8 L40.0 32.4Z M30.7 40.0 L29.9 38.1 L29.6 36.4 L29.7 35.0 L30.4 34.2 L31.5 34.0 L32.8 34.6 L34.1 35.7 L35.3 37.4 L36.1 39.2 L36.4 40.9 L36.3 42.3 L35.6 43.2 L34.5 43.3 L33.2 42.8 L31.9 41.6Z M20.7 37.4 L21.9 35.7 L23.2 34.6 L24.5 34.0 L25.6 34.2 L26.3 35.0 L26.4 36.4 L26.1 38.1 L25.3 40.0 L24.1 41.6 L22.8 42.8 L21.5 43.3 L20.4 43.2 L19.7 42.3 L19.6 40.9 L19.9 39.2Z M18.0 27.4 L20.0 27.6 L21.7 28.2 L22.8 29.0 L23.2 30.0 L22.8 31.0 L21.7 31.8 L20.0 32.4 L18.0 32.6 L16.0 32.4 L14.3 31.8 L13.2 31.0 L12.8 30.0 L13.2 29.0 L14.3 28.2 L16.0 27.6Z M25.3 20.0 L26.1 21.9 L26.4 23.6 L26.3 25.0 L25.6 25.8 L24.5 26.0 L23.2 25.4 L21.9 24.3 L20.7 22.6 L19.9 20.8 L19.6 19.1 L19.7 17.7 L20.4 16.8 L21.5 16.7 L22.8 17.2 L24.1 18.4Z M35.3 22.6 L34.1 24.3 L32.8 25.4 L31.5 26.0 L30.4 25.8 L29.7 25.0 L29.6 23.6 L29.9 21.9 L30.7 20.0 L31.9 18.4 L33.2 17.2 L34.5 16.7 L35.6 16.8 L36.3 17.7 L36.4 19.1 L36.1 20.8Z M6.2 8.0a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z M16.2 8.0a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z M26.2 8.0a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z M36.2 8.0a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z M46.2 8.0a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0 -3.6 0Z M10 47L13 51L10 55L7 51Z M19 47L22 51L19 55L16 51Z M28 47L31 51L28 55L25 51Z M37 47L40 51L37 55L34 51Z M46 47L49 51L46 55L43 51Z M6 26L8.5 30L6 34L3.5 30Z M50 26L52.5 30L50 34L47.5 30Z"/></symbol><symbol id="l-pastel" viewBox="0 0 100 100"><ellipse cx="50" cy="86" rx="40" ry="6" fill="#1FA37A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/>
+<rect x="17" y="60" width="66" height="24" rx="3" fill="#F2438F" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M17 66 q5.5 7 11 0 q5.5 7 11 0 q5.5 7 11 0 q5.5 7 11 0 q5.5 7 11 0 q5.5 7 11 0" fill="none" stroke="#FFF4E0" stroke-width="3" stroke-linecap="round"/>
+<rect x="25" y="42" width="50" height="19" rx="3" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M25 47 q5 6 10 0 q5 6 10 0 q5 6 10 0 q5 6 10 0 q5 6 10 0" fill="none" stroke="#FFF4E0" stroke-width="3" stroke-linecap="round"/>
+<rect x="34" y="28" width="32" height="15" rx="3" fill="#FFF4E0" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/>
+<g stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"><rect x="39" y="15" width="4" height="13" fill="#3A6BE0"/><rect x="48" y="12" width="4" height="16" fill="#F2438F"/><rect x="57" y="15" width="4" height="13" fill="#1FA37A"/></g>
+<g stroke="#1B1B1B" stroke-width="1.6"><path d="M41 14 c-4 -4 0 -9 0 -9 c0 0 4 5 0 9Z" fill="#FF8A00"/><path d="M50 11 c-4 -4 0 -9 0 -9 c0 0 4 5 0 9Z" fill="#FF8A00"/><path d="M59 14 c-4 -4 0 -9 0 -9 c0 0 4 5 0 9Z" fill="#FF8A00"/></g></symbol><symbol id="l-sol" viewBox="0 0 100 100"><path d="M50 50 L93.7 44.6 L93.7 55.4Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L90.5 67.2 L85.1 76.5Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L76.5 85.1 L67.2 90.5Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L55.4 93.7 L44.6 93.7Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L32.8 90.5 L23.5 85.1Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L14.9 76.5 L9.5 67.2Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L6.3 55.4 L6.3 44.6Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L9.5 32.8 L14.9 23.5Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L23.5 14.9 L32.8 9.5Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L44.6 6.3 L55.4 6.3Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L67.2 9.5 L76.5 14.9Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50 50 L85.1 23.5 L90.5 32.8Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><circle cx="50" cy="50" r="22" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><g fill="none" stroke="#1B1B1B" stroke-width="2.2" stroke-linecap="round"><path d="M41 46 q3 -3 6 0"/><path d="M53 46 q3 -3 6 0"/><path d="M42 56 q8 7 16 0"/></g><circle cx="39" cy="53" r="2.4" fill="#F2438F"/><circle cx="61" cy="53" r="2.4" fill="#F2438F"/></symbol><symbol id="l-reloj" viewBox="0 0 100 100"><g stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"><circle cx="30" cy="22" r="9" fill="#F2438F"/><circle cx="70" cy="22" r="9" fill="#F2438F"/><path d="M34 80 L27 90 M66 80 L73 90" fill="none" stroke-linecap="round"/><circle cx="50" cy="54" r="31" fill="#3A6BE0"/><circle cx="50" cy="54" r="24" fill="#FFF4E0"/></g><g stroke="#1B1B1B" stroke-width="3" stroke-linecap="round"><path d="M50 54 V38"/><path d="M50 54 L61 60"/></g><circle cx="50" cy="54" r="2.8" fill="#1B1B1B"/></symbol><symbol id="l-casa" viewBox="0 0 100 100"><g stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"><rect x="22" y="44" width="56" height="42" fill="#F2438F"/><path d="M14 47 L50 16 L86 47Z" fill="#FF8A00"/><rect x="43" y="60" width="15" height="26" rx="7" fill="#1FA37A"/><rect x="28" y="54" width="10" height="10" fill="#FFC21A"/><rect x="63" y="54" width="10" height="10" fill="#FFC21A"/></g></symbol><symbol id="l-copa" viewBox="0 0 100 100"><g stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"><path d="M30 14 H70 C70 44 62 54 50 56 C38 54 30 44 30 14Z" fill="#FFF4E0"/><path d="M32 30 H68 C66 46 60 52 50 53 C40 52 34 46 32 30Z" fill="#C8203C"/><path d="M50 56 V80" fill="none"/><ellipse cx="50" cy="84" rx="16" ry="5" fill="#FFC21A"/></g><circle cx="44" cy="40" r="2" fill="#FFF4E0"/><circle cx="54" cy="44" r="1.6" fill="#FFF4E0"/></symbol><symbol id="l-sombrero" viewBox="0 0 100 100"><g stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"><ellipse cx="50" cy="66" rx="44" ry="14" fill="#FFC21A"/><path d="M32 64 C32 36 40 22 50 22 C60 22 68 36 68 64 Z" fill="#FFC21A"/><path d="M33 56 C44 60 56 60 67 56 L67 62 C56 66 44 66 33 62Z" fill="#F2438F"/></g><path d="M16 66 q8 6 17 0 M67 66 q9 6 17 0" fill="none" stroke="#1FA37A" stroke-width="3" stroke-linecap="round"/></symbol><symbol id="l-pinata" viewBox="0 0 100 100"><path d="M45.3 33.7 L50.0 3.0 L54.7 33.7Z" fill="#F2438F" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M50.0 3.0 l3.5 -2.0 M50.0 3.0 l-3.5 -2.0" stroke="#F2438F" stroke-width="2.4" stroke-linecap="round"/><path d="M59.8 36.1 L86.5 20.4 L65.6 43.4Z" fill="#FFC21A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M86.5 20.4 l3.7 1.4 M86.5 20.4 l-0.6 -4.0" stroke="#FFC21A" stroke-width="2.4" stroke-linecap="round"/><path d="M67.0 48.8 L96.0 59.8 L65.0 58.0Z" fill="#1FA37A" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M96.0 59.8 l1.2 3.8 M96.0 59.8 l2.7 -3.0" stroke="#1FA37A" stroke-width="2.4" stroke-linecap="round"/><path d="M61.6 62.4 L71.3 91.9 L53.2 66.7Z" fill="#3A6BE0" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M71.3 91.9 l-2.2 3.4 M71.3 91.9 l4.0 0.2" stroke="#3A6BE0" stroke-width="2.4" stroke-linecap="round"/><path d="M47.6 66.8 L30.9 92.9 L39.1 63.0Z" fill="#FF8A00" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M30.9 92.9 l-4.0 0.4 M30.9 92.9 l2.4 3.2" stroke="#FF8A00" stroke-width="2.4" stroke-linecap="round"/><path d="M35.4 58.8 L4.6 62.2 L33.0 49.7Z" fill="#C8203C" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M4.6 62.2 l-2.8 -2.8 M4.6 62.2 l-1.0 3.9" stroke="#C8203C" stroke-width="2.4" stroke-linecap="round"/><path d="M34.0 44.2 L12.0 22.4 L39.5 36.6Z" fill="#8B3FD1" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><path d="M12.0 22.4 l0.4 -4.0 M12.0 22.4 l-3.7 1.6" stroke="#8B3FD1" stroke-width="2.4" stroke-linecap="round"/><circle cx="50" cy="50" r="20" fill="#FFF4E0" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/><circle cx="50" cy="50" r="10" fill="#F2438F" stroke="#1B1B1B" stroke-width="2.2" stroke-linejoin="round"/></symbol><symbol id="l-frijol" viewBox="0 0 40 28"><path d="M4 14 C4 5 14 2 22 5 C28 7 30 3 34 6 C39 10 38 22 28 25 C18 28 4 24 4 14Z" fill="#5A2E1B" stroke="#2A140A" stroke-width="1.5"/><path d="M12 9 C16 7 20 8 22 9" fill="none" stroke="#C98B63" stroke-width="2.4" stroke-linecap="round"/></symbol></defs></svg>
+
+<!-- papel picado colgando de un hilo -->
+<div class="papel-picado" aria-hidden="true">
+    {% for bandera in "123456789012345678901234" %}
+    <svg class="bandera" viewBox="0 0 56 68"><use href="#l-papel"/></svg>
+    {% endfor %}
+</div>
+
+<!-- abanico de cartas: dos atras y la del festejado al frente -->
+<div class="abanico" aria-hidden="true">
+    <div class="carta carta-atras carta-izq">
+        <span class="carta-numero">1</span>
+        <svg class="carta-ilustracion" viewBox="0 0 100 100"><use href="#l-sol"/></svg>
+        <span class="carta-nombre">El Sol</span>
+    </div>
+    <div class="carta carta-atras carta-der">
+        <span class="carta-numero">7</span>
+        {% if invitacion.contenido_extra.carta_dibujo == "pinata" %}
+        <svg class="carta-ilustracion" viewBox="0 0 100 100"><use href="#l-pastel"/></svg>
+        <span class="carta-nombre">El Pastel</span>
+        {% else %}
+        <svg class="carta-ilustracion" viewBox="0 0 100 100"><use href="#l-pinata"/></svg>
+        <span class="carta-nombre">La Piñata</span>
+        {% endif %}
+    </div>
+    <div class="carta carta-frente">
+        <span class="carta-numero">{{ invitacion.contenido_extra.carta_numero|default:"1" }}</span>
+        {% if invitacion.contenido_extra.carta_dibujo == "pinata" %}
+        <svg class="carta-ilustracion" viewBox="0 0 100 100"><use href="#l-pinata"/></svg>
+        {% else %}
+        <svg class="carta-ilustracion" viewBox="0 0 100 100"><use href="#l-pastel"/></svg>
+        {% endif %}
+        <span class="carta-nombre">{{ invitacion.contenido_extra.carta_titulo|default:"La Fiesta" }}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="hero-fecha">{{ invitacion.fecha_evento|date:"l j \d\e F"|lower|capfirst }} · {{ invitacion.fecha_evento|date:"g:i A" }}</p>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="tabla-cabecera">
+    <p class="kicker">Tu tabla</p>
+    <h2 class="titulo-carta">¡Corre y se va!</h2>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- aqui aparece el grito de "¡Lotería!" y la lluvia de papel picado al confirmar -->
+<div class="festejo" id="festejo" aria-hidden="true"></div>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rye&family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        --papel: #F6EFE0;
+        --crema: #FFF4E0;          /* el carton de las cartas */
+        --tinta: #1B1B1B;
+        --rosa: #D9127A;           /* rosa mexicano */
+        --amarillo: #FFC21A;
+        --verde: #138A63;
+        --azul: #3A6BE0;
+        --naranja: #F07C00;
+        --morado: #8B3FD1;
+        --rojo: #C8203C;
+
+        --carta: 'Rye', 'Rockwell', Georgia, serif;
+        --texto: 'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
+
+        --margen: clamp(1.25rem, 5vw, 2rem);
+        --ancho: 28rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        --sombra-dura: 4px 4px 0 var(--tinta);
+
+        /* el frijolito con el que se marca la tabla */
+        --frijol: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 28'%3E%3Cpath d='M4 14 C4 5 14 2 22 5 C28 7 30 3 34 6 C39 10 38 22 28 25 C18 28 4 24 4 14Z' fill='%235A2E1B' stroke='%232A140A' stroke-width='1.5'/%3E%3Cpath d='M12 9 C16 7 20 8 22 9' fill='none' stroke='%23C98B63' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--tinta);
+        font-family: var(--texto);
+        font-size: 1rem;
+        line-height: 1.45;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(217, 18, 122, 0.15);
+    }
+    ::selection {
+        background: var(--amarillo);
+        color: var(--tinta);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 800 0.7rem/1.3 var(--texto);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .titulo-carta {
+        margin: 0;
+        font: 400 clamp(2rem, 10vw, 2.6rem)/1.1 var(--carta);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (ficha amarilla)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        top: max(0.9rem, env(safe-area-inset-top));
+        right: max(0.9rem, env(safe-area-inset-right));
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 2.9rem;
+        height: 2.9rem;
+        padding: 0;
+        border: 2.5px solid var(--tinta);
+        border-radius: 50%;
+        background: var(--amarillo);
+        color: var(--tinta);
+        cursor: pointer;
+        box-shadow: 3px 3px 0 var(--tinta);
+    }
+    .boton-musica svg {
+        grid-area: 1 / 1;
+        width: 1.3rem;
+        height: 1.3rem;
+        transition: opacity 0.2s ease;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        opacity: 0;
+    }
+    .boton-musica.sonando .icono-pausa {
+        opacity: 1;
+    }
+    .boton-musica.sonando {
+        animation: bailar 1.2s ease-in-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 3px solid var(--rosa);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.7s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    /* cada pieza trae su --retraso para entrar escalonada */
+    .visible :is(.eyebrow, .nombres, .mensaje, .hero-fecha, .tabla-cabecera, .countdown, .acciones-rapidas, .familia, .itinerario-item, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.7s var(--curva) var(--retraso, 0s) both;
+    }
+    /* las cartas se reparten una por una */
+    .visible :is(.carta, .detalle-item, .lugar-item, .vestimenta) {
+        animation: repartir 0.6s var(--curva) var(--retraso, 0s) both;
+    }
+    /* y el frijolito cae sobre cada carta de la tabla */
+    .visible :is(.detalle-item, .lugar-item, .vestimenta)::after {
+        animation: frijolito 0.45s cubic-bezier(0.3, 1.6, 0.5, 1) calc(var(--retraso, 0s) + 0.6s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.7rem; }
+    }
+    @keyframes repartir {
+        from { opacity: 0; translate: 0 2rem; scale: 0.9; }
+    }
+    @keyframes frijolito {
+        from { opacity: 0; scale: 2.6; }
+    }
+    @keyframes ondear {
+        50% { rotate: 3deg; }
+    }
+    @keyframes bailar {
+        25% { rotate: -10deg; }
+        75% { rotate: 10deg; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; }
+    }
+    @keyframes grito {
+        0% { opacity: 0; scale: 0.3; rotate: -20deg; }
+        25% { opacity: 1; scale: 1.1; rotate: -6deg; }
+        35% { scale: 1; }
+        80% { opacity: 1; }
+        100% { opacity: 0; scale: 1.05; }
+    }
+    @keyframes caer {
+        to { translate: var(--dx) 110vh; rotate: var(--giro); }
+    }
+
+    /* ============================================
+       PORTADA: papel picado + abanico de cartas
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 var(--margen) 2.4rem;
+        background: var(--papel);
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        display: contents;
+    }
+    .papel-picado {
+        display: flex;
+        justify-content: center;
+        align-self: stretch;
+        margin-inline: calc(-1 * var(--margen));
+        padding-top: 0.5rem;
+        border-top: 2px solid var(--tinta);   /* el hilo */
+        overflow: hidden;
+        flex: none;
+    }
+    .bandera {
+        flex: none;
+        width: 3.3rem;
+        height: 4rem;
+        margin: -0.5rem 0.1rem 0;
+        transform-origin: top center;
+        animation: ondear 3s ease-in-out infinite;
+    }
+    .bandera:nth-child(6n+1) { color: var(--rosa); }
+    .bandera:nth-child(6n+2) { color: var(--amarillo); animation-delay: -0.5s; }
+    .bandera:nth-child(6n+3) { color: var(--verde); animation-delay: -1s; }
+    .bandera:nth-child(6n+4) { color: var(--azul); animation-delay: -1.5s; }
+    .bandera:nth-child(6n+5) { color: var(--naranja); animation-delay: -2s; }
+    .bandera:nth-child(6n+6) { color: var(--morado); animation-delay: -2.5s; }
+
+    .abanico {
+        position: relative;
+        flex: none;
+        width: 100%;
+        height: clamp(12rem, 36svh, 15rem);
+        margin-top: clamp(0.8rem, 2.5vh, 1.6rem);
+    }
+    /* la carta: carton crema, marco negro y un marco de color por dentro */
+    .carta {
+        --color-marco: var(--rosa);
+        position: absolute;
+        left: 50%;
+        top: 0;
+        height: 100%;
+        aspect-ratio: 5 / 8;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.6rem 0.5rem 0.75rem;
+        background: var(--crema);
+        border: 3px solid var(--tinta);
+        border-radius: 4px;
+        box-shadow: inset 0 0 0 4px var(--crema), inset 0 0 0 7px var(--color-marco), 5px 6px 0 rgba(27, 27, 27, 0.18);
+    }
+    .carta-izq {
+        --color-marco: var(--naranja);
+        --retraso: 0.05s;
+        translate: -105% 6%;
+        rotate: -12deg;
+        scale: 0.86;
+    }
+    .carta-der {
+        --color-marco: var(--verde);
+        --retraso: 0.15s;
+        translate: 5% 6%;
+        rotate: 11deg;
+        scale: 0.86;
+    }
+    .carta-frente {
+        --retraso: 0.3s;
+        z-index: 1;
+        translate: -50% 0;
+        rotate: -2deg;
+    }
+    .carta-numero {
+        align-self: flex-start;
+        margin-left: 0.4rem;
+        font: 400 1.5rem/1 var(--carta);
+    }
+    .carta-atras .carta-numero {
+        font-size: 1.1rem;
+    }
+    .carta-ilustracion {
+        width: 78%;
+        height: auto;
+        overflow: visible;
+    }
+    .carta-nombre {
+        font: 400 0.95rem/1.1 var(--carta);
+        text-transform: uppercase;
+    }
+    .carta-atras .carta-nombre {
+        font-size: 0.72rem;
+    }
+
+    .hero-contenido {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+        padding-top: 1rem;
+    }
+    .eyebrow {
+        --retraso: 0.5s;
+        margin: 0;
+        font: 800 0.8rem/1.3 var(--texto);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--rosa);
+    }
+    .nombres {
+        --retraso: 0.6s;
+        max-width: 100%;   /* sin esto el titulo crece con el nombre y el JS no detecta que no cabe */
+        min-width: 0;
+        margin: 0.2rem 0 0;
+        font: 400 clamp(2.4rem, 12vw, 4rem)/1.05 var(--carta);
+        text-wrap: balance;
+    }
+    .mensaje {
+        --retraso: 0.7s;
+        max-width: 32ch;
+        margin: 0.6rem 0 0;
+        font-size: 1rem;
+        line-height: 1.45;
+        text-wrap: pretty;
+    }
+    .hero-fecha {
+        --retraso: 0.8s;
+        margin: 0.9rem 0 0;
+        padding: 0.35rem 0.9rem;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--amarillo);
+        font: 800 0.85rem/1.2 var(--texto);
+        box-shadow: 3px 3px 0 var(--tinta);
+    }
+
+    /* ============================================
+       PANTALLA 2: TU TABLA (datos como cartas)
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.6rem var(--margen) 2.6rem;
+        background: var(--rosa);
+        color: var(--crema);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 1rem;
+    }
+    .tabla-cabecera {
+        --retraso: 0.05s;
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem;
+        counter-reset: carta;
+    }
+    /* las secciones del motor "desaparecen" como cajas: sus cartas entran directo a la tabla */
+    .detalles,
+    .lugares {
+        display: contents;
+    }
+    .detalle-divisor {
+        display: none;
+    }
+    .detalle-item,
+    .lugar-item,
+    .vestimenta {
+        --color-marco: var(--amarillo);
+        counter-increment: carta;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.2rem;
+        min-height: 9.4rem;
+        padding: 0.55rem 0.6rem 0.65rem;
+        background: var(--crema);
+        color: var(--tinta);
+        border: 3px solid var(--tinta);
+        border-radius: 4px;
+        box-shadow: inset 0 0 0 3px var(--crema), inset 0 0 0 6px var(--color-marco);
+    }
+    .detalles .detalle-item:first-child { --retraso: 0.1s; }
+    .detalles .detalle-item:last-child { --color-marco: var(--azul); --retraso: 0.2s; }
+    .lugar-item { --color-marco: var(--verde); --retraso: 0.3s; }
+    .lugar-item + .lugar-item { --color-marco: var(--naranja); --retraso: 0.4s; }
+    .vestimenta { --color-marco: var(--morado); --retraso: 0.5s; }
+    /* si quedan impares, la ultima carta ocupa todo el ancho (la marca el JS) */
+    .carta-ancha {
+        grid-column: 1 / -1;
+        min-height: 7.5rem;
+    }
+    /* numero de la carta, arriba a la izquierda */
+    .detalle-item::before,
+    .lugar-item::before,
+    .vestimenta::before {
+        content: counter(carta);
+        position: absolute;
+        left: 0.7rem;
+        top: 0.5rem;
+        font: 400 1rem/1 var(--carta);
+    }
+    /* el frijolito que marca la carta */
+    .detalle-item::after,
+    .lugar-item::after,
+    .vestimenta::after {
+        content: "";
+        position: absolute;
+        right: 0.55rem;
+        top: 0.5rem;
+        width: 1.7rem;
+        height: 1.2rem;
+        background: var(--frijol) center / contain no-repeat;
+        rotate: -18deg;
+    }
+    .carta-dibujo {
+        width: 2.9rem;
+        height: 2.9rem;
+        margin-top: 0.4rem;
+        overflow: visible;
+    }
+    .detalle-valor {
+        font: 800 1rem/1.2 var(--texto);
+        text-wrap: balance;
+    }
+    /* Django escribe "15 de Noviembre"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .detalle-label {
+        order: 9;   /* el nombre de la carta va abajo, como en la loteria */
+        font: 400 0.78rem/1.1 var(--carta);
+        text-transform: uppercase;
+    }
+    .lugar-direccion {
+        font-size: 0.78rem;
+        line-height: 1.25;
+        opacity: 0.75;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--tinta);
+        border-radius: 50%;
+    }
+
+    /* ============================================
+       COUNTDOWN (fichas en fila)
+       ============================================ */
+    .countdown {
+        --retraso: 0.6s;
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.45rem;
+        margin-top: 0.35rem;
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown::before {
+        content: "Faltan";
+        grid-column: 1 / -1;
+        font: 800 0.7rem/1.3 var(--texto);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.4rem 0 0.35rem;
+        background: var(--crema);
+        color: var(--tinta);
+        border: 2.5px solid var(--tinta);
+        border-radius: 8px;
+    }
+    .countdown span {
+        font: 400 1.5rem/1 var(--carta);
+    }
+    .countdown label {
+        margin-top: 0.15rem;
+        font: 800 0.58rem/1 var(--texto);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS: fichas de colores con sombra dura
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.7s;
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.55rem;
+        margin-top: 0.5rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0 0.7rem;
+        background: var(--crema);
+        color: var(--tinta);
+        border: 2.5px solid var(--tinta);
+        border-radius: 10px;
+        text-decoration: none;
+        font: 800 0.74rem/1 var(--texto);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        box-shadow: var(--sombra-dura);
+        transition: translate 0.15s ease, box-shadow 0.15s ease;
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--amarillo);
+    }
+    .accion-icono:active {
+        translate: 3px 3px;
+        box-shadow: 1px 1px 0 var(--tinta);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 3px solid var(--amarillo);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: el programa
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.1rem;
+        padding: 2.6rem var(--margen);
+        background: var(--verde);
+        color: var(--crema);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: 800 0.66rem/1.3 var(--texto);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+    .familia-nombres {
+        font: 400 1.2rem/1.2 var(--carta);
+    }
+    .itinerario::before {
+        content: "El programa";
+        font: 800 0.7rem/1.3 var(--texto);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .itinerario h3 {
+        margin: 0.1rem 0 0.8rem;
+        font: 400 clamp(2rem, 10vw, 2.6rem)/1.1 var(--carta);
+    }
+    /* cada paso es una tira de carton con su hora en una pestaña de color */
+    .itinerario-item {
+        --color-marco: var(--amarillo);
+        display: grid;
+        grid-template-columns: 5.4rem 1fr;
+        align-items: stretch;
+        margin-bottom: 0.45rem;
+        background: var(--crema);
+        color: var(--tinta);
+        border: 2.5px solid var(--tinta);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.3);
+        text-align: left;
+    }
+    .itinerario-item:nth-of-type(5n+2) { --color-marco: var(--rosa); --retraso: 0.08s; }
+    .itinerario-item:nth-of-type(5n+3) { --color-marco: var(--azul); --retraso: 0.16s; }
+    .itinerario-item:nth-of-type(5n+4) { --color-marco: var(--naranja); --retraso: 0.24s; }
+    .itinerario-item:nth-of-type(5n+5) { --color-marco: var(--morado); --retraso: 0.32s; }
+    .itinerario-hora {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 0.3rem;
+        background: var(--color-marco);
+        border-right: 2.5px solid var(--tinta);
+        font: 800 0.8rem/1.1 var(--texto);
+        white-space: nowrap;
+    }
+    .itinerario-item:nth-of-type(5n+2) .itinerario-hora,
+    .itinerario-item:nth-of-type(5n+3) .itinerario-hora,
+    .itinerario-item:nth-of-type(5n+5) .itinerario-hora {
+        color: var(--crema);
+    }
+    .itinerario-evento {
+        padding: 0.55rem 0.75rem;
+        font: 700 1rem/1.25 var(--texto);
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        background: var(--amarillo);
+        color: var(--tinta);
+        border: 2.5px solid var(--tinta);
+        border-radius: 10px;
+        text-decoration: none;
+        font: 800 0.8rem/1 var(--texto);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        box-shadow: var(--sombra-dura);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 3px solid var(--amarillo);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.4s;
+        margin: 0;
+        font: 400 1.15rem/1.25 var(--carta);
+    }
+
+    /* ============================================
+       GALERIA: cada foto es una carta
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 0.9rem;
+        align-content: center;
+        padding: 2.6rem max(var(--margen), (100% - 32rem) / 2);
+        background: var(--amarillo);
+    }
+    .galeria::before {
+        content: "Las fotos";
+        grid-column: 1 / -1;
+        font: 400 clamp(2rem, 10vw, 2.6rem)/1.1 var(--carta);
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 5 / 8;
+        object-fit: cover;
+        border: 6px solid var(--crema);
+        border-radius: 4px;
+        outline: 3px solid var(--tinta);
+        box-shadow: 6px 7px 0 var(--tinta);
+    }
+    .galeria img:nth-of-type(odd) { rotate: -2deg; }
+    .galeria img:nth-of-type(even) { rotate: 2deg; }
+
+    /* ============================================
+       RSVP: ¡LOTERIA! (llena tu tabla)
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.6rem var(--margen) 2.8rem;
+        background: var(--naranja);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "¡Lotería! · llena tu tabla";
+        font: 800 0.7rem/1.3 var(--texto);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .rsvp h2 {
+        margin: 0.15rem auto 0.3rem;
+        font: 400 clamp(2rem, 10vw, 2.6rem)/1.1 var(--carta);
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        font-weight: 600;
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 400 1.5rem/1 var(--carta);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "31 de Octubre": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-weight: 500;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+
+    /* --- La tabla: carton crema con marco, como una carta grande --- */
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 1.3rem auto 0;
+        padding: 1.4rem 1.1rem 1.2rem;
+        background: var(--crema);
+        border: 3px solid var(--tinta);
+        border-radius: 6px;
+        box-shadow: inset 0 0 0 4px var(--crema), inset 0 0 0 7px var(--rosa), 6px 7px 0 var(--tinta);
+        text-align: left;
+    }
+    /* campos de 16px o mas: el iPhone no hace zoom */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 2.5px solid var(--tinta);
+        border-radius: 8px;
+        background: #FFFFFF;
+        color: var(--tinta);
+        font: 600 1.05rem/1.3 var(--texto);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(27, 27, 27, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        box-shadow: 3px 3px 0 var(--rosa);
+    }
+    #form-rsvp textarea {
+        min-height: 4.2rem;
+        resize: vertical;
+    }
+
+    /* --- Si / No / Tal vez: la opcion elegida se marca con un frijolito --- */
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        padding: 0.3rem;
+        background: #FFFFFF;
+        border: 2.5px solid var(--tinta);
+        border-radius: 8px;
+        font: 800 0.85rem/1.1 var(--texto);
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--amarillo);
+    }
+    .opciones-asistencia input[type="radio"]:checked + label::after {
+        content: "";
+        position: absolute;
+        right: -0.4rem;
+        top: -0.55rem;
+        width: 1.6rem;
+        height: 1.15rem;
+        background: var(--frijol) center / contain no-repeat;
+        rotate: 20deg;
+        animation: frijolito 0.4s cubic-bezier(0.3, 1.6, 0.5, 1) both;
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 3px solid var(--rosa);
+        outline-offset: 2px;
+    }
+
+    /* --- Acompanantes --- */
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 800 0.72rem/1.2 var(--texto);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .campo-con-label input {
+        max-width: 4.2rem;
+        text-align: center;
+    }
+
+    /* --- Enviar --- */
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.3rem;
+        background: var(--rosa);
+        color: var(--crema);
+        border: 2.5px solid var(--tinta);
+        border-radius: 10px;
+        font: 400 1.1rem/1 var(--carta);
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        box-shadow: var(--sombra-dura);
+        transition: translate 0.15s ease, box-shadow 0.15s ease;
+    }
+    #form-rsvp button:active {
+        translate: 3px 3px;
+        box-shadow: 1px 1px 0 var(--tinta);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 3px solid var(--rosa);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 400 1.4rem/1.2 var(--carta);
+    }
+
+    /* --- "¡Lotería!" y lluvia de papel picado al confirmar --- */
+    .festejo {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .grito {
+        grid-area: 1 / 1;
+        padding: 0.6rem 1.4rem;
+        background: var(--amarillo);
+        border: 4px solid var(--tinta);
+        border-radius: 12px;
+        font: 400 clamp(2.6rem, 15vw, 4.5rem)/1 var(--carta);
+        box-shadow: 8px 8px 0 var(--tinta);
+        animation: grito 2.2s var(--curva) both;
+    }
+    .confeti {
+        position: absolute;
+        top: -2rem;
+        width: 0.9rem;
+        height: 1.1rem;
+        border: 1.5px solid var(--tinta);
+        animation: caer var(--duracion, 2.4s) linear var(--retraso, 0s) both;
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        .festejo {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        const svgNS = 'http://www.w3.org/2000/svg';
+
+        // --- 1. Cada dato se vuelve carta: su dibujo y su nombre con articulo ---
+        // ("Día" -> "El día"). Si una etiqueta no esta en la lista, se deja igual.
+        const articulos = {
+            'Día': 'El día', 'Hora': 'La hora', 'Lugar': 'El lugar',
+            'Ceremonia': 'La ceremonia', 'Recepción': 'La recepción', 'Misa': 'La misa',
+            'Fiesta': 'La fiesta', 'Celebración': 'La celebración',
+            'Código de vestimenta': 'El atuendo'
+        };
+        function hacerCarta(elemento, dibujo) {
+            if (!elemento) return;
+            const svg = document.createElementNS(svgNS, 'svg');
+            svg.setAttribute('class', 'carta-dibujo');
+            svg.setAttribute('viewBox', '0 0 100 100');
+            svg.setAttribute('aria-hidden', 'true');
+            const uso = document.createElementNS(svgNS, 'use');
+            uso.setAttribute('href', '#l-' + dibujo);
+            svg.appendChild(uso);
+            elemento.prepend(svg);
+            const etiqueta = elemento.querySelector('.detalle-label');
+            const texto = etiqueta ? etiqueta.textContent.trim() : '';
+            if (articulos[texto]) etiqueta.textContent = articulos[texto];
+        }
+        const dias = document.querySelectorAll('.detalles .detalle-item');
+        hacerCarta(dias[0], 'sol');
+        hacerCarta(dias[1], 'reloj');
+        const lugares = document.querySelectorAll('.lugar-item');
+        hacerCarta(lugares[0], 'casa');
+        hacerCarta(lugares[1], 'copa');
+        hacerCarta(document.querySelector('.vestimenta'), 'sombrero');
+        const cartas = document.querySelectorAll('.pantalla-contenido :is(.detalle-item, .lugar-item, .vestimenta)');
+        if (cartas.length % 2 === 1) cartas[cartas.length - 1].classList.add('carta-ancha');
+
+        // --- 2. El nombre nunca se sale de la pantalla (ni pasa de 2 renglones) ---
+        const titulo = document.querySelector('.nombres');
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 1.05 * 2.3;   // 1.05 = line-height
+            let vueltas = 0;
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 3. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 4. ¡Lotería! cuando el RSVP se envía con éxito ---
+        // El motor escribe "¡Gracias por confirmar!" en #rsvp-status; lo
+        // escuchamos sin tocar su logica.
+        const status = document.getElementById('rsvp-status');
+        const festejo = document.getElementById('festejo');
+        const colores = ['#D9127A', '#FFC21A', '#138A63', '#3A6BE0', '#F07C00', '#8B3FD1'];
+        function gritarLoteria() {
+            if (!festejo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const grito = document.createElement('div');
+            grito.className = 'grito';
+            grito.textContent = '¡Lotería!';
+            festejo.appendChild(grito);
+            for (let i = 0; i < 36; i++) {
+                const pieza = document.createElement('span');
+                pieza.className = 'confeti';
+                pieza.style.left = (Math.random() * 100) + '%';
+                pieza.style.background = colores[i % colores.length];
+                pieza.style.setProperty('--dx', ((Math.random() - 0.5) * 30) + 'vw');
+                pieza.style.setProperty('--giro', ((Math.random() - 0.5) * 900) + 'deg');
+                pieza.style.setProperty('--duracion', (1.8 + Math.random() * 1.4) + 's');
+                pieza.style.setProperty('--retraso', (Math.random() * 0.5) + 's');
+                festejo.appendChild(pieza);
+            }
+            setTimeout(() => { festejo.textContent = ''; }, 3600);
+        }
+        if (status) {
+            new MutationObserver(() => {
+                if (status.textContent.includes('Gracias')) gritarLoteria();
+            }).observe(status, { childList: true, characterData: true, subtree: true });
+        }
+    })();
+</script>
+{% endblock %}
