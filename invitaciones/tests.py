@@ -370,3 +370,38 @@ class DemoBabyShowerTests(TestCase):
         # si el SW cacheara /votar/conteo/, el juego en vivo mostraría datos viejos
         respuesta = self.client.get(reverse("invitaciones:service_worker"))
         self.assertContains(respuesta, "'/votar/'")
+
+
+class DemoCarnetDeBaileTests(TestCase):
+    def test_crear_demo_xv_carnet_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_xv_carnet", stdout=StringIO())
+        # la IP se acepta con o sin "http://"
+        call_command("crear_demo_xv_carnet", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="xv-carnet-02").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-xv-regina")
+        self.assertEqual(invitacion.plantilla.color_tema, "#F9DDE3")
+        self.assertEqual(invitacion.musica_url, "http://192.168.1.50:8000/static/invitaciones/musica/cancion-boda.mp3")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 18)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/xv-carnet-02.html")
+        # el regalo nace oculto: si el JS falla, nunca tapa la invitación
+        self.assertContains(respuesta, 'id="regalo" hidden')
+        self.assertContains(respuesta, "/static/invitaciones/pwa/xv-carnet-02-180.png")
+
+
+class DemoCobaltoTests(TestCase):
+    def test_crear_demo_cobalto_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_cobalto", stdout=StringIO())
+        call_command("crear_demo_cobalto", stdout=StringIO())
+
+        self.assertEqual(Invitacion.objects.filter(slug="demo-cobalto-editorial").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-cobalto-editorial")
+        self.assertEqual(invitacion.plantilla.color_tema, "#1F3FA3")
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-editorial-02.html")
+        self.assertContains(respuesta, "/static/invitaciones/pwa/boda-editorial-02-180.png")
