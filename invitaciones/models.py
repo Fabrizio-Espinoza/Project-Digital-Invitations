@@ -1,3 +1,4 @@
+import secrets
 from urllib.parse import urlsplit
 
 from django.conf import settings
@@ -159,3 +160,42 @@ class Voto(models.Model):
 
     class Meta:
         ordering = ["-creado_en"]
+
+
+
+def _token_pedido():
+    # 12 caracteres al azar (~72 bits): imposible de adivinar, corto para WhatsApp
+    return secrets.token_urlsafe(9)
+
+
+class Pedido(models.Model):
+    """
+    Un cliente que ya pagó y tiene que mandar sus datos. Tú lo creas en el
+    admin (diseño + paquete) y le mandas el link privado /pedido/<token>/;
+    el cliente llena el formulario desde su celular y al enviarlo se crea
+    su Invitacion como borrador (activa=False) para que la revises y la
+    publiques. Mientras no la publiques, el cliente puede corregir sus datos.
+    """
+    token = models.CharField(max_length=24, unique=True, default=_token_pedido, editable=False)
+    cliente = models.CharField(max_length=120, help_text="Para ti: cómo identificas a este cliente (no se publica).")
+    plantilla = models.ForeignKey(Plantilla, on_delete=models.PROTECT, related_name="pedidos")
+    nivel = models.CharField(max_length=20, choices=Invitacion.NIVEL, default="interactiva")
+    invitacion = models.OneToOneField(
+        Invitacion, on_delete=models.SET_NULL, null=True, blank=True, related_name="pedido"
+    )
+    # lo que el cliente pide y no cabe en la invitación
+    cancion = models.CharField(max_length=300, blank=True)
+    notas = models.TextField(blank=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    enviado_en = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-creado_en"]
+
+    def __str__(self):
+        return f"{self.cliente} · {self.plantilla.nombre}"
+
+    @property
+    def abierto(self):
+        """El cliente puede llenar/corregir hasta que la invitación se publica."""
+        return self.invitacion is None or not self.invitacion.activa

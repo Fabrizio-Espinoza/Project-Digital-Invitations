@@ -941,3 +941,191 @@ class CatalogoTests(TestCase):
         # por WiFi (http://<ip>:8000) no hay https: forzarlo rompería la vista previa
         respuesta = self.client.get("/")
         self.assertContains(respuesta, 'content="http://testserver/static/invitaciones/catalogo/compartir.jpg"')
+
+
+# ---------------------------------------------------------------------------
+# Pedido: formulario del cliente
+# ---------------------------------------------------------------------------
+import shutil
+from io import BytesIO
+
+from django.contrib.auth.models import User
+from django.core.files.uploadedfile import SimpleUploadedFile
+from PIL import Image
+
+from .models import ImagenGaleria, Pedido
+
+MEDIA_PRUEBAS = tempfile.mkdtemp(prefix="media-pruebas-")
+
+
+def foto_de_prueba(nombre="foto.jpg", ancho=3000, alto=2000, con_gps=True):
+    imagen = Image.new("RGB", (ancho, alto), (200, 120, 90))
+    exif = Image.Exif()
+    if con_gps:
+        exif[0x8825] = {2: (19.0, 26.0, 0.0)}      # GPSInfo: latitud de la casa
+    salida = BytesIO()
+    imagen.save(salida, "JPEG", exif=exif)
+    return SimpleUploadedFile(nombre, salida.getvalue(), content_type="image/jpeg")
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class PedidoTests(TestCase):
+    @classmethod
+    def tearDownClass(cls):
+        super().tearDownClass()
+        shutil.rmtree(MEDIA_PRUEBAS, ignore_errors=True)
+
+    def setUp(self):
+        self.boda = Plantilla.objects.create(nombre="Hotel Amor", tipo_evento="boda", slug_tema="boda-hotel-03")
+        self.pedido = Pedido.objects.create(cliente="Sofía (WhatsApp)", plantilla=self.boda, nivel="premium")
+        self.url = reverse("pedido", args=[self.pedido.token])
+
+    def datos_boda(self, **cambios):
+        datos = {
+            "anfitriones": "Sofía & Emiliano",
+            "fecha": "2027-05-08",
+            "hora": "18:00",
+            "mensaje": "Ven a celebrar con nosotros.",
+            "ceremonia_etiqueta": "Misa",
+            "ceremonia_nombre": "Capilla de la hacienda",
+            "ceremonia_mapa": "maps.app.goo.gl/abc",
+            "recepcion_nombre": "Patio de los flamboyanes",
+            "dresscode": "Formal de verano",
+            "usar_color": "on",
+            "color": "#1F4D3A",
+            "admite_ninos": "no",
+            "itinerario-hora": ["6:00 PM", "", "8:30 PM"],
+            "itinerario-evento": ["Ceremonia", "", "Cena"],
+            "padrinos-rol": ["Padres de la novia"],
+            "padrinos-nombres": ["Laura & Jorge"],
+            "mesa_regalos_url": "https://mesaderegalos.liverpool.com.mx/",
+            "cancion": "Perfect – Ed Sheeran",
+            "notas": "Que diga «Nos casamos»",
+        }
+        datos.update(cambios)
+        return datos
+
+    def test_el_token_es_largo_y_la_pagina_pide_lo_de_una_boda(self):
+        self.assertGreaterEqual(len(self.pedido.token), 12)
+        respuesta = self.client.get(self.url)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta["X-Robots-Tag"], "noindex, nofollow")
+        for texto in ("Nombres de los novios", "Lugar de la ceremonia", "Programa del evento",
+                      "Papás y padrinos", "Tu canción", "Elegir fotos"):
+            self.assertContains(respuesta, texto)
+        self.assertNotContains(respuesta, "Fecha probable de parto")
+        self.assertEqual(self.client.get("/pedido/no-existe/").status_code, 404)
+
+    def test_enviar_crea_la_invitacion_como_borrador(self):
+        respuesta = self.client.post(self.url, self.datos_boda(fotos=[foto_de_prueba()]))
+        self.assertRedirects(respuesta, f"{self.url}?listo=1")
+        self.pedido.refresh_from_db()
+        inv = self.pedido.invitacion
+        self.assertFalse(inv.activa)
+        self.assertEqual(inv.titulo_evento, "Boda de Sofía & Emiliano")
+        self.assertEqual(timezone.localtime(inv.fecha_evento).hour, 18)
+        extra = inv.contenido_extra
+        self.assertEqual(extra["lugar_ceremonia_etiqueta"], "Misa")
+        self.assertEqual(extra["lugar_ceremonia_mapa_url"], "https://maps.app.goo.gl/abc")
+        self.assertEqual(extra["dresscode_color"], "#1F4D3A")
+        self.assertIs(extra["admite_ninos"], False)
+        # el renglón vacío del programa se ignora
+        self.assertEqual(extra["itinerario"], [{"hora": "6:00 PM", "evento": "Ceremonia"}, {"hora": "8:30 PM", "evento": "Cena"}])
+        self.assertEqual(extra["padrinos"], [{"rol": "Padres de la novia", "nombres": "Laura & Jorge"}])
+        self.assertNotIn("lugar_direccion", extra)
+        self.assertEqual(self.pedido.cancion, "Perfect – Ed Sheeran")
+
+        # la foto se achica, se guarda en JPEG y pierde los datos EXIF (GPS)
+        foto = inv.galeria.get()
+        with Image.open(foto.imagen.path) as guardada:
+            self.assertEqual(max(guardada.size), 2000)
+            self.assertNotIn(0x8825, guardada.getexif())
+
+        # borrador: la vista pública no la enseña, la vista previa sí
+        self.assertEqual(self.client.get(reverse("invitaciones:detalle", args=[inv.slug])).status_code, 404)
+        previa = self.client.get(reverse("pedido_vista_previa", args=[self.pedido.token]))
+        self.assertEqual(previa.status_code, 200)
+        self.assertContains(previa, "Vista previa")
+        self.assertContains(previa, "Patio de los flamboyanes")
+        self.assertContains(self.client.get(f"{self.url}?listo=1"), "Recibimos tus datos")
+
+    def test_corregir_actualiza_la_misma_invitacion_sin_perder_lo_que_no_controla(self):
+        self.client.post(self.url, self.datos_boda())
+        inv = Pedido.objects.get(pk=self.pedido.pk).invitacion
+        inv.contenido_extra["frase_superior"] = "¡Nos vamos de viaje!"     # algo que puso el dueño en el admin
+        inv.save()
+
+        # al volver a abrir el link, el cliente ve lo que ya mandó
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, 'value="Sofía &amp; Emiliano"')
+        self.assertContains(respuesta, 'value="Laura &amp; Jorge"')
+
+        self.client.post(self.url, self.datos_boda(dresscode="", usar_color="", **{"padrinos-rol": [], "padrinos-nombres": []}))
+        self.assertEqual(Invitacion.objects.count(), 1)
+        inv.refresh_from_db()
+        self.assertNotIn("dresscode", inv.contenido_extra)
+        self.assertNotIn("dresscode_color", inv.contenido_extra)
+        self.assertNotIn("padrinos", inv.contenido_extra)
+        self.assertEqual(inv.contenido_extra["frase_superior"], "¡Nos vamos de viaje!")
+
+    def test_errores_se_explican_y_no_se_crea_nada(self):
+        datos = self.datos_boda(anfitriones="", ceremonia_nombre="", recepcion_nombre="",
+                                **{"itinerario-hora": ["7:00 PM"], "itinerario-evento": [""]})
+        respuesta = self.client.post(self.url, datos)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Revisa lo que está en rojo")
+        self.assertContains(respuesta, "Escribe al menos un lugar")
+        self.assertContains(respuesta, "le falta «¿Qué pasa?»")
+        self.assertFalse(Invitacion.objects.exists())
+
+    def test_foto_que_no_es_imagen_se_rechaza(self):
+        falsa = SimpleUploadedFile("virus.jpg", b"no soy una foto", content_type="image/jpeg")
+        respuesta = self.client.post(self.url, self.datos_boda(fotos=[falsa]))
+        self.assertContains(respuesta, "no se pudo abrir")
+        self.assertFalse(ImagenGaleria.objects.exists())
+
+    def test_publicada_ya_no_se_edita(self):
+        self.client.post(self.url, self.datos_boda())
+        inv = Pedido.objects.get(pk=self.pedido.pk).invitacion
+        inv.activa = True
+        inv.save()
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, "ya está publicada")
+        self.client.post(self.url, self.datos_boda(anfitriones="Otro nombre"))
+        inv.refresh_from_db()
+        self.assertEqual(inv.anfitriones, "Sofía & Emiliano")
+
+    def test_baby_shower_pide_lo_suyo_y_arma_votacion_y_panales(self):
+        baby = Plantilla.objects.create(nombre="Pancito", tipo_evento="baby_shower",
+                                        slug_tema="baby-shower-panaderia-03", soporta_votacion=True)
+        pedido = Pedido.objects.create(cliente="Mariana", plantilla=baby, nivel="premium")
+        url = reverse("pedido", args=[pedido.token])
+        self.assertContains(self.client.get(url), "Fecha probable de parto")
+        self.client.post(url, {
+            "anfitriones": "Mariana & Diego", "fecha": "2027-01-10", "hora": "17:00",
+            "lugar_nombre": "Casa de la abuela", "lugar_direccion": "Coyoacán",
+            "fecha_probable_parto": "2027-02-06", "votacion": "on", "lluvia_panales": "on",
+            "mesas_regalos-nombre": ["Liverpool"], "mesas_regalos-codigo": ["51384920"],
+            "mesas_regalos-url": ["mesaderegalos.liverpool.com.mx"],
+        })
+        pedido.refresh_from_db()
+        extra = pedido.invitacion.contenido_extra
+        self.assertEqual(pedido.invitacion.lugar_nombre, "Casa de la abuela")
+        self.assertEqual(extra["fecha_probable_parto"], "2027-02-06")
+        self.assertEqual([o["clave"] for o in extra["votacion"]["opciones"]], ["nina", "nino"])
+        self.assertEqual(len(extra["lluvia_panales"]), 4)
+        self.assertEqual(extra["mesas_regalos"][0]["url"], "https://mesaderegalos.liverpool.com.mx")
+
+    def test_admin_muestra_el_link_y_publica(self):
+        admin = User.objects.create_superuser("dueno", "d@ejemplo.mx", "clave-larga-123")
+        self.client.force_login(admin)
+        cambio = self.client.get(reverse("admin:invitaciones_pedido_change", args=[self.pedido.pk]))
+        self.assertContains(cambio, self.url)
+        self.assertContains(cambio, "Copiar mensaje para WhatsApp")
+
+        self.client.post(self.url, self.datos_boda())
+        self.client.post(reverse("admin:invitaciones_pedido_changelist"),
+                         {"action": "publicar", "_selected_action": [self.pedido.pk]})
+        self.pedido.refresh_from_db()
+        self.assertTrue(self.pedido.invitacion.activa)
+        self.assertEqual(self.client.get(reverse("invitaciones:detalle", args=[self.pedido.invitacion.slug])).status_code, 200)

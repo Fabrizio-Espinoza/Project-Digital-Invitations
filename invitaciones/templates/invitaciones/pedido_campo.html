@@ -1,0 +1,23 @@
+{% comment %}Un campo del formulario del pedido: etiqueta, control, ayuda y error.{% endcomment %}
+{% if campo.widget_type == "checkbox" %}
+<div class="campo campo-casilla" id="campo-{{ campo.name }}">
+    <label>{{ campo }} <span>{{ campo.label }}</span></label>
+    {% if campo.help_text %}<p class="ayuda">{{ campo.help_text }}</p>{% endif %}
+    {% for error in campo.errors %}<p class="error">{{ error }}</p>{% endfor %}
+</div>
+{% elif campo.widget_type == "radioselect" %}
+<fieldset class="campo" id="campo-{{ campo.name }}">
+    <legend>{{ campo.label }}</legend>
+    <div class="pastillas">
+        {% for opcion in campo %}<label class="pastilla">{{ opcion.tag }}<span>{{ opcion.choice_label }}</span></label>{% endfor %}
+    </div>
+    {% for error in campo.errors %}<p class="error">{{ error }}</p>{% endfor %}
+</fieldset>
+{% else %}
+<div class="campo{% if campo.errors %} con-error{% endif %}" id="campo-{{ campo.name }}">
+    <label for="{{ campo.id_for_label }}">{{ campo.label }}{% if campo.field.required %} <abbr title="obligatorio">*</abbr>{% endif %}</label>
+    {{ campo }}
+    {% if campo.help_text %}<p class="ayuda">{{ campo.help_text }}</p>{% endif %}
+    {% for error in campo.errors %}<p class="error">{{ error }}</p>{% endfor %}
+</div>
+{% endif %}
