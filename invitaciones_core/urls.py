@@ -28,6 +28,9 @@ urlpatterns = [
     path('', vistas_invitaciones.catalogo, name='catalogo'),
     path('pedido/<str:token>/', vistas_invitaciones.pedido, name='pedido'),
     path('pedido/<str:token>/vista/', vistas_invitaciones.pedido_vista_previa, name='pedido_vista_previa'),
+    path('panel/<str:token>/', vistas_invitaciones.panel_anfitrion, name='panel_anfitrion'),
+    path('panel/<str:token>/lista.csv', vistas_invitaciones.panel_lista_csv, name='panel_lista_csv'),
+    path('panel/<str:token>/revelar/', vistas_invitaciones.panel_revelar, name='panel_revelar'),
     path('privacidad/', vistas_invitaciones.aviso_privacidad, name='aviso_privacidad'),
 ]
 

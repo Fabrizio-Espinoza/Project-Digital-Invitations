@@ -257,9 +257,10 @@
     <section class="final">
         <div class="sello"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h1>Tu invitación ya está publicada</h1>
-        <p>Si quieres cambiar algo, escríbenos por WhatsApp y lo hacemos por ti.</p>
+        <p>En tu panel ves quién confirma, cuántas personas van y los mensajes que te dejan. Si quieres cambiar algo de la invitación, escríbenos por WhatsApp y lo hacemos por ti.</p>
         <div class="acciones">
-            <a class="boton boton-vibra" href="{% url 'invitaciones:detalle' pedido.invitacion.slug %}">Ver mi invitación</a>
+            <a class="boton boton-vibra" href="{% url 'panel_anfitrion' pedido.invitacion.token_panel %}">Ver quién ha confirmado</a>
+            <a class="boton boton-claro" href="{% url 'invitaciones:detalle' pedido.invitacion.slug %}">Ver mi invitación</a>
             <a class="boton boton-verde" href="{{ whatsapp }}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
         </div>
     </section>

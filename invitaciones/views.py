@@ -1,3 +1,4 @@
+import csv
 import json
 import re
 from datetime import timedelta, timezone as dt_timezone
@@ -567,3 +568,109 @@ def _respuesta_privada(respuesta):
     respuesta["X-Robots-Tag"] = "noindex, nofollow"
     respuesta["Cache-Control"] = "private, no-store"
     return respuesta
+
+
+# ---------------------------------------------------------------------------
+# Panel del anfitrión (/panel/<token>/)
+# ---------------------------------------------------------------------------
+def _invitacion_del_panel(token):
+    return get_object_or_404(Invitacion.objects.select_related("plantilla"), token_panel=token)
+
+
+def _url_invitacion(request, invitacion):
+    return _url_absoluta(request, reverse("invitaciones:detalle", args=[invitacion.slug]))
+
+
+def panel_anfitrion(request, token):
+    """
+    El panel privado del cliente: quién confirmó, cuántas personas van, los
+    mensajes que le dejaron y la lista para descargar. Solo lectura, salvo
+    revelar el resultado de la votación. Es el argumento de venta que hace
+    la diferencia contra "mándame tu confirmación por WhatsApp".
+    """
+    invitacion = _invitacion_del_panel(token)
+    respuestas = list(invitacion.confirmaciones.order_by("-creada_en"))
+    por_tipo = {clave: [r for r in respuestas if r.asistencia == clave] for clave in ("si", "tal_vez", "no")}
+
+    def personas(lista):
+        return sum(1 + r.num_acompanantes for r in lista)
+
+    ahora = timezone.now()
+    dias = (timezone.localtime(invitacion.fecha_evento).date() - timezone.localtime(ahora).date()).days
+    votacion = _votacion_habilitada(invitacion)
+    resumen_votos = None
+    if votacion:
+        resumen = _resumen_votacion(invitacion, votacion)
+        resumen_votos = {
+            "pregunta": votacion.get("pregunta", "Votación"),
+            "total": resumen["total"],
+            "resultado": resumen["resultado"],
+            "opciones": [
+                {
+                    **opcion,
+                    "votos": resumen["conteos"].get(opcion.get("clave"), 0),
+                    "porcentaje": round(100 * resumen["conteos"].get(opcion.get("clave"), 0) / resumen["total"])
+                    if resumen["total"] else 0,
+                }
+                for opcion in votacion["opciones"]
+            ],
+        }
+    url_invitacion = _url_invitacion(request, invitacion)
+    return _respuesta_privada(render(request, "invitaciones/panel.html", {
+        "marca": settings.MARCA_NOMBRE,
+        "invitacion": invitacion,
+        "diseno": _diseno_del_catalogo(invitacion.plantilla),
+        "respuestas": respuestas,
+        "total_si": len(por_tipo["si"]),
+        "total_tal_vez": len(por_tipo["tal_vez"]),
+        "total_no": len(por_tipo["no"]),
+        "personas_si": personas(por_tipo["si"]),
+        "mensajes": [r for r in respuestas if r.mensaje.strip()],
+        "dias": dias,
+        "fecha_borrado": invitacion.fecha_evento + timedelta(days=settings.DIAS_RETENCION_DATOS),
+        "votacion": resumen_votos,
+        "url_invitacion": url_invitacion,
+        # sin número: WhatsApp deja elegir a quién (o a qué grupo) mandarla
+        "compartir_whatsapp": "https://wa.me/?text=" + quote(
+            f"¡Estás invitado! {invitacion.titulo_evento}. Aquí están todos los detalles y puedes confirmar: {url_invitacion}"
+        ),
+    }))
+
+
+def panel_lista_csv(request, token):
+    """La lista de respuestas para abrir en Excel (UTF-8 con BOM para que respete los acentos)."""
+    invitacion = _invitacion_del_panel(token)
+    etiquetas = dict(Confirmacion.ASISTENCIA)
+    respuesta = HttpResponse(content_type="text/csv; charset=utf-8")
+    respuesta["Content-Disposition"] = f'attachment; filename="confirmaciones-{invitacion.slug}.csv"'
+    respuesta.write("﻿")
+    escritor = csv.writer(respuesta)
+    escritor.writerow(["Nombre", "Respuesta", "Acompañantes", "Personas en total", "Mensaje", "Fecha de respuesta"])
+    for r in invitacion.confirmaciones.order_by("nombre_invitado"):
+        escritor.writerow([
+            r.nombre_invitado,
+            etiquetas.get(r.asistencia, r.asistencia),
+            r.num_acompanantes,
+            1 + r.num_acompanantes if r.asistencia != "no" else 0,
+            r.mensaje,
+            timezone.localtime(r.creada_en).strftime("%d/%m/%Y %H:%M"),
+        ])
+    return _respuesta_privada(respuesta)
+
+
+@require_POST
+def panel_revelar(request, token):
+    """
+    El anfitrión revela el resultado de la votación desde su celular (en
+    pleno evento). A los invitados con la invitación abierta les aparece
+    en ≤ 8 s, con el mismo polling de siempre.
+    """
+    invitacion = _invitacion_del_panel(token)
+    votacion = _votacion_habilitada(invitacion)
+    claves = [opcion.get("clave") for opcion in (votacion or {}).get("opciones", [])]
+    opcion = request.POST.get("opcion", "")
+    if votacion is None or opcion not in claves:
+        return _error("Esa opción no existe.")
+    invitacion.contenido_extra["votacion"]["resultado"] = opcion
+    invitacion.save(update_fields=["contenido_extra"])
+    return redirect("panel_anfitrion", token=token)
