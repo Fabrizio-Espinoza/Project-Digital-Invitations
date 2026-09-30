@@ -82,6 +82,8 @@ Pega la llave que generó el segundo comando en `DJANGO_SECRET_KEY` y llena:
 - `DJANGO_ADMIN_URL`: una ruta difícil de adivinar (ej. `panel-7k2q`).
 - `DJANGO_CABECERA_IP=HTTP_X_REAL_IP` (así llega la IP real del invitado en
   PythonAnywhere; sin esto el límite anti-spam trataría a todos como uno solo).
+- `WHATSAPP_NUMERO`: tu WhatsApp de ventas, 52 + 10 dígitos (ej. `525512345678`).
+  Es a donde llegan los botones "La quiero" del catálogo.
 - Los datos del aviso de privacidad (`MARCA_NOMBRE`, `AVISO_RESPONSABLE`,
   `AVISO_DOMICILIO`, `AVISO_CORREO`).
 
@@ -138,7 +140,8 @@ Pestaña **Web** → *Add a new web app* → *Manual configuration* → **Python
 5. **Security** → activa **Force HTTPS**.
 6. Botón verde **Reload**.
 
-Prueba: `https://tuusuario.pythonanywhere.com/privacidad/` y el admin en
+Prueba: `https://tuusuario.pythonanywhere.com/` (el catálogo),
+`https://tuusuario.pythonanywhere.com/privacidad/` y el admin en
 `https://tuusuario.pythonanywhere.com/panel-7k2q/`.
 
 ## 5. Crear los demos en el servidor

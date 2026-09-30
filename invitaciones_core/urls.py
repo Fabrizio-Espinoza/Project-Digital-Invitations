@@ -25,6 +25,7 @@ urlpatterns = [
     # la ruta del admin sale de settings (en producción se cambia en el .env)
     path(settings.ADMIN_URL, admin.site.urls),
     path('invitaciones/', include('invitaciones.urls')),
+    path('', vistas_invitaciones.catalogo, name='catalogo'),
     path('privacidad/', vistas_invitaciones.aviso_privacidad, name='aviso_privacidad'),
 ]
 

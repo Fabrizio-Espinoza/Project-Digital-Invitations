@@ -30,3 +30,14 @@ def revisar_ruta_admin(app_configs, **kwargs):
             id="invitaciones.W002",
         )]
     return []
+
+
+@register(deploy=True)
+def revisar_whatsapp(app_configs, **kwargs):
+    if not getattr(settings, "WHATSAPP_NUMERO", ""):
+        return [Warning(
+            "El catálogo no tiene número de WhatsApp: los botones \"La quiero\" no llegan a ti.",
+            hint="Agrega WHATSAPP_NUMERO=52XXXXXXXXXX al .env.",
+            id="invitaciones.W003",
+        )]
+    return []

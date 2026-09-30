@@ -162,7 +162,9 @@ CABECERA_IP_CLIENTE = 'REMOTE_ADDR'
 # Aviso de privacidad (/privacidad/). Los datos del responsable se capturan
 # en el .env de producción; si faltan, la página los muestra entre corchetes
 # y "manage.py check --deploy" avisa.
-MARCA_NOMBRE = os.environ.get('MARCA_NOMBRE', '')
+MARCA_NOMBRE = os.environ.get('MARCA_NOMBRE', 'InvitaVibra')
+# WhatsApp de ventas para los botones del catálogo: lada de país + número (52 + 10 dígitos)
+WHATSAPP_NUMERO = os.environ.get('WHATSAPP_NUMERO', '')
 AVISO_RESPONSABLE = os.environ.get('AVISO_RESPONSABLE', '')
 AVISO_DOMICILIO = os.environ.get('AVISO_DOMICILIO', '')
 AVISO_CORREO = os.environ.get('AVISO_CORREO', '')

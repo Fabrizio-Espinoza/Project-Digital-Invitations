@@ -884,3 +884,60 @@ class RenombreDemosViejosTests(TestCase):
                 renombrada = Invitacion.objects.get(slug=nuevo)
                 self.assertEqual(renombrada.pk, invitacion.pk)       # la misma, no una nueva
                 self.assertEqual(renombrada.confirmaciones.count(), 1)
+
+
+# ---------------------------------------------------------------------------
+# Catálogo (página principal)
+# ---------------------------------------------------------------------------
+from urllib.parse import unquote
+
+from django.contrib.staticfiles import finders
+from django.template.loader import get_template
+
+from .catalogo import DISENOS, TIPOS, captura
+from .checks import revisar_whatsapp
+from .management.commands.crear_todos_los_demos import DEMOS
+
+
+class CatalogoTests(TestCase):
+    def test_cada_diseno_tiene_demo_plantilla_y_captura(self):
+        # plantilla nueva sin agregar al catálogo (o al revés) = esta prueba falla
+        self.assertEqual({d["demo"] for d in DISENOS}, {slug for _, slug, _ in DEMOS})
+        self.assertEqual(len({d["slug_tema"] for d in DISENOS}), len(DISENOS))
+        tipos = {clave for clave, _, _ in TIPOS}
+        for diseno in DISENOS:
+            with self.subTest(diseno=diseno["nombre"]):
+                self.assertIn(diseno["tipo"], tipos)
+                get_template(f"invitaciones/temas/{diseno['slug_tema']}.html")
+                self.assertIsNotNone(finders.find(captura(diseno)), "falta correr capturar_catalogo")
+        self.assertIsNotNone(finders.find("invitaciones/catalogo/compartir.jpg"))
+
+    @override_settings(WHATSAPP_NUMERO="+52 55 1234-5678", MARCA_NOMBRE="InvitaVibra")
+    def test_la_portada_muestra_los_disenos_y_el_whatsapp(self):
+        call_command("crear_demo_xv_gira", stdout=StringIO())
+        respuesta = self.client.get("/")
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/catalogo.html")
+        for diseno in DISENOS:
+            self.assertContains(respuesta, diseno["nombre"])
+        # el número se limpia y el mensaje dice qué diseño y qué evento
+        html = unquote(respuesta.content.decode())
+        self.assertIn("https://wa.me/525512345678?text=", html)
+        self.assertIn("«La Gira» para unos XV años", html)
+        # demo creado → link; demo que no existe en esta base → sin link (no a un 404)
+        self.assertContains(respuesta, 'href="/invitaciones/demo-xv-ximena/"')
+        self.assertNotContains(respuesta, 'href="/invitaciones/demo-hotel-amor/"')
+        # la foto que sale al pegar el link en WhatsApp: URL absoluta y, fuera de DEBUG, siempre https
+        self.assertContains(respuesta, 'property="og:image" content="https://testserver/static/invitaciones/catalogo/compartir.jpg"')
+
+    def test_aviso_si_falta_el_whatsapp(self):
+        with override_settings(WHATSAPP_NUMERO=""):
+            self.assertEqual([a.id for a in revisar_whatsapp(None)], ["invitaciones.W003"])
+        with override_settings(WHATSAPP_NUMERO="525512345678"):
+            self.assertEqual(revisar_whatsapp(None), [])
+
+    @override_settings(DEBUG=True)
+    def test_en_desarrollo_la_imagen_para_compartir_respeta_http(self):
+        # por WiFi (http://<ip>:8000) no hay https: forzarlo rompería la vista previa
+        respuesta = self.client.get("/")
+        self.assertContains(respuesta, 'content="http://testserver/static/invitaciones/catalogo/compartir.jpg"')
