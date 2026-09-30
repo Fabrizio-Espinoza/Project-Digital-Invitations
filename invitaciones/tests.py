@@ -562,3 +562,23 @@ class DemoNivelDesbloqueadoTests(TestCase):
             self.assertContains(respuesta, fragmento)
         self.assertContains(respuesta, 'class="boton-select" href="' + reverse("invitaciones:calendario", args=[invitacion.slug]))
         self.assertContains(respuesta, "/static/invitaciones/pwa/fiesta-consola-03-180.png")
+
+
+class DemoPancitoEnElHornoTests(TestCase):
+    def test_crear_demo_baby_pancito_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_baby_pancito", stdout=StringIO())
+        call_command("crear_demo_baby_pancito", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="baby-shower-panaderia-03").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-baby-pancito")
+        self.assertTrue(invitacion.plantilla.soporta_votacion)
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/baby-shower-panaderia-03.html")
+        # todas las secciones de baby shower del motor, vestidas de panadería
+        for fragmento in ('id="dulce-espera"', 'id="votacion"', 'id="regalos"', 'id="panales"',
+                          'id="c-concha"', "¿De qué sabor viene?", "Una tarde dulce", "rsvp:enviado"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/baby-shower-panaderia-03-180.png")

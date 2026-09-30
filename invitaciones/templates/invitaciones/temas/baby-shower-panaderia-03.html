@@ -1,0 +1,1608 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  PANCITO EN EL HORNO — tercera plantilla de baby shower.
+
+  Concepto: "hay un pancito en el horno". El bebé es pan recién hecho en una
+  panadería mexicana: conchas, charolas, mantel de cuadritos, blondas de
+  papel y el turno que da la señora de la caja.
+
+    Portada ....... una concha grande humeando bajo el letrero curvo "¡Hay un
+                    pancito en el horno!" y una franja de azulejos.
+    Dulce espera .. "Tiempo de horneado": las 10 lunas del motor se vuelven 10
+                    conchas en la charola (horneadas, en el horno con vapor, o
+                    masa cruda) según la semana real del embarazo.
+    Info .......... receta de la abuela sobre mantel de cuadritos; la cuenta
+                    regresiva es el reloj del horno ("Sale del horno en").
+    Programa ...... como la pizarra de precios con puntitos.
+    Votacion ...... "¿De qué sabor viene?": concha de fresa o de chocolate; la
+                    revelacion sale como etiqueta de pastel y cae una lluvia de
+                    chispas de colores.
+    Regalos ....... cajas de pastelería; pañales como etiquetas de precio.
+    Fotos ......... sobre blondas de papel calado.
+    RSVP .......... "Pide tu turno"; al confirmar sale el ticket del turno con
+                    el número y el nombre del invitado.
+
+  Opuesta a Diez Lunas (noche lavanda, poetica) y a Entrega Especial (carton
+  kraft, humor de paqueteria): calida, antojable y muy mexicana; paleta crema
+  de masa / chocolate / fresa + dorado de pan, con azul talavera de acento.
+  Tipografia: Young Serif (letrero de panaderia) + DM Sans (lectura). Ambas OFL.
+  Todo el arte (conchas, blondas, azulejos, chispas) es CSS/SVG propio.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Baby shower{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <!-- concha dibujada a mano: pan dorado + costra de azucar con sus surcos -->
+        <symbol id="c-concha" viewBox="0 0 44 44">
+            <ellipse class="concha-pan" cx="22" cy="30" rx="19" ry="8.5"/>
+            <path class="concha-costra" d="M4.5 29C4.5 12 39.5 12 39.5 29C33 32 11 32 4.5 29Z"/>
+            <path class="concha-surcos" d="M22 28L11 18.5M22 28L16 15.5M22 28V14M22 28L28 15.5M22 28L33 18.5M8.5 24.5Q22 17 35.5 24.5M12.5 20Q22 14.5 31.5 20" fill="none"/>
+        </symbol>
+    </defs>
+</svg>
+
+<!-- letrero curvo sobre la concha grande que humea -->
+<div class="aparador" aria-hidden="true">
+    <svg class="letrero-curvo" viewBox="0 0 300 90">
+        <path id="c-arco" d="M20 80Q150 -10 280 80" fill="none"/>
+        <text><textPath href="#c-arco" startOffset="50%" text-anchor="middle">¡Hay un pancito en el horno!</textPath></text>
+    </svg>
+    <div class="concha-grande">
+        <i class="vapor"></i><i class="vapor"></i><i class="vapor"></i>
+        <svg viewBox="0 0 44 44"><use href="#c-concha"/></svg>
+    </div>
+</div>
+
+<!-- franja de azulejos al pie de la portada -->
+<div class="azulejos" aria-hidden="true"></div>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="etiqueta-fecha">
+    <span>{{ invitacion.fecha_evento|date:"l j \d\e F"|lower }}</span>
+    <span>{{ invitacion.fecha_evento|date:"g:i A" }}</span>
+</p>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="receta-cabecera">
+    <p class="kicker">Receta de la abuela</p>
+    <h2 class="titulo-pan">Una tarde dulce</h2>
+    <p class="receta-porciones">Rinde: muchos abrazos · Dificultad: ninguna</p>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400&family=Young+Serif&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 crema de masa · 30 chocolate + dorado de pan · 10 fresa (+ azul talavera) */
+        --masa: #FFF6E9;
+        --masa-2: #F6E7CF;
+        --dorado: #D99A4E;
+        --dorado-oscuro: #A8692C;
+        --chocolate: #5B3526;
+        --chocolate-suave: rgba(91, 53, 38, 0.72);
+        --fresa: #F2A7BC;
+        --fresa-fuerte: #C9486F;
+        --talavera: #2E5AA6;
+        --blanco: #FFFFFF;
+
+        --letrero: 'Young Serif', Georgia, serif;
+        --texto: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+
+        --margen: clamp(1.3rem, 6vw, 2.5rem);
+        --ancho: 26rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        /* chispas de colores regadas sobre la masa */
+        --chispas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg stroke-width='4' stroke-linecap='round'%3E%3Cpath d='M14 20l8 5' stroke='%23F2A7BC'/%3E%3Cpath d='M70 12l-3 8' stroke='%23F7D98B'/%3E%3Cpath d='M100 48l8 2' stroke='%239FC9E8'/%3E%3Cpath d='M40 70l-6 6' stroke='%23F2A7BC'/%3E%3Cpath d='M86 96l6 5' stroke='%23B8E0C2'/%3E%3Cpath d='M18 104l2 -8' stroke='%23F7D98B'/%3E%3C/g%3E%3C/svg%3E");
+        /* mantel de cuadritos (gingham) en rosa */
+        --mantel: linear-gradient(90deg, rgba(242, 167, 188, 0.45) 50%, transparent 50%) 0 0 / 2rem 2rem, linear-gradient(rgba(242, 167, 188, 0.45) 50%, transparent 50%) 0 0 / 2rem 2rem, #FFF1F4;
+        /* la concha en data URI, para el boton de musica y las opciones */
+        --concha-dibujo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Cellipse cx='22' cy='30' rx='19' ry='8.5' fill='%23D99A4E'/%3E%3Cpath d='M4.5 29C4.5 12 39.5 12 39.5 29C33 32 11 32 4.5 29Z' fill='%23F2A7BC'/%3E%3Cpath d='M22 28L11 18.5M22 28L16 15.5M22 28V14M22 28L28 15.5M22 28L33 18.5M8.5 24.5Q22 17 35.5 24.5M12.5 20Q22 14.5 31.5 20' fill='none' stroke='%23C9486F' stroke-opacity='.45' stroke-width='1.3'/%3E%3C/svg%3E");
+        /* azulejo de talavera: flor de cuatro petalos y cuartos de circulo en las esquinas */
+        --azulejo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' fill='%23F7F9FC'/%3E%3Cg fill='%232E5AA6'%3E%3Cellipse cx='20' cy='11' rx='3.6' ry='6.5'/%3E%3Cellipse cx='20' cy='29' rx='3.6' ry='6.5'/%3E%3Cellipse cx='11' cy='20' rx='6.5' ry='3.6'/%3E%3Cellipse cx='29' cy='20' rx='6.5' ry='3.6'/%3E%3Ccircle cx='0' cy='0' r='6'/%3E%3Ccircle cx='40' cy='0' r='6'/%3E%3Ccircle cx='0' cy='40' r='6'/%3E%3Ccircle cx='40' cy='40' r='6'/%3E%3C/g%3E%3Ccircle cx='20' cy='20' r='3' fill='%23F2C94C'/%3E%3Crect width='40' height='40' fill='none' stroke='%232E5AA6' stroke-opacity='.4'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--masa);
+        color: var(--chocolate);
+        font-family: var(--texto);
+        font-size: 1.02rem;
+        line-height: 1.5;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(242, 167, 188, 0.3);
+    }
+    ::selection {
+        background: var(--fresa);
+        color: var(--chocolate);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    /* la concha se dibuja con <use>: los selectores no entran a la copia,
+       pero las variables si se heredan; por eso cada estado cambia --pan,
+       --costra y --surco en el elemento que la contiene */
+    .concha-pan { fill: var(--pan, var(--dorado)); }
+    .concha-costra { fill: var(--costra, var(--fresa)); }
+    .concha-surcos {
+        stroke: var(--surco, var(--fresa-fuerte));
+        stroke-opacity: 0.4;
+        stroke-width: var(--grosor, 1px);
+        stroke-linecap: round;
+        vector-effect: non-scaling-stroke;
+    }
+    .kicker {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .titulo-pan {
+        margin: 0.2rem 0 0;
+        font: 400 clamp(2rem, 9.5vw, 2.6rem)/1.05 var(--letrero);
+        color: var(--chocolate);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-bebe,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-votacion,
+    .pantalla-regalos,
+    .pantalla-panales,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (una conchita que se mece)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.2rem;
+        height: 3.2rem;
+        padding: 0;
+        border: 2px solid var(--chocolate);
+        border-radius: 50%;
+        background: var(--concha-dibujo) center 42% / 2.5rem no-repeat, var(--masa);
+        cursor: pointer;
+        box-shadow: 0 6px 12px -4px rgba(91, 53, 38, 0.45);
+    }
+    .boton-musica svg {
+        display: none;   /* la conchita reemplaza los iconos del motor */
+    }
+    /* vapor: aparece cuando suena */
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: 100%;
+        width: 1.2rem;
+        height: 1.1rem;
+        translate: -50% 0;
+        border-radius: 50%;
+        border-top: 2px solid rgba(91, 53, 38, 0.35);
+        opacity: 0;
+    }
+    .boton-musica.sonando {
+        animation: mecer 1.6s ease-in-out infinite;
+    }
+    .boton-musica.sonando::after {
+        animation: vapor 1.6s ease-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--fresa-fuerte);
+        outline-offset: 4px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.aparador, .eyebrow, .nombres, .mensaje, .etiqueta-fecha, .bebe-semanas, .lunas, .receta-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .itinerario, .familia, .boton-mesa-regalos, .nota-ninos, .votacion-opciones, .regalo-tarjeta) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 1rem; }
+    }
+    @keyframes vapor {
+        0% { opacity: 0; translate: -50% 0.4rem; scale: 0.6; }
+        40% { opacity: 1; }
+        100% { opacity: 0; translate: -50% -1.4rem; scale: 1.2; }
+    }
+    @keyframes mecer {
+        50% { rotate: -8deg; }
+    }
+    @keyframes caer-chispa {
+        from { translate: 0 -10vh; rotate: 0deg; }
+        to { translate: var(--deriva, 0) 110vh; rotate: var(--giro, 360deg); }
+    }
+    @keyframes salir-ticket {
+        from { clip-path: inset(0 0 100% 0); translate: 0 -1rem; }
+        to { clip-path: inset(0 0 0 0); translate: 0 0; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.3; }
+    }
+
+    /* ============================================
+       PORTADA: el aparador de la panaderia
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.4rem var(--margen) 5.6rem;
+        background: var(--chispas) 0 0 / 7.5rem, var(--masa);
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        display: contents;
+    }
+    .aparador {
+        --retraso: 0.05s;
+        position: relative;
+        width: min(19rem, 80vw);
+    }
+    .letrero-curvo {
+        display: block;
+        width: 100%;
+        overflow: visible;
+    }
+    .letrero-curvo text {
+        font: 400 19px var(--letrero);
+        fill: var(--fresa-fuerte);
+        letter-spacing: 0.5px;
+    }
+    .concha-grande {
+        --grosor: 2.2px;
+        position: relative;
+        width: 72%;
+        margin: -2.6rem auto 0;
+        filter: drop-shadow(0 10px 10px rgba(91, 53, 38, 0.25));
+    }
+    .concha-grande svg {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+    }
+    /* tres hilitos de vapor */
+    .vapor {
+        position: absolute;
+        top: 12%;
+        width: 0.9rem;
+        height: 2.6rem;
+        border-left: 2.5px solid rgba(91, 53, 38, 0.28);
+        border-radius: 50%;
+        animation: humo 3s ease-in-out infinite;
+    }
+    .vapor:nth-child(1) { left: 34%; }
+    .vapor:nth-child(2) { left: 48%; top: 6%; animation-delay: 1s; }
+    .vapor:nth-child(3) { left: 62%; animation-delay: 2s; }
+    @keyframes humo {
+        0% { opacity: 0; translate: 0 0.8rem; }
+        40% { opacity: 1; }
+        100% { opacity: 0; translate: 0.3rem -1.6rem; }
+    }
+    .hero-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 28rem;
+        margin-top: -1.8rem;
+    }
+    .eyebrow {
+        --retraso: 0.2s;
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--dorado-oscuro);
+    }
+    .nombres {
+        --retraso: 0.3s;
+        max-width: 100%;
+        min-width: 0;
+        margin: 0.3rem 0 0;
+        font: 400 clamp(2.4rem, 12vw, 3.8rem)/1.02 var(--letrero);
+        color: var(--chocolate);
+        text-wrap: balance;
+    }
+    .nombres .amp {
+        color: var(--fresa-fuerte);
+    }
+    .mensaje {
+        --retraso: 0.45s;
+        max-width: 30ch;
+        margin: 0.8rem 0 0;
+        color: var(--chocolate-suave);
+        text-wrap: pretty;
+    }
+    /* etiqueta de papel con la fecha, como las de la charola */
+    .etiqueta-fecha {
+        --retraso: 0.6s;
+        display: flex;
+        flex-direction: column;
+        margin: 1rem 0 0;
+        padding: 0.45rem 1.1rem 0.4rem;
+        border-radius: 0.3rem;
+        background: var(--blanco);
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.15), 0 6px 12px -8px rgba(91, 53, 38, 0.6);
+        rotate: -2deg;
+    }
+    .etiqueta-fecha span:first-child {
+        font: 400 1.1rem/1.2 var(--letrero);
+    }
+    .etiqueta-fecha span:last-child {
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.14em;
+        color: var(--fresa-fuerte);
+    }
+    /* azulejos de talavera: flor de cuatro petalos con conic + radial */
+    .azulejos {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 3rem;
+        background: var(--azulejo) 0 0 / 3rem 3rem;
+        border-top: 3px solid var(--talavera);
+    }
+
+    /* ============================================
+       DULCE ESPERA: tiempo de horneado (la charola)
+       ============================================ */
+    .pantalla-bebe {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 4.8rem;
+        background: var(--chispas) 0 0 / 7.5rem, var(--masa-2);
+    }
+    .marco-decorativo-bebe {
+        display: none;
+    }
+    .pantalla-bebe .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    .bebe-eyebrow {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .bebe-semanas {
+        --retraso: 0.1s;
+        display: flex;
+        align-items: baseline;
+        justify-content: center;
+        gap: 0.5rem;
+        margin: 0.2rem 0 0;
+    }
+    .bebe-semana-numero {
+        font: 400 4rem/1 var(--letrero);
+        font-variant-numeric: tabular-nums;
+    }
+    .bebe-semana-label {
+        font: 400 1.3rem/1.2 var(--letrero);
+        color: var(--dorado-oscuro);
+    }
+    /* la charola de metal con sus agujeritos; el JS cambia lunas por conchas */
+    .lunas {
+        --retraso: 0.2s;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 0.35rem 0.3rem;
+        margin: 1rem 0 0;
+        padding: 0.9rem 0.7rem 0.7rem;
+        border-radius: 0.6rem;
+        background:
+            radial-gradient(circle, rgba(0, 0, 0, 0.12) 1.4px, transparent 1.8px) 0 0 / 0.8rem 0.8rem,
+            linear-gradient(160deg, #D9D6D0, #B5B1AA);
+        box-shadow: inset 0 0 0 3px #A29D95, inset 0 0 0 5px #CFCBC4, 0 12px 20px -12px rgba(0, 0, 0, 0.5);
+    }
+    .luna {
+        width: 100%;
+        height: auto;
+        overflow: visible;
+    }
+    .luna-sombra { fill: #E3DDD3; }
+    .luna-luz { fill: #F4EFE7; }
+    .luna-crateres { display: none; }
+    /* estados del pan que pone el JS (via variables, ver arriba) */
+    .pan-listo.sabor-vainilla {
+        --costra: #F7E3B5;
+        --surco: #B98A3E;
+    }
+    .pan-listo.sabor-chocolate {
+        --costra: #7A4A33;
+        --surco: #2A140C;
+    }
+    .pan-horneando {
+        --pan: #E8B878;
+        filter: drop-shadow(0 0 6px rgba(255, 166, 77, 0.9));
+    }
+    .pan-crudo {
+        --pan: #F3E4C8;
+        --costra: #FBF2E2;
+        --surco: #C9B48E;
+        opacity: 0.85;
+    }
+    .lunas-vapor {
+        stroke: rgba(91, 53, 38, 0.35);
+        stroke-width: 1.6;
+        fill: none;
+        stroke-linecap: round;
+        animation: humo-svg 2.4s ease-in-out infinite;
+    }
+    @keyframes humo-svg {
+        0% { opacity: 0; translate: 0 3px; }
+        50% { opacity: 1; }
+        100% { opacity: 0; translate: 0 -5px; }
+    }
+    .lunas-leyenda {
+        margin: 0.7rem 0 0;
+        font: 400 1.15rem/1.3 var(--letrero);
+    }
+    .bebe-faltan {
+        margin: 0.4rem 0 0;
+        color: var(--chocolate-suave);
+    }
+    .bebe-faltan strong {
+        font: 400 1.4rem/1 var(--letrero);
+        color: var(--fresa-fuerte);
+    }
+    .bebe-tamano {
+        display: inline-block;
+        margin: 0.6rem 0 0;
+        padding: 0.35rem 0.9rem;
+        border-radius: 99px;
+        background: var(--blanco);
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.12);
+    }
+    .bebe-nota {
+        margin: 0.8rem 0 0;
+        font-size: 0.82rem;
+        font-style: italic;
+        color: var(--chocolate-suave);
+    }
+
+    /* ============================================
+       PANTALLA INFO: la receta sobre el mantel
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.8rem var(--margen) 4.8rem;
+        background: var(--mantel);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* la tarjeta de receta: franja rosa arriba, renglones azules */
+    .receta-cabecera {
+        --retraso: 0.05s;
+        padding: 1rem 1.1rem 0.7rem;
+        border-radius: 0.5rem 0.5rem 0 0;
+        background: linear-gradient(var(--fresa) 0 0.45rem, var(--blanco) 0.45rem);
+        box-shadow: 0 1px 0 rgba(201, 72, 111, 0.4);
+    }
+    .receta-porciones {
+        margin: 0.35rem 0 0;
+        font-size: 0.82rem;
+        font-style: italic;
+        color: var(--chocolate-suave);
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    .pantalla-info .pantalla-contenido {
+        filter: drop-shadow(0 14px 16px rgba(91, 53, 38, 0.18));
+    }
+    .detalles,
+    .lugares,
+    .vestimenta {
+        padding: 0 1.1rem;
+        background: repeating-linear-gradient(transparent 0 1.55rem, rgba(46, 90, 166, 0.14) 1.55rem 1.6rem), var(--blanco);
+        text-align: left;
+    }
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0 0.9rem;
+        padding-top: 0.6rem;
+        padding-bottom: 0.4rem;
+    }
+    .lugares {
+        --retraso: 0.25s;
+    }
+    .pantalla-contenido > :is(.detalles, .lugares, .vestimenta):not(:has(+ :is(.lugares, .vestimenta))) {
+        padding-bottom: 0.9rem;
+        border-radius: 0 0 0.5rem 0.5rem;
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.05rem;
+    }
+    .lugar-item {
+        padding-block: 0.4rem;
+    }
+    .detalle-divisor {
+        width: 1px;
+        background: rgba(201, 72, 111, 0.35);
+    }
+    /* cada ingrediente lleva su conchita de viñeta */
+    .detalle-label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .detalle-label::before {
+        content: "";
+        flex: none;
+        width: 0.9rem;
+        height: 0.9rem;
+        background: var(--concha-dibujo) center / contain no-repeat;
+    }
+    .detalle-valor {
+        font: 400 1.12rem/1.3 var(--letrero);
+    }
+    /* Django escribe "12 de Diciembre"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        font-size: 0.85rem;
+        color: var(--chocolate-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding-block: 0.4rem;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.3);
+    }
+
+    /* ============================================
+       COUNTDOWN: el reloj del horno
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.3rem;
+        margin-top: 0.9rem;
+        padding: 0.6rem 0.6rem 0.55rem;
+        border-radius: 0.9rem;
+        background: linear-gradient(180deg, #6B4231, var(--chocolate));
+        box-shadow: inset 0 0 0 3px #7C5140, 0 10px 18px -10px rgba(0, 0, 0, 0.5);
+        color: #FFB25E;
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown::before {
+        content: "Sale del horno en";
+        grid-column: 1 / -1;
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #F6D2BD;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .countdown span {
+        font: 400 1.9rem/1.1 var(--letrero);
+        text-shadow: 0 0 10px rgba(255, 150, 60, 0.6);
+    }
+    .countdown label {
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #F6D2BD;
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.9rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0 0.8rem;
+        border-radius: 99px;
+        border: 2px solid var(--chocolate);
+        background: var(--blanco);
+        color: var(--chocolate);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.82rem;
+        letter-spacing: 0.06em;
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--fresa-fuerte);
+        border-color: var(--fresa-fuerte);
+        color: var(--blanco);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--chocolate);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+        stroke-width: 2;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: la pizarra de precios
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem var(--margen) 4.8rem;
+        background: var(--chispas) 0 0 / 7.5rem, var(--masa);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .itinerario {
+        --retraso: 0.05s;
+        padding: 1.1rem 1.1rem 1rem;
+        border-radius: 0.6rem;
+        background: var(--blanco);
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.12), 0 12px 20px -14px rgba(91, 53, 38, 0.6);
+    }
+    .itinerario h3 {
+        margin: 0 0 0.6rem;
+        font: 400 1.9rem/1.1 var(--letrero);
+    }
+    .itinerario h3::before {
+        content: "Hoy en la panadería";
+        display: block;
+        margin-bottom: 0.2rem;
+        font: 700 0.7rem/1.3 var(--texto);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    /* renglon de menu: evento ........ hora */
+    .itinerario-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.4rem;
+        padding: 0.3rem 0;
+        text-align: left;
+    }
+    .itinerario-evento {
+        order: 1;
+        font-weight: 600;
+    }
+    .itinerario-item::after {
+        content: "";
+        order: 2;
+        flex: 1;
+        min-width: 1rem;
+        border-bottom: 2px dotted rgba(91, 53, 38, 0.35);
+    }
+    .itinerario-hora {
+        order: 3;
+        font: 400 1.05rem/1 var(--letrero);
+        color: var(--fresa-fuerte);
+        white-space: nowrap;
+    }
+    .familia {
+        --retraso: 0.1s;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.5rem 1rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .familia-nombres {
+        font: 400 1.15rem/1.25 var(--letrero);
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.9rem;
+        border-radius: 99px;
+        background: var(--chocolate);
+        color: var(--masa);
+        text-decoration: none;
+        font-weight: 700;
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--fresa-fuerte);
+        outline-offset: 3px;
+    }
+    /* la nota de niños como galleta redonda de glaseado */
+    .nota-ninos {
+        --retraso: 0.3s;
+        display: grid;
+        place-items: center;
+        width: 9rem;
+        max-width: none;
+        aspect-ratio: 1;
+        margin: 0;
+        padding: 1.2rem;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--fresa) 58%, var(--dorado) 60%);
+        box-shadow: 0 8px 14px -8px rgba(91, 53, 38, 0.6);
+        font: 400 1rem/1.2 var(--letrero);
+        rotate: -6deg;
+    }
+
+    /* ============================================
+       VOTACION: ¿de que sabor viene?
+       ============================================ */
+    .pantalla-votacion {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 4.8rem;
+        background: var(--mantel);
+    }
+    .votacion-eyebrow {
+        margin: 0;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .votacion-pregunta {
+        margin: 0.25rem 0 0;
+        font: 400 clamp(2rem, 9.5vw, 2.6rem)/1.05 var(--letrero);
+    }
+    .votacion-subtitulo {
+        max-width: 30ch;
+        margin: 0.5rem auto 0;
+        color: var(--chocolate-suave);
+        text-wrap: pretty;
+    }
+    .votacion-opciones {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        margin-top: 1.2rem;
+    }
+    /* cada opcion es una concha del sabor (su color viene de --color-opcion) */
+    .votacion-opcion {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.9rem 0.6rem 1.1rem;
+        overflow: hidden;
+        border: 2px solid var(--chocolate);
+        border-radius: 1rem;
+        background: var(--blanco);
+        color: var(--chocolate);
+        font: inherit;
+        cursor: pointer;
+        transition: translate 0.15s ease;
+    }
+    /* la concha del sabor la pone el JS; la costra toma --color-opcion */
+    .concha-voto {
+        --costra: var(--color-opcion);
+        --surco: rgba(0, 0, 0, 0.6);
+        --grosor: 1.4px;
+        width: 5.5rem;
+        height: 5.5rem;
+    }
+    .votacion-opcion:active {
+        translate: 0 2px;
+    }
+    .votacion-opcion:disabled {
+        cursor: default;
+    }
+    .votacion-opcion:focus-visible {
+        outline: 3px solid var(--fresa-fuerte);
+        outline-offset: 3px;
+    }
+    /* la barra de resultados se llena desde abajo, como la charola */
+    .opcion-relleno {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        height: 0.55rem;
+        width: 0;
+        background: var(--color-opcion);
+        transition: width 1s var(--curva);
+    }
+    .con-resultados .opcion-relleno {
+        width: var(--porcentaje, 0%);
+    }
+    .opcion-texto {
+        font: 400 1.15rem/1.2 var(--letrero);
+    }
+    .opcion-porcentaje {
+        min-height: 1.3em;
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: var(--fresa-fuerte);
+    }
+    .opcion-mi-voto {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 99px;
+        background: var(--chocolate);
+        color: var(--masa);
+        font-weight: 700;
+        font-size: 0.62rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0;
+    }
+    .es-mi-voto .opcion-mi-voto {
+        opacity: 1;
+    }
+    .es-ganadora {
+        box-shadow: 0 0 0 4px var(--color-opcion);
+    }
+    .votacion-ayuda,
+    .votacion-total,
+    .votacion-status {
+        margin: 0.7rem 0 0;
+        font-size: 0.88rem;
+        color: var(--chocolate-suave);
+    }
+    .votacion-total span {
+        font: 400 1.2rem/1 var(--letrero);
+        color: var(--chocolate);
+    }
+    .con-resultados .votacion-ayuda {
+        display: none;
+    }
+    /* la revelacion como etiqueta de pastel con orilla ondulada */
+    .votacion-revelacion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 1rem auto 0;
+        padding: 1.2rem 1.4rem;
+        max-width: 18rem;
+        background: var(--blanco);
+        -webkit-mask: radial-gradient(circle 0.5rem at 50% 50%, #000 97%, transparent) -0.5rem -0.5rem / 1rem 1rem round, linear-gradient(#000 0 0) center / calc(100% - 1rem) calc(100% - 1rem) no-repeat;
+        mask: radial-gradient(circle 0.5rem at 50% 50%, #000 97%, transparent) -0.5rem -0.5rem / 1rem 1rem round, linear-gradient(#000 0 0) center / calc(100% - 1rem) calc(100% - 1rem) no-repeat;
+    }
+    .votacion-revelacion[hidden] {
+        display: none;
+    }
+    .revelacion-eyebrow {
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .revelacion-texto {
+        font: 400 2.4rem/1.1 var(--letrero);
+    }
+    .revelacion-detalle {
+        font-size: 0.85rem;
+        color: var(--chocolate-suave);
+    }
+    /* lluvia de chispas de colores (el motor crea los papelitos) */
+    .confeti {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .confeti i {
+        position: absolute;
+        top: 0;
+        width: 0.3rem;
+        height: 0.85rem;
+        border-radius: 99px;
+        animation: caer-chispa 3s linear both;
+    }
+
+    /* ============================================
+       REGALOS: cajas de pasteleria
+       ============================================ */
+    .pantalla-regalos {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 4.8rem;
+        background: var(--chispas) 0 0 / 7.5rem, var(--masa-2);
+    }
+    .regalos-titulo {
+        margin: 0;
+        font: 400 clamp(2.1rem, 10vw, 2.7rem)/1.05 var(--letrero);
+    }
+    .regalos-intro {
+        max-width: 32ch;
+        margin: 0.5rem auto 0;
+        font-size: 0.95rem;
+        color: var(--chocolate-suave);
+        text-wrap: pretty;
+    }
+    /* caja rosa con tapa a rayas y cordon de panaderia */
+    .regalo-tarjeta {
+        position: relative;
+        margin-top: 1.1rem;
+        padding: 1.5rem 1.1rem 1.1rem;
+        border-radius: 0.5rem;
+        background:
+            linear-gradient(90deg, transparent calc(50% - 1px), rgba(201, 72, 111, 0.7) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)) top / 100% 0.9rem no-repeat,
+            repeating-linear-gradient(90deg, var(--fresa) 0 0.7rem, #FBD3DE 0.7rem 1.4rem) top / 100% 0.6rem no-repeat,
+            var(--blanco);
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.12), 0 12px 18px -14px rgba(91, 53, 38, 0.6);
+    }
+    .regalo-tarjeta + .regalo-tarjeta {
+        --retraso: 0.15s;
+    }
+    .regalo-icono {
+        display: none;   /* la caja ya dice que es regalo */
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.5rem;
+        font: 400 1.4rem/1.2 var(--letrero);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+        color: var(--chocolate-suave);
+    }
+    .mesas-lista {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.6rem 0;
+        border-bottom: 1px dashed rgba(91, 53, 38, 0.2);
+    }
+    .mesa-item:last-child {
+        border-bottom: 0;
+    }
+    .mesa-nombre {
+        font-weight: 700;
+    }
+    .mesa-codigo {
+        font-size: 0.88rem;
+        color: var(--chocolate-suave);
+    }
+    .mesa-botones {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.3rem;
+        padding: 0 0.9rem;
+        border: 2px solid var(--chocolate);
+        border-radius: 99px;
+        background: var(--blanco);
+        color: var(--chocolate);
+        text-decoration: none;
+        font: 700 0.8rem/1 var(--texto);
+        cursor: pointer;
+    }
+    .mesa-enlace {
+        background: var(--chocolate);
+        color: var(--masa);
+    }
+    .boton-copiar.copiado {
+        border-color: var(--fresa-fuerte);
+        background: var(--fresa-fuerte);
+        color: var(--blanco);
+    }
+
+    /* ============================================
+       PAÑALES: etiquetas de precio de la vitrina
+       ============================================ */
+    .pantalla-panales {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 4.8rem;
+        background: var(--mantel);
+    }
+    .regalo-panales {
+        margin-top: 0;
+    }
+    .regalo-panales h3 {
+        font-size: 2rem;
+    }
+    .regalo-panales > p {
+        font-size: 0.95rem;
+    }
+    .panales-tallas {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin: 0.9rem 0 0;
+        padding: 0;
+        list-style: none;
+    }
+    /* etiqueta con muesca y ojal, como las del pan de la vitrina */
+    .panales-tallas li {
+        display: flex;
+        flex-direction: column;
+        padding: 0.55rem 0.4rem 0.5rem 1.1rem;
+        border-radius: 0.3rem;
+        background: var(--masa-2);
+        text-align: left;
+        -webkit-mask: radial-gradient(circle 0.22rem at 0.55rem 50%, transparent 95%, #000);
+        mask: radial-gradient(circle 0.22rem at 0.55rem 50%, transparent 95%, #000);
+        transition: background 0.3s ease, scale 0.3s var(--curva);
+    }
+    .panales-rango {
+        font: 400 1.2rem/1.1 var(--letrero);
+    }
+    .panales-talla {
+        font-weight: 700;
+        font-size: 0.8rem;
+        color: var(--fresa-fuerte);
+    }
+    .panales-tallas li.te-toca {
+        background: var(--fresa);
+        scale: 1.05;
+    }
+    .panales-tallas li.te-toca .panales-talla {
+        color: var(--chocolate);
+    }
+    .panales-buscador {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        margin-top: 1rem;
+        text-align: left;
+        font: 400 1.1rem/1.2 var(--letrero);
+    }
+    /* 16px o mas: el iPhone no hace zoom al escribir */
+    .panales-buscador input {
+        width: 100%;
+        padding: 0.6rem 0.85rem;
+        border: 2px solid rgba(91, 53, 38, 0.25);
+        border-radius: 99px;
+        background: var(--blanco);
+        color: var(--chocolate);
+        font: 500 1rem/1.4 var(--texto);
+    }
+    .panales-buscador input:focus {
+        outline: none;
+        border-color: var(--fresa-fuerte);
+    }
+    /* dos clases para ganarle a ".regalo-tarjeta p" */
+    .regalo-tarjeta .panales-resultado {
+        min-height: 1.4em;
+        margin: 0.6rem 0 0;
+        font: 400 1.2rem/1.2 var(--letrero);
+        color: var(--fresa-fuerte);
+    }
+
+    /* ============================================
+       GALERIA: fotos sobre blondas de papel
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem 1rem;
+        align-content: center;
+        padding: 2rem max(var(--margen), (100% - 30rem) / 2) 4.8rem;
+        background: var(--chispas) 0 0 / 7.5rem, var(--masa);
+    }
+    .galeria::before {
+        content: "Recién salidas";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -1rem;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .galeria::after {
+        content: "Del horno a la foto";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 400 clamp(1.9rem, 9vw, 2.4rem)/1.1 var(--letrero);
+    }
+    /* sin JS: foto redonda con orilla blanca */
+    .galeria > img,
+    .blonda img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 0.35rem solid var(--blanco);
+    }
+    /* con JS: la blonda calada asoma alrededor de la foto */
+    .blonda {
+        position: relative;
+        isolation: isolate;   /* sin esto la blonda (z-index -1) se esconde tras el fondo */
+        margin: 0;
+        padding: 0.9rem;
+    }
+    .blonda::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle, transparent 0.12rem, var(--blanco) 0.16rem) 0 0 / 0.6rem 0.6rem;
+        -webkit-mask: radial-gradient(circle 0.55rem, #000 97%, transparent) -0.2rem -0.2rem / 1.1rem 1.1rem round, radial-gradient(circle, #000 calc(50% - 0.55rem), transparent calc(50% - 0.5rem));
+        mask: radial-gradient(circle 0.55rem, #000 97%, transparent) -0.2rem -0.2rem / 1.1rem 1.1rem round, radial-gradient(circle, #000 calc(50% - 0.55rem), transparent calc(50% - 0.5rem));
+        filter: drop-shadow(0 4px 6px rgba(91, 53, 38, 0.2));
+    }
+    .blonda:nth-of-type(even) {
+        rotate: 4deg;
+    }
+
+    /* ============================================
+       RSVP: pide tu turno
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 5rem;
+        background: var(--mantel);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Pide tu turno";
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--fresa-fuerte);
+    }
+    .rsvp h2 {
+        margin: 0.25rem auto 0.4rem;
+        font: 400 clamp(2rem, 9.5vw, 2.6rem)/1.05 var(--letrero);
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: var(--chocolate-suave);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 400 1.35rem/1 var(--letrero);
+        color: var(--fresa-fuerte);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "5 de Diciembre": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.15rem;
+        font-size: 0.9rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    /* hoja de pedidos de la panaderia */
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 1.1rem auto 0;
+        padding: 0 1.1rem 1.2rem;
+        border-radius: 0.5rem;
+        background: var(--blanco);
+        text-align: left;
+        box-shadow: 0 0 0 1px rgba(91, 53, 38, 0.12), 0 16px 24px -16px rgba(91, 53, 38, 0.6);
+        overflow: hidden;
+    }
+    #form-rsvp::before {
+        content: "Hoja de pedido";
+        margin: 0 -1.1rem 0.1rem;
+        padding: 0.55rem 1rem 0.5rem;
+        background: var(--chocolate);
+        color: var(--masa);
+        font: 400 1.05rem/1.2 var(--letrero);
+        text-align: center;
+    }
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.55rem 0.8rem;
+        border: 2px solid rgba(91, 53, 38, 0.18);
+        border-radius: 0.6rem;
+        background: var(--masa);
+        color: var(--chocolate);
+        font: 500 1rem/1.4 var(--texto);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(91, 53, 38, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--fresa-fuerte);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.7rem;
+        padding: 0 0.3rem;
+        border: 2px solid rgba(91, 53, 38, 0.18);
+        border-radius: 99px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--fresa-fuerte);
+        background: var(--fresa-fuerte);
+        color: var(--blanco);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--chocolate);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--chocolate-suave);
+    }
+    .campo-con-label input {
+        max-width: 4.5rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        border: 0;
+        border-radius: 99px;
+        background: var(--chocolate);
+        color: var(--masa);
+        font: 400 1.1rem/1 var(--letrero);
+        cursor: pointer;
+    }
+    #form-rsvp button:focus-visible {
+        outline: 3px solid var(--fresa-fuerte);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 400 1.3rem/1.2 var(--letrero);
+        color: var(--chocolate);
+    }
+
+    /* --- El ticket del turno, como el de la maquinita de la panaderia --- */
+    .ticket-turno {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 12rem;
+        margin: 0.6rem auto 0;
+        padding: 0.8rem 1rem 1rem;
+        background: var(--fresa);
+        color: var(--chocolate);
+        /* orilla rasgada arriba y abajo */
+        -webkit-mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 0.8rem 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 0.8rem 51% repeat-x;
+        mask: conic-gradient(from 135deg at top, #0000, #000 1deg 89deg, #0000 90deg) top / 0.8rem 51% repeat-x, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 0.8rem 51% repeat-x;
+        animation: salir-ticket 1s var(--curva) both;
+    }
+    .ticket-turno small {
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+    }
+    .ticket-turno strong {
+        font: 400 3.4rem/1 var(--letrero);
+        font-variant-numeric: tabular-nums;
+    }
+    .ticket-turno span {
+        font: 400 1.05rem/1.2 var(--letrero);
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        const SVG_NS = 'http://www.w3.org/2000/svg';
+
+        // --- 1. El "&" de los nombres en fresa ---
+        const titulo = document.querySelector('.nombres');
+        if (titulo) {
+            const partes = titulo.textContent.trim().split(/\s+(&|y|e)\s+/i);
+            if (partes.length === 3) {
+                titulo.textContent = '';
+                const amp = document.createElement('span');
+                amp.className = 'amp';
+                amp.textContent = partes[1];
+                titulo.append(partes[0] + ' ', amp, ' ' + partes[2]);
+            }
+        }
+
+        // --- 2. Las 10 lunas del motor se vuelven 10 conchas en la charola ---
+        // Las anteriores a la luna actual ya estan horneadas (y de sabores
+        // surtidos), la actual esta en el horno con vapor y las demas son masa.
+        const charola = document.getElementById('lunas');
+        if (charola) {
+            const lunas = [...charola.querySelectorAll('.luna')];
+            const actual = lunas.findIndex(l => l.classList.contains('luna-actual'));
+            const sabores = ['sabor-fresa', 'sabor-vainilla', 'sabor-chocolate'];
+            lunas.forEach((luna, i) => {
+                const estado = actual === -1 || i < actual ? 'pan-listo' : i === actual ? 'pan-horneando' : 'pan-crudo';
+                luna.replaceChildren();
+                const uso = document.createElementNS(SVG_NS, 'use');
+                uso.setAttribute('href', '#c-concha');
+                luna.appendChild(uso);
+                if (estado === 'pan-horneando') {
+                    const vapor = document.createElementNS(SVG_NS, 'path');
+                    vapor.setAttribute('class', 'lunas-vapor');
+                    vapor.setAttribute('d', 'M17 11c-2-3 2-5 0-8M27 11c-2-3 2-5 0-8');
+                    luna.appendChild(vapor);
+                }
+                luna.classList.add(estado, sabores[i % 3]);
+            });
+            const numero = actual === -1 ? 10 : actual + 1;
+            charola.setAttribute('aria-label', 'Pan ' + numero + ' de 10 en el horno');
+            const leyenda = document.getElementById('lunas-leyenda');
+            if (leyenda) leyenda.textContent = actual === -1 ? '¡Los diez panes están listos!' : 'Pan ' + numero + ' de 10 en el horno';
+            const eyebrow = document.querySelector('.bebe-eyebrow');
+            if (eyebrow) eyebrow.textContent = 'Tiempo de horneado';
+            const nota = document.querySelector('.bebe-nota');
+            if (nota) nota.textContent = '280 días a fuego lento: diez panes de 28 días cada uno.';
+        }
+
+        // --- 2b. Cada opcion de la votacion lleva su concha del sabor ---
+        document.querySelectorAll('.votacion-opcion').forEach(opcion => {
+            const concha = document.createElementNS(SVG_NS, 'svg');
+            concha.setAttribute('class', 'concha-voto');
+            concha.setAttribute('viewBox', '0 0 44 44');
+            concha.setAttribute('aria-hidden', 'true');
+            const uso = document.createElementNS(SVG_NS, 'use');
+            uso.setAttribute('href', '#c-concha');
+            concha.appendChild(uso);
+            opcion.prepend(concha);
+        });
+
+        // --- 3. Los datos como ingredientes de la receta ---
+        const etiquetas = { 'Día': 'Cuándo', 'Hora': 'A qué hora', 'Lugar': 'Dónde', 'Código de vestimenta': 'Qué ponerse' };
+        document.querySelectorAll('.pantalla-info .detalle-label').forEach(el => {
+            const original = el.textContent.trim();
+            if (etiquetas[original]) el.textContent = etiquetas[original];
+        });
+        const enviar = document.querySelector('#form-rsvp button');
+        if (enviar) enviar.textContent = 'Pedir mi turno';
+        const itinerario = document.querySelector('.itinerario h3');
+        if (itinerario) itinerario.textContent = 'Programa';
+
+        // --- 4. Fotos sobre blondas de papel ---
+        document.querySelectorAll('.galeria > img').forEach(foto => {
+            const blonda = document.createElement('figure');
+            blonda.className = 'blonda';
+            foto.before(blonda);
+            blonda.appendChild(foto);
+        });
+
+        // --- 5. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actualTexto = total.textContent;
+                if (actualTexto !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;
+                    total.classList.add('cambio');
+                }
+                anterior = actualTexto;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 6. Al confirmar sale el ticket del turno con el nombre del invitado ---
+        // El numero es su lugar en la lista de confirmados. El motor borra el
+        // formulario antes de avisar: el nombre se guarda al enviar.
+        const form = document.getElementById('form-rsvp');
+        const status = document.getElementById('rsvp-status');
+        let cliente = '';
+        if (form) form.addEventListener('submit', () => {
+            cliente = (form.elements.nombre_invitado.value || '').trim();
+        });
+        document.addEventListener('rsvp:enviado', e => {
+            const previo = document.querySelector('.ticket-turno');
+            if (previo) previo.remove();
+            if (!status || e.detail.asistencia !== 'si') return;
+            const numero = String(Math.max(1, parseInt(e.detail.total_confirmados, 10) || 1)).padStart(2, '0');
+            const ticket = document.createElement('div');
+            ticket.className = 'ticket-turno';
+            ticket.setAttribute('role', 'img');
+            const pequeno = document.createElement('small');
+            pequeno.textContent = 'Su turno';
+            const grande = document.createElement('strong');
+            grande.textContent = numero;
+            const para = document.createElement('span');
+            para.textContent = 'Para ' + (cliente.split(/\s+/)[0] || 'ti');
+            ticket.setAttribute('aria-label', 'Tu turno: ' + numero + ', ' + para.textContent);
+            ticket.append(pequeno, grande, para);
+            status.after(ticket);
+        });
+    })();
+</script>
+{% endblock %}
