@@ -1,6 +1,6 @@
 """
-Crea (o actualiza) TODOS los demos de un jalón y te imprime la lista de
-links para abrirlos en el celular.
+Crea (o actualiza) TODOS los demos de un jalón (invitaciones y formularios
+de prueba) y te imprime la lista de links para abrirlos en el celular.
 
 Uso:
     python manage.py crear_todos_los_demos --host 192.168.100.18:8000
@@ -53,3 +53,9 @@ class Command(BaseCommand):
         for comando, slug, nombre in DEMOS:
             call_command(comando, stdout=StringIO())   # su propio mensaje no hace falta aquí
             self.stdout.write(f"  {nombre:<36} {host}/invitaciones/{slug}/")
+
+        # un formulario de prueba por diseño (no guarda nada): para mandárselo a prospectos
+        salida = StringIO()
+        call_command("crear_demos_formulario", "--host", host, stdout=salida)
+        self.stdout.write(self.style.SUCCESS("Formularios de prueba (no guardan nada):"))
+        self.stdout.write(salida.getvalue().rstrip())

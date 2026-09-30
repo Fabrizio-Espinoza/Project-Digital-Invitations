@@ -1129,3 +1129,72 @@ class PedidoTests(TestCase):
         self.pedido.refresh_from_db()
         self.assertTrue(self.pedido.invitacion.activa)
         self.assertEqual(self.client.get(reverse("invitaciones:detalle", args=[self.pedido.invitacion.slug])).status_code, 200)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class PedidoValoresPorDefectoTests(TestCase):
+    def pedido(self, slug_tema, tipo):
+        plantilla = Plantilla.objects.create(nombre=slug_tema, tipo_evento=tipo, slug_tema=slug_tema)
+        return Pedido.objects.create(cliente="Ana", plantilla=plantilla, nivel="premium")
+
+    def test_lo_minimo_se_completa_sin_inventar(self):
+        pedido = self.pedido("boda-hotel-03", "boda")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00",
+            "recepcion_nombre": "Jardín Los Arcos",
+        })
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertIn("unimos nuestras vidas", inv.mensaje_bienvenida)
+        self.assertEqual(inv.contenido_extra["lugar_recepcion_mapa_url"],
+                         "https://www.google.com/maps/search/?api=1&query=Jard%C3%ADn%20Los%20Arcos")
+        # lo que sería inventar se queda fuera: la plantilla esconde esa parte
+        for clave in ("dresscode", "itinerario", "admite_ninos", "mesa_regalos_url", "lugar_ceremonia_mapa_url"):
+            self.assertNotIn(clave, inv.contenido_extra)
+        # el mensaje que sí escriben se respeta
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00",
+            "recepcion_nombre": "Jardín Los Arcos", "mensaje": "¡Nos casamos!",
+        })
+        inv.refresh_from_db()
+        self.assertEqual(inv.mensaje_bienvenida, "¡Nos casamos!")
+
+    def test_graduacion_con_un_solo_lugar(self):
+        pedido = self.pedido("graduacion-salida-03", "graduacion")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Camila", "fecha": "2027-06-19", "hora": "17:00",
+            "lugar_nombre": "Salón Aurora", "lugar_direccion": "Monterrey, N.L.",
+        })
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(inv.contenido_extra["generacion"], "2027")
+        self.assertIn("query=Sal%C3%B3n%20Aurora%2C%20Monterrey%2C%20N.L.", inv.lugar_mapa_url)
+
+
+class DemoFormularioTests(TestCase):
+    def setUp(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        call_command("crear_demos_formulario", stdout=StringIO())
+        self.url = reverse("pedido", args=["demo-boda-hotel-03"])
+
+    def test_el_demo_ensena_la_invitacion_y_no_guarda_nada(self):
+        antes = (Invitacion.objects.count(), ImagenGaleria.objects.count())
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, "Prueba el formulario")
+        self.assertContains(respuesta, "no se guarda nada")
+        self.assertNotContains(respuesta, 'type="file"')
+
+        respuesta = self.client.post(self.url, {
+            "anfitriones": "Prospecto & Pareja", "fecha": "2027-09-18", "hora": "19:00",
+            "recepcion_nombre": "Hacienda Prueba", "fotos": [foto_de_prueba()],
+        })
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Prospecto &amp; Pareja")      # su invitación armada
+        self.assertContains(respuesta, "Demo · así quedaría la tuya")
+        self.assertContains(respuesta, "https://wa.me/")
+        # y nada quedó en la base
+        self.assertEqual((Invitacion.objects.count(), ImagenGaleria.objects.count()), antes)
+        demo = Pedido.objects.get(token="demo-boda-hotel-03")
+        self.assertIsNone(demo.invitacion)
+        self.assertIsNone(demo.enviado_en)
+
+    def test_el_catalogo_enlaza_el_demo_del_formulario(self):
+        self.assertContains(self.client.get("/"), 'href="/pedido/demo-boda-hotel-03/"')

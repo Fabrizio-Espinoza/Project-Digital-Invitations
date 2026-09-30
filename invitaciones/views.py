@@ -6,6 +6,7 @@ from urllib.parse import quote
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Count
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseNotAllowed
 from django.shortcuts import get_object_or_404, redirect, render
@@ -462,6 +463,9 @@ def catalogo(request):
         # los tres celulares de la portada: XV, boda y baby shower (tres públicos distintos)
         "portada": [por_nombre[n] for n in ("La Gira", "Hotel Amor", "Pancito en el Horno")],
         "whatsapp_general": enlace_whatsapp("¡Hola! Quiero cotizar una invitación digital."),
+        # el demo del formulario de Hotel Amor, si ya se creó (crear_demos_formulario)
+        "demo_formulario": Pedido.objects.filter(token="demo-boda-hotel-03", es_demo=True).exists()
+        and reverse("pedido", args=["demo-boda-hotel-03"]),
         "imagen_compartir": _url_absoluta(request, static("invitaciones/catalogo/compartir.jpg")),
     })
 
@@ -494,12 +498,15 @@ def pedido(request, token):
     para corregir hasta que la invitación se publica.
     """
     pedido = get_object_or_404(Pedido.objects.select_related("plantilla", "invitacion"), token=token)
+    diseno = _diseno_del_catalogo(pedido.plantilla)
     contexto = {
         "marca": settings.MARCA_NOMBRE,
         "pedido": pedido,
-        "diseno": _diseno_del_catalogo(pedido.plantilla),
+        "diseno": diseno,
         "whatsapp": enlace_whatsapp(
-            f"¡Hola! Tengo una duda con los datos de mi invitación «{_diseno_del_catalogo(pedido.plantilla)['nombre']}»."
+            f"¡Hola! Probé el formulario de «{diseno['nombre']}» y quiero mi invitación."
+            if pedido.es_demo else
+            f"¡Hola! Tengo una duda con los datos de mi invitación «{diseno['nombre']}»."
         ),
     }
     if not pedido.abierto:
@@ -513,7 +520,7 @@ def pedido(request, token):
         formulario = FormularioPedido(request.POST, pedido=pedido)
         filas, errores = leer_filas(request.POST, formulario.repetibles())
         fotos, borrar = [], []
-        if formulario.con_galeria:
+        if formulario.con_galeria and not pedido.es_demo:     # el demo no sube fotos
             ids = {str(foto.pk) for foto in galeria}
             borrar = [pk for pk in request.POST.getlist("borrar_foto") if pk in ids]
             archivos = request.FILES.getlist("fotos")
@@ -526,9 +533,11 @@ def pedido(request, token):
                     except ValidationError as error:
                         errores.extend(error.messages)
         if formulario.is_valid() and not errores:
+            if pedido.es_demo:
+                return _respuesta_privada(_vista_demo(request, pedido, formulario.cleaned_data, filas, contexto["whatsapp"]))
             guardar_pedido(pedido, formulario.cleaned_data, filas, fotos, borrar)
             return redirect(f"{reverse('pedido', args=[token])}?listo=1")
-        if request.FILES:
+        if request.FILES and not pedido.es_demo:
             errores.append("Por seguridad, vuelve a elegir tus fotos antes de enviar.")
     else:
         iniciales, filas = datos_iniciales(pedido)
@@ -542,6 +551,22 @@ def pedido(request, token):
         "galeria": galeria,
         "max_fotos": MAX_FOTOS,
     }))
+
+
+def _vista_demo(request, pedido, datos, filas, whatsapp):
+    """
+    Demo del formulario para prospectos: arma la invitación con lo que
+    escribieron, la pinta y deshace todo (rollback). Enseña el resultado
+    real sin guardar nada, así un demo compartido no se llena de datos de
+    desconocidos ni de fotos en el disco.
+    """
+    with transaction.atomic():
+        invitacion = guardar_pedido(pedido, datos, filas, [])
+        invitacion = (Invitacion.objects.select_related("plantilla").prefetch_related("galeria")
+                      .get(pk=invitacion.pk))
+        respuesta = _pintar_invitacion(request, invitacion, vista_previa=pedido, demo_whatsapp=whatsapp)
+        transaction.set_rollback(True)
+    return respuesta
 
 
 def pedido_vista_previa(request, token):
