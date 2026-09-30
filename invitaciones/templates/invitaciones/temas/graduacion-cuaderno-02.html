@@ -1,0 +1,1150 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  TAREA CUMPLIDA — segunda plantilla de graduación.
+
+  Concepto: la invitación es la ultima pagina del cuaderno escolar. Libreta de
+  cuadricula con espiral y linea roja de margen, el nombre pasado con
+  marcatextos, la calificacion en pluma roja del profe, el itinerario como
+  horario de clases, un periodico mural de corcho para las fotos y el pase de
+  lista (RSVP) en el pizarron. Al confirmar, salen volando birretes.
+
+  Es el opuesto de "Laurel de Oro" (noche, oro foil, laurel, formal): aqui todo
+  es de dia, con humor y memoria escolar compartida por cualquier egresado en México.
+
+  Paleta: papel · cuadricula azul · tinta azul de pluma · marcatextos amarillo ·
+          pluma roja · verde pizarron (+ corcho para el periodico mural).
+  Tipografia: Caveat (letra a mano) + Space Mono (lo "impreso" del cuaderno y
+  los numeros: al ser monoespaciada, el countdown no brinca). Ambas OFL.
+  Todos los garabatos son SVG propio: sin licencias que confirmar.
+
+  Claves opcionales de contenido_extra (las mismas que "Laurel de Oro"):
+    carrera -> "Ingeniería Mecatrónica"
+    institucion -> "Instituto Politécnico Nacional"
+    generacion -> "2021 — 2026"
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}¡Lo logré!{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<!-- Garabatos a mano: se dibujan UNA vez y se reutilizan con <use>.
+     pathLength="1" permite "dibujarlos" con una animacion de trazo. -->
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="g-birrete" viewBox="0 0 100 80"><g fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M7 31 C22 25 36 18 50 11 C64 18 79 24 93 30 C79 37 64 43 50 49 C36 43 21 37 7 31 Z"/><path pathLength="1" d="M25 39 L26 58 C37 67 63 67 75 58 L75 39"/><path pathLength="1" d="M50 30 C62 33 74 36 84 33 L86 55"/><path pathLength="1" d="M82 55 L90 55 L89 67 L83 67 Z"/></g></symbol>
+        <symbol id="g-birrete-lleno" viewBox="0 0 100 80"><path d="M7 31 L50 11 L93 30 L50 49 Z" fill="#23336E"/><path d="M25 39 L26 58 C37 67 63 67 75 58 L75 39 L50 49 Z" fill="#1A2754"/><path d="M50 30 C62 33 74 36 84 33 L86 55" fill="none" stroke="#FFE45C" stroke-width="2.4"/><path d="M82 55 L90 55 L89 67 L83 67 Z" fill="#FFE45C"/></symbol>
+        <symbol id="g-estrella" viewBox="0 0 40 40"><path pathLength="1" d="M20 3 L25 15 L38 16.5 L28 25 L31.5 38 L20 31 L8.5 37.5 L12 25 L2 16 L15 14.5 Z" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+        <symbol id="g-subrayado" viewBox="0 0 200 14" preserveAspectRatio="none"><path pathLength="1" d="M2 9 C20 3 34 13 52 7 C70 1 84 12 102 7 C120 2 136 12 154 7 C170 3 184 10 198 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+        <symbol id="g-circulo" viewBox="0 0 120 90"><path pathLength="1" d="M70 8 C30 2 6 22 8 46 C10 72 44 86 76 80 C104 74 116 50 110 30 C104 12 80 4 50 11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+        <linearGradient id="g-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8C9096"/><stop offset=".45" stop-color="#E8EAEC"/><stop offset="1" stop-color="#6E7278"/></linearGradient>
+        <pattern id="g-espiral" width="24" height="36" patternUnits="userSpaceOnUse"><ellipse cx="12" cy="27" rx="4.2" ry="4.6" fill="#3A3F4A"/><path d="M10 28 C9 14 12 3 16 2 C19 1 18 10 14.5 27" fill="none" stroke="url(#g-metal)" stroke-width="2.6" stroke-linecap="round"/></pattern>
+    </defs>
+</svg>
+
+<svg class="espiral" aria-hidden="true"><rect width="100%" height="36" fill="url(#g-espiral)"/></svg>
+
+<!-- encabezado de hoja de ejercicios, "llenado a mano" -->
+<div class="encabezado-hoja">
+    <span><b>Materia:</b> <i>Graduación</i></span>
+    <span><b>Fecha:</b> <i>{{ invitacion.fecha_evento|date:"d/m/Y" }}</i></span>
+</div>
+
+<svg class="garabato garabato-birrete" viewBox="0 0 100 80" aria-hidden="true"><use href="#g-birrete"/></svg>
+<svg class="garabato garabato-estrella" viewBox="0 0 40 40" aria-hidden="true"><use href="#g-estrella"/></svg>
+{% endblock %}
+
+{% block hero_extra %}
+<div class="boleta">
+    {% if invitacion.contenido_extra.carrera or invitacion.contenido_extra.institucion or invitacion.contenido_extra.generacion %}
+    <dl class="datos-escolares">
+        {% if invitacion.contenido_extra.carrera %}<div><dt>Carrera</dt><dd>{{ invitacion.contenido_extra.carrera }}</dd></div>{% endif %}
+        {% if invitacion.contenido_extra.institucion %}<div><dt>Escuela</dt><dd>{{ invitacion.contenido_extra.institucion }}</dd></div>{% endif %}
+        {% if invitacion.contenido_extra.generacion %}<div><dt>Generación</dt><dd>{{ invitacion.contenido_extra.generacion }}</dd></div>{% endif %}
+    </dl>
+    {% endif %}
+    <!-- la calificación del profe, en pluma roja -->
+    <div class="calificacion" aria-hidden="true">
+        <svg viewBox="0 0 120 90"><use href="#g-circulo"/></svg>
+        <span class="calificacion-numero">10</span>
+        <span class="calificacion-nota">¡Excelente!</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="apuntes-cabecera">
+    <p class="impreso">Apuntes · pág. 2</p>
+    <h2 class="titulo-mano">Datos importantes</h2>
+    <svg class="subrayado" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><use href="#g-subrayado"/></svg>
+    <p class="nota-margen" aria-hidden="true">¡esto viene en el examen!</p>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- aqui aparecen los birretes que vuelan al confirmar asistencia -->
+<div class="birretes" id="birretes" aria-hidden="true"></div>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400..700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        --papel: #FBFAF5;
+        --cuadro: #D6E4F3;          /* lineas de la cuadricula */
+        --margen-rojo: #EFA2A2;     /* la linea roja del margen */
+        --tinta: #23336E;           /* pluma azul */
+        --tinta-suave: #5A6B8C;     /* lo "impreso" del cuaderno */
+        --lapiz: #4B4F5C;
+        --marcatexto: #FFE45C;
+        --pluma-roja: #D93A2B;
+        --pizarron: #2E4A3B;
+        --gis: #F3F1E7;
+        --corcho: #C9A27A;
+        /* cintas washi */
+        --cinta-amarilla: rgba(255, 228, 92, 0.88);
+        --cinta-rosa: rgba(255, 164, 196, 0.8);
+        --cinta-verde: rgba(170, 226, 140, 0.8);
+        --cinta-azul: rgba(150, 196, 240, 0.8);
+
+        --mano: 'Caveat', 'Bradley Hand', 'Segoe Print', cursive;
+        --impreso: 'Space Mono', ui-monospace, 'Courier New', monospace;
+        --t-impreso: 400 0.64rem/1.4 var(--impreso);
+
+        /* la linea roja sigue al contenido aunque la pagina sea ancha (escritorio) */
+        --x-margen: max(2.1rem, (100% - 30rem) / 2);
+        --derecha: max(1.25rem, (100% - 30rem) / 2);
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+        --cuadricula:
+            linear-gradient(var(--cuadro) 1px, transparent 1px) 0 0 / 1.25rem 1.25rem,
+            linear-gradient(90deg, var(--cuadro) 1px, transparent 1px) 0 0 / 1.25rem 1.25rem;
+        --linea-margen: linear-gradient(90deg, transparent var(--x-margen), var(--margen-rojo) var(--x-margen), var(--margen-rojo) calc(var(--x-margen) + 1.5px), transparent calc(var(--x-margen) + 1.5px));
+        /* "recuadro dibujado a mano": radios irregulares en las cuatro esquinas */
+        --a-mano: 255px 15px 225px 15px / 15px 225px 15px 255px;
+
+        /* palomita roja dentro de un recuadro de pluma azul */
+        --casilla: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M4 5 C10 4 18 4 24 5 C24 11 25 18 24 24 C17 25 10 24 4 24 C4 17 3 11 4 5 Z' fill='none' stroke='%2323336E' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M7 15 C9 17 11 19 13 22 C16 15 20 9 26 3' fill='none' stroke='%23D93A2B' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --casilla-vacia: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Cpath d='M4 5 C10 4 18 4 24 5 C24 11 25 18 24 24 C17 25 10 24 4 24 C4 17 3 11 4 5 Z' fill='none' stroke='%2323336E' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E");
+        --flecha-mano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 60'%3E%3Cg fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8 C30 2 52 10 50 26 C48 38 30 36 34 26 C38 16 60 22 66 47'/%3E%3Cpath d='M57 41 L66 48 L71 38'/%3E%3C/g%3E%3C/svg%3E");
+        /* trazo de marcatextos con orillas irregulares */
+        --trazo-marcatexto: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M5 9 C40 5 120 3 197 7 L195 33 C130 36 60 37 7 33 C3 25 2 16 5 9 Z' fill='%23FFE45C'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--tinta);
+        font-family: var(--mano);
+        font-size: 1.3rem;
+        line-height: 1.3;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(255, 228, 92, 0.4);
+    }
+    ::selection {
+        background: var(--marcatexto);
+        color: var(--tinta);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .impreso {
+        margin: 0;
+        font: var(--t-impreso);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .titulo-mano {
+        margin: 0;
+        font: 700 clamp(2.3rem, 11vw, 3rem)/1 var(--mano);
+        color: var(--tinta);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (sticker redondo)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        top: max(2.6rem, env(safe-area-inset-top));
+        right: max(0.9rem, env(safe-area-inset-right));
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+        border: 2px solid var(--tinta);
+        border-radius: 50% 45% 55% 48% / 52% 50% 48% 50%;
+        background: var(--marcatexto);
+        color: var(--tinta);
+        rotate: -6deg;
+        cursor: pointer;
+        box-shadow: 2px 3px 0 rgba(35, 51, 110, 0.25);
+    }
+    .boton-musica svg {
+        grid-area: 1 / 1;
+        width: 1.3rem;
+        height: 1.3rem;
+        transition: opacity 0.2s ease;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        opacity: 0;
+    }
+    .boton-musica.sonando .icono-pausa {
+        opacity: 1;
+    }
+    .boton-musica.sonando {
+        animation: menear 1.6s ease-in-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px dashed var(--pluma-roja);
+        outline-offset: 4px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.7s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    /* cada pieza trae su --retraso para entrar escalonada */
+    .visible :is(.encabezado-hoja, .eyebrow, .nombres, .boleta, .mensaje, .apuntes-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    /* los garabatos "se dibujan" solos: stroke-dashoffset se hereda a los <path> del <use> */
+    .visible :is(.garabato, .calificacion svg, .subrayado) {
+        animation: dibujar 1.1s ease-out var(--retraso-trazo, 0.4s) both;
+    }
+    .visible .resaltado {
+        animation: resaltar 0.8s cubic-bezier(0.6, 0, 0.3, 1) 0.55s both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.7rem; }
+    }
+    @keyframes dibujar {
+        from { stroke-dashoffset: 1; }
+        to { stroke-dashoffset: 0; }
+    }
+    @keyframes resaltar {
+        from { background-size: 0% 62%; }
+        to { background-size: 100% 62%; }
+    }
+    @keyframes menear {
+        25% { rotate: -12deg; }
+        75% { rotate: 2deg; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; }
+    }
+    @keyframes volar {
+        0% { translate: 0 0; rotate: 0deg; opacity: 1; }
+        55% { opacity: 1; }
+        100% { translate: var(--dx) -105vh; rotate: var(--giro); opacity: 0; }
+    }
+
+    /* ============================================
+       PORTADA: la ultima hoja del cuaderno
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        padding: 0 var(--derecha) 2.4rem calc(var(--x-margen) + 1.1rem);
+        background: var(--linea-margen), var(--cuadricula), var(--papel);
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        display: contents;
+    }
+    .espiral {
+        display: block;
+        width: calc(100% + var(--x-margen) + 1.1rem + var(--derecha));
+        height: 36px;
+        margin-left: calc(-1 * (var(--x-margen) + 1.1rem));
+        flex: none;
+    }
+    .encabezado-hoja {
+        --retraso: 0.05s;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 0.2rem 1rem;
+        margin-top: 0.8rem;
+        padding-bottom: 0.3rem;
+        border-bottom: 1.5px solid var(--tinta-suave);
+    }
+    .encabezado-hoja b {
+        font: var(--t-impreso);
+        font-weight: 400;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .encabezado-hoja i {
+        font: 600 1.35rem/1 var(--mano);
+        font-style: normal;
+        color: var(--tinta);
+    }
+    /* dejan espacio al sticker de musica (esquina superior derecha) */
+    body:has(.boton-musica) .encabezado-hoja,
+    body:has(.boton-musica) .rsvp h2 {
+        margin-right: 3.4rem;
+    }
+    .garabato {
+        position: absolute;
+        z-index: 0;
+        stroke-dasharray: 1;
+        color: var(--tinta);
+        opacity: 0.85;
+        pointer-events: none;
+    }
+    .garabato-birrete {
+        --retraso-trazo: 1s;
+        right: calc(var(--derecha) - 0.2rem);
+        bottom: 5.5rem;
+        width: 4.6rem;
+        rotate: 10deg;
+    }
+    .garabato-estrella {
+        --retraso-trazo: 1.4s;
+        right: calc(var(--derecha) + 4.6rem);
+        bottom: 3.2rem;
+        width: 1.9rem;
+        color: #E3B400;
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 1.2rem 0;
+    }
+    /* "¡Lo logré!" en pluma roja con una flecha que apunta al nombre */
+    .eyebrow {
+        --retraso: 0.15s;
+        order: 0;
+        position: relative;
+        margin: 0 0 0.2rem;
+        font: 700 1.9rem/1 var(--mano);
+        color: var(--pluma-roja);
+        rotate: -5deg;
+    }
+    .eyebrow::after {
+        content: "";
+        position: absolute;
+        left: calc(100% + 0.5rem);
+        top: -0.2rem;
+        width: 3.4rem;
+        height: 2.6rem;
+        background: currentColor;
+        -webkit-mask: var(--flecha-mano) center / contain no-repeat;
+        mask: var(--flecha-mano) center / contain no-repeat;
+    }
+    .nombres {
+        --retraso: 0.25s;
+        order: 1;
+        max-width: 100%;   /* sin esto el titulo crece con el nombre y el JS no detecta que no cabe */
+        min-width: 0;
+        margin: 0;
+        font: 700 clamp(3.4rem, 18vw, 6rem)/1.02 var(--mano);
+        color: var(--tinta);
+        text-wrap: balance;
+    }
+    /* el marcatextos: un trazo por renglon (box-decoration-break: clone) y en
+       "multiply" para que la cuadricula se transparente, como en papel real */
+    .resaltado {
+        padding: 0 0.12em;
+        background: var(--trazo-marcatexto) 0 70% / 0% 62% no-repeat;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        mix-blend-mode: multiply;
+    }
+    .boleta {
+        --retraso: 0.45s;
+        order: 2;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 0.8rem;
+        width: 100%;
+        margin-top: 0.8rem;
+    }
+    .datos-escolares {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .datos-escolares dt {
+        font: var(--t-impreso);
+        font-size: 0.58rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .datos-escolares dd {
+        margin: 0;
+        font: 600 1.3rem/1.05 var(--mano);
+        color: var(--tinta);
+    }
+    .calificacion {
+        --retraso-trazo: 1.2s;
+        position: relative;
+        flex: none;
+        width: 5.6rem;
+        height: 4.3rem;
+        color: var(--pluma-roja);
+        rotate: -8deg;
+    }
+    .calificacion svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        stroke-dasharray: 1;
+    }
+    .calificacion-numero {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0.35rem;
+        text-align: center;
+        font: 700 2.8rem/1 var(--mano);
+    }
+    .calificacion-nota {
+        position: absolute;
+        left: -0.4rem;
+        right: -0.6rem;
+        bottom: -1.3rem;
+        text-align: center;
+        font: 700 1.25rem/1 var(--mano);
+    }
+    .mensaje {
+        --retraso: 0.6s;
+        order: 3;
+        max-width: 26ch;
+        margin: 1.8rem 0 0;
+        font: 500 1.35rem/1.25 var(--mano);
+        color: var(--lapiz);
+        text-wrap: pretty;
+    }
+
+    /* ============================================
+       PANTALLA 2: DATOS IMPORTANTES (apuntes)
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.5rem var(--derecha) 2.5rem calc(var(--x-margen) + 1.1rem);
+        background: var(--linea-margen), var(--cuadricula), var(--papel);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    .apuntes-cabecera {
+        --retraso: 0.05s;
+        --retraso-trazo: 0.5s;
+        position: relative;
+    }
+    .apuntes-cabecera .titulo-mano {
+        margin-top: 0.2rem;
+    }
+    .subrayado {
+        display: block;
+        width: 13rem;
+        height: 0.8rem;
+        color: var(--pluma-roja);
+        stroke-dasharray: 1;
+    }
+    /* nota al margen, en pluma roja */
+    .nota-margen {
+        position: absolute;
+        right: 3.3rem;   /* a la izquierda del sticker de musica */
+        top: -0.5rem;
+        max-width: 6.8rem;
+        margin: 0;
+        font: 700 1.15rem/1 var(--mano);
+        color: var(--pluma-roja);
+        text-align: center;
+        rotate: 7deg;
+    }
+    .pantalla-contenido {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+
+    /* ============================================
+       DETALLES como lista de pendientes palomeada
+       ============================================ */
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1.25fr 1fr;
+        gap: 0.55rem;
+    }
+    .detalle-divisor {
+        display: none;
+    }
+    .lugares {
+        --retraso: 0.25s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }
+    .detalle-item,
+    .lugar-item,
+    .vestimenta {
+        display: grid;
+        grid-template-columns: 1.5rem 1fr;
+        column-gap: 0.5rem;
+        align-items: start;
+    }
+    .detalle-item::before,
+    .lugar-item::before,
+    .vestimenta::before {
+        content: "";
+        grid-row: 1 / span 2;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0.1rem;
+        background: var(--casilla) center / contain no-repeat;
+    }
+    .detalle-label {
+        font: var(--t-impreso);
+        font-size: 0.58rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .detalle-valor {
+        grid-column: 2;
+        font: 600 1.45rem/1.05 var(--mano);
+        color: var(--tinta);
+    }
+    /* Django escribe "05 de Diciembre"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        grid-column: 2;
+        font-size: 1.1rem;
+        color: var(--lapiz);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+    }
+    .vestimenta-valor {
+        grid-column: 2;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    /* muestras de color como "bolitas" coloreadas a mano */
+    .vestimenta-color {
+        width: 1.1rem;
+        height: 1.1rem;
+        border: 2px solid var(--tinta);
+        border-radius: 50% 45% 55% 48% / 52% 50% 48% 50%;
+    }
+
+    /* ============================================
+       COUNTDOWN: respuestas en recuadros dibujados a mano
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.55rem;
+        margin-top: 0.6rem;
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown::before {
+        content: "Faltan:";
+        grid-column: 1 / -1;
+        font: var(--t-impreso);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.45rem 0 0.4rem;
+        border: 2px solid var(--tinta);
+        border-radius: var(--a-mano);
+        background: rgba(251, 250, 245, 0.85);
+    }
+    .countdown div:nth-child(odd) { rotate: -1.5deg; }
+    .countdown div:nth-child(even) { rotate: 1.2deg; }
+    .countdown span {
+        font: 700 1.55rem/1 var(--impreso);
+        color: var(--tinta);
+    }
+    .countdown label {
+        margin-top: 0.25rem;
+        font: var(--t-impreso);
+        font-size: 0.55rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS: cintas washi de colores (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.7rem 0.6rem;
+        margin-top: 0.9rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0 0.8rem;
+        background: var(--cinta-azul);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 700 0.68rem/1 var(--impreso);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        /* orillas en zigzag, como cinta cortada con los dedos */
+        clip-path: polygon(0 8%, 3% 0, 6% 10%, 9% 0, 91% 0, 94% 10%, 97% 0, 100% 8%, 100% 92%, 97% 100%, 94% 90%, 91% 100%, 9% 100%, 6% 90%, 3% 100%, 0 92%);
+        transition: filter 0.2s ease;
+    }
+    .accion-icono:nth-child(1) { background: var(--cinta-amarilla); rotate: -1.5deg; }
+    .accion-icono:nth-child(2) { background: var(--cinta-rosa); rotate: 1.2deg; }
+    .accion-icono:nth-child(3) { background: var(--cinta-verde); rotate: 1deg; }
+    .accion-icono:nth-child(4) { rotate: -1.2deg; }
+    .accion-icono:hover {
+        filter: saturate(1.4) brightness(0.97);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px dashed var(--pluma-roja);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: dedicatoria y horario
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.4rem;
+        padding: 2.5rem var(--derecha) 2.5rem calc(var(--x-margen) + 1.1rem);
+        background: var(--linea-margen), var(--cuadricula), var(--papel);
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: var(--t-impreso);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .familia-nombres {
+        font: 600 1.45rem/1.1 var(--mano);
+    }
+    /* el itinerario es un horario de clases con renglones resaltados */
+    .itinerario {
+        --retraso: 0.15s;
+    }
+    .itinerario::before {
+        content: "Horario";
+        font: var(--t-impreso);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .itinerario h3 {
+        margin: 0.1rem 0 0.7rem;
+        font: 700 clamp(2.3rem, 11vw, 3rem)/1 var(--mano);
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: 5.6rem 1fr;
+        align-items: center;
+        border: 2px solid var(--tinta);
+        border-bottom-width: 0;
+        background: rgba(251, 250, 245, 0.9);
+    }
+    .itinerario-item:last-child {
+        border-bottom-width: 2px;
+    }
+    .itinerario-hora {
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0.55rem;
+        border-right: 2px solid var(--tinta);
+        font: 700 0.72rem/1.2 var(--impreso);
+        color: var(--tinta);
+    }
+    .itinerario-evento {
+        margin: 0.35rem 0.5rem;
+        padding: 0 0.3rem;
+        font: 600 1.4rem/1.1 var(--mano);
+        justify-self: start;
+        background: linear-gradient(transparent 20%, var(--cinta-amarilla) 20% 85%, transparent 85%);
+        mix-blend-mode: multiply;
+    }
+    .itinerario-item:nth-of-type(4n+2) .itinerario-evento { background-image: linear-gradient(transparent 20%, var(--cinta-rosa) 20% 85%, transparent 85%); }
+    .itinerario-item:nth-of-type(4n+3) .itinerario-evento { background-image: linear-gradient(transparent 20%, var(--cinta-verde) 20% 85%, transparent 85%); }
+    .itinerario-item:nth-of-type(4n+4) .itinerario-evento { background-image: linear-gradient(transparent 20%, var(--cinta-azul) 20% 85%, transparent 85%); }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        background: var(--cinta-amarilla);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 700 0.75rem/1 var(--impreso);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        clip-path: polygon(0 8%, 2% 0, 4% 10%, 6% 0, 94% 0, 96% 10%, 98% 0, 100% 8%, 100% 92%, 98% 100%, 96% 90%, 94% 100%, 6% 100%, 4% 90%, 2% 100%, 0 92%);
+        rotate: -1deg;
+    }
+    .boton-mesa-regalos:hover {
+        filter: saturate(1.4) brightness(0.97);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px dashed var(--pluma-roja);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.35s;
+        margin: 0;
+        font: 700 1.4rem/1.1 var(--mano);
+        color: var(--pluma-roja);
+        rotate: -2deg;
+    }
+
+    /* ============================================
+       GALERIA: periodico mural de corcho
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.4rem 1rem;
+        align-content: center;
+        padding: 3rem max(1.4rem, (100% - 34rem) / 2);
+        background:
+            radial-gradient(circle at 20% 30%, rgba(90, 60, 30, 0.25) 0.8px, transparent 1.4px) 0 0 / 9px 11px,
+            radial-gradient(circle at 70% 60%, rgba(255, 240, 210, 0.3) 0.8px, transparent 1.4px) 0 0 / 13px 7px,
+            var(--corcho);
+        box-shadow: inset 0 0 0 0.7rem #8A5A3B, inset 0 0 0 0.85rem #6E4529;
+    }
+    .galeria::before {
+        content: "Periódico mural";
+        grid-column: 1 / -1;
+        justify-self: center;
+        padding: 0.3rem 1.2rem;
+        background: var(--papel);
+        font: 700 1.9rem/1.1 var(--mano);
+        color: var(--tinta);
+        rotate: -2deg;
+        box-shadow: 0 3px 6px rgba(60, 35, 15, 0.3);
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        border: 0.45rem solid #FFFFFF;
+        border-bottom-width: 1.6rem;
+        box-shadow: 0 8px 14px -6px rgba(60, 35, 15, 0.55);
+    }
+    .galeria img:nth-of-type(odd) { rotate: -3deg; }
+    .galeria img:nth-of-type(even) { rotate: 2.5deg; translate: 0 0.8rem; }
+    .galeria img:nth-of-type(3n+1) {
+        grid-column: 1 / -1;
+        width: 78%;
+        justify-self: center;
+        aspect-ratio: 4 / 3;
+    }
+
+    /* ============================================
+       RSVP: pase de lista en el pizarron
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.8rem max(1.4rem, (100% - 30rem) / 2) 3rem;
+        background:
+            radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.07), transparent 60%),
+            radial-gradient(ellipse at 80% 90%, rgba(255, 255, 255, 0.05), transparent 55%),
+            var(--pizarron);
+        color: var(--gis);
+        box-shadow: inset 0 0 0 0.6rem #8A5A3B, inset 0 0 0 0.75rem #6E4529;
+    }
+    .rsvp::before {
+        content: "Pase de lista";
+        font: var(--t-impreso);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: rgba(243, 241, 231, 0.7);
+    }
+    /* letra de gis: un halo suave imita el polvo */
+    .rsvp h2 {
+        margin: 0.2rem 0 0.3rem;
+        font: 700 clamp(2.4rem, 11vw, 3rem)/1 var(--mano);
+        text-shadow: 0 0 2px rgba(243, 241, 231, 0.55);
+    }
+    .rsvp p {
+        margin: 0;
+        font: 500 1.35rem/1.2 var(--mano);
+        text-shadow: 0 0 2px rgba(243, 241, 231, 0.4);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 700 1.8rem/1 var(--mano);
+        color: var(--marcatexto);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "21 de Noviembre": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-size: 1.2rem;
+        color: rgba(243, 241, 231, 0.75);
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+
+    /* --- La hoja arrancada de la libreta (con los hoyitos de la espiral) --- */
+    #form-rsvp {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-top: 1.3rem;
+        padding: 2.1rem 1.1rem 1.2rem calc(2.1rem + 0.6rem);
+        background:
+            radial-gradient(circle at 12px 10px, var(--pizarron) 4px, transparent 4.5px) 0 0 / 24px 22px repeat-x,
+            linear-gradient(90deg, transparent 2.1rem, var(--margen-rojo) 2.1rem, var(--margen-rojo) calc(2.1rem + 1.5px), transparent calc(2.1rem + 1.5px)),
+            repeating-linear-gradient(transparent 0 calc(2.2rem - 1px), var(--cuadro) calc(2.2rem - 1px) 2.2rem) 0 1.4rem,
+            var(--papel);
+        color: var(--tinta);
+        rotate: -1deg;
+        box-shadow: 0 16px 26px -12px rgba(0, 0, 0, 0.6);
+    }
+    /* renglones: la letra "se escribe" sobre las lineas (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"] {
+        width: 100%;
+        height: 2.2rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 600 1.45rem/2.2rem var(--mano);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(35, 51, 110, 0.4);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        background: rgba(255, 228, 92, 0.35);
+    }
+    #form-rsvp textarea {
+        width: 100%;
+        min-height: 4.4rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 600 1.45rem/2.2rem var(--mano);
+        resize: vertical;
+    }
+
+    /* --- Si / No / Tal vez: casillas que se palomean en rojo --- */
+    .opciones-asistencia {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.2rem 1.1rem;
+        min-height: 2.2rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 2.2rem;
+        font: 600 1.4rem/1 var(--mano);
+        cursor: pointer;
+    }
+    .opciones-asistencia label::before {
+        content: "";
+        flex: none;
+        width: 1.35rem;
+        height: 1.35rem;
+        background: var(--casilla-vacia) center / contain no-repeat;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label::before {
+        background-image: var(--casilla);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px dashed var(--pluma-roja);
+        outline-offset: 2px;
+    }
+
+    /* --- Acompanantes --- */
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: var(--t-impreso);
+        font-size: 0.6rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        max-width: 3.2rem;
+        text-align: center;
+    }
+
+    /* --- Entregar (enviar): cinta amarilla --- */
+    #form-rsvp button {
+        min-height: 3rem;
+        margin-top: 0.5rem;
+        border: 0;
+        background: var(--cinta-amarilla);
+        color: var(--tinta);
+        font: 700 0.8rem/1 var(--impreso);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        cursor: pointer;
+        clip-path: polygon(0 8%, 2% 0, 4% 10%, 6% 0, 94% 0, 96% 10%, 98% 0, 100% 8%, 100% 92%, 98% 100%, 96% 90%, 94% 100%, 6% 100%, 4% 90%, 2% 100%, 0 92%);
+        transition: filter 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        filter: saturate(1.5) brightness(0.96);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px dashed var(--pluma-roja);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 700 1.8rem/1.1 var(--mano);
+        color: var(--marcatexto);
+    }
+
+    /* --- Birretes que vuelan al confirmar --- */
+    .birretes {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .birrete-volador {
+        position: absolute;
+        bottom: -4rem;
+        width: 3.2rem;
+        height: 2.6rem;
+        animation: volar var(--duracion, 2.2s) cubic-bezier(0.15, 0.6, 0.4, 1) var(--retraso, 0s) both;
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        .birretes {
+            display: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        // --- 1. El nombre "pasado con marcatextos" ---
+        // Se envuelve el texto en un <span> para que el trazo siga cada renglon.
+        const titulo = document.querySelector('.nombres');
+        if (titulo && titulo.textContent.trim()) {
+            const resaltado = document.createElement('span');
+            resaltado.className = 'resaltado';
+            resaltado.textContent = titulo.textContent.trim();
+            titulo.textContent = '';
+            titulo.appendChild(resaltado);
+        }
+
+        // --- 2. El nombre nunca se sale de la pantalla (ni pasa de 2 renglones) ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 1.02 * 2.3;   // 1.02 = line-height
+            let vueltas = 0;
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 3. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 4. ¡Lanzamiento de birretes! cuando el RSVP se envía con éxito ---
+        // El motor escribe "¡Gracias por confirmar!" en #rsvp-status; lo escuchamos
+        // sin tocar su logica.
+        const status = document.getElementById('rsvp-status');
+        const cielo = document.getElementById('birretes');
+        function lanzarBirretes() {
+            if (!cielo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            const svgNS = 'http://www.w3.org/2000/svg';
+            for (let i = 0; i < 16; i++) {
+                const birrete = document.createElementNS(svgNS, 'svg');
+                birrete.setAttribute('viewBox', '0 0 100 80');
+                birrete.setAttribute('class', 'birrete-volador');
+                const uso = document.createElementNS(svgNS, 'use');
+                uso.setAttribute('href', '#g-birrete-lleno');
+                birrete.appendChild(uso);
+                birrete.style.left = (5 + Math.random() * 85) + '%';
+                birrete.style.setProperty('--dx', ((Math.random() - 0.5) * 40) + 'vw');
+                birrete.style.setProperty('--giro', ((Math.random() - 0.5) * 720) + 'deg');
+                birrete.style.setProperty('--duracion', (1.8 + Math.random()) + 's');
+                birrete.style.setProperty('--retraso', (Math.random() * 0.35) + 's');
+                cielo.appendChild(birrete);
+                setTimeout(() => birrete.remove(), 3500);
+            }
+        }
+        if (status) {
+            new MutationObserver(() => {
+                if (status.textContent.includes('Gracias')) lanzarBirretes();
+            }).observe(status, { childList: true, characterData: true, subtree: true });
+        }
+    })();
+</script>
+{% endblock %}

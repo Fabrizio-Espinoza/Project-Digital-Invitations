@@ -1,0 +1,1268 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  CARNET DE BAILE — segunda plantilla de XV años.
+
+  Concepto: en los bailes de gala cada dama llevaba un "carnet de baile",
+  una tarjetita con liston donde los invitados se apuntaban para cada pieza.
+  Los XV giran alrededor del vals, asi que la invitacion entera es ese carnet:
+  el invitado "reserva su pieza" al confirmar.
+
+  Estetica "coquette" (la tendencia mas fuerte entre chicas de 14-16 años):
+  moños de saten, perlas, encaje festoneado y rosa ballet. Es el opuesto de
+  "Medianoche Dorada" (noche, dorado, estrellas): aqui todo es luz de dia.
+
+  Firma: la invitacion llega envuelta como regalo. Al tocar el moño se desata,
+  la caja se abre y empieza la musica (ese toque es la interaccion real que el
+  navegador exige para dejar sonar audio).
+
+  Paleta: lino (papel) · rosa ballet · rosa moño · frambuesa (acento) · ciruela (texto) · perla.
+  Tipografia: Ballet (script de alto contraste, nombre) + Gilda Display (serif
+  Didone suave). Ambas de Google Fonts con licencia OFL: libres para uso comercial.
+  Todo el arte (moño, perlas, encaje) es SVG/CSS propio: sin licencias que confirmar.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Mis XV años{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<!-- Piezas del moño y la perla: se dibujan UNA vez aqui y se reutilizan con <use> -->
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="g-saten" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F9CFD9"/><stop offset=".45" stop-color="#F0AFBF"/><stop offset="1" stop-color="#D9859B"/>
+        </linearGradient>
+        <linearGradient id="g-cola" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#DE8EA3"/><stop offset=".5" stop-color="#F2B8C6"/><stop offset="1" stop-color="#E49AAE"/>
+        </linearGradient>
+        <radialGradient id="g-hueco" cx=".85" cy=".5" r=".9">
+            <stop offset="0" stop-color="#B85A76"/><stop offset="1" stop-color="#DC8FA4"/>
+        </radialGradient>
+        <linearGradient id="g-nudo" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#F4BCC9"/><stop offset="1" stop-color="#CF7690"/>
+        </linearGradient>
+        <radialGradient id="g-perla" cx=".35" cy=".3" r=".75">
+            <stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#FDF6F2"/><stop offset=".75" stop-color="#EBDCD3"/><stop offset="1" stop-color="#C9B2A8"/>
+        </radialGradient>
+        <g id="m-cola-i"><path d="M112 80 C101 106 80 132 60 176 L78 166 L88 184 C100 146 118 114 126 84 Z" fill="url(#g-cola)"/><path d="M111 92 C101 116 86 140 74 168" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2"/></g>
+        <g id="m-cola-d"><path d="M128 80 C139 106 160 134 180 172 L162 164 L151 181 C142 142 122 114 114 84 Z" fill="url(#g-cola)"/><path d="M129 92 C139 116 154 140 168 164" fill="none" stroke="#FFFFFF" stroke-opacity=".35" stroke-width="2"/></g>
+        <g id="m-lazo-i"><path d="M112 63 C95 38 58 16 36 25 C15 34 14 64 30 81 C47 98 87 92 112 79 Z" fill="url(#g-saten)"/><path d="M112 71 C94 60 64 52 48 58 C60 72 90 78 112 76 Z" fill="url(#g-hueco)" opacity=".75"/><path d="M104 56 C86 40 60 30 42 36" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g id="m-lazo-d"><path d="M128 63 C145 38 182 16 204 25 C225 34 226 64 210 81 C193 98 153 92 128 79 Z" fill="url(#g-saten)"/><path d="M128 71 C146 60 176 52 192 58 C180 72 150 78 128 76 Z" fill="url(#g-hueco)" opacity=".75"/><path d="M136 56 C154 40 180 30 198 36" fill="none" stroke="#FFFFFF" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/></g>
+        <g id="m-nudo"><path d="M108 59 C113 54 127 54 132 59 C137 67 137 77 132 85 C127 90 113 90 108 85 C103 77 103 67 108 59 Z" fill="url(#g-nudo)"/><path d="M111 63 C116 60 124 60 129 63" fill="none" stroke="#FFFFFF" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/></g>
+        <symbol id="mono" viewBox="0 0 240 190"><use href="#m-cola-i"/><use href="#m-cola-d"/><use href="#m-lazo-i"/><use href="#m-lazo-d"/><use href="#m-nudo"/></symbol>
+    </defs>
+</svg>
+
+<!-- Collar de perlas graduadas (mas grandes junto al moño) colgando del moño -->
+<div class="adorno-superior" aria-hidden="true">
+    <svg viewBox="0 0 400 230">
+        <g class="collar" fill="url(#g-perla)"><circle cx="200.0" cy="78.0" r="6.6" style="--i:0"/><circle cx="191.1" cy="89.1" r="6.4" style="--i:1"/><circle cx="208.9" cy="89.1" r="6.4" style="--i:1"/><circle cx="181.8" cy="99.4" r="6.3" style="--i:2"/><circle cx="218.2" cy="99.4" r="6.3" style="--i:2"/><circle cx="172.1" cy="108.9" r="6.1" style="--i:3"/><circle cx="227.9" cy="108.9" r="6.1" style="--i:3"/><circle cx="161.9" cy="117.4" r="6.0" style="--i:4"/><circle cx="238.1" cy="117.4" r="6.0" style="--i:4"/><circle cx="151.2" cy="124.7" r="5.9" style="--i:5"/><circle cx="248.8" cy="124.7" r="5.9" style="--i:5"/><circle cx="140.0" cy="130.5" r="5.7" style="--i:6"/><circle cx="260.0" cy="130.5" r="5.7" style="--i:6"/><circle cx="128.4" cy="134.7" r="5.6" style="--i:7"/><circle cx="271.6" cy="134.7" r="5.6" style="--i:7"/><circle cx="116.4" cy="136.8" r="5.4" style="--i:8"/><circle cx="283.6" cy="136.8" r="5.4" style="--i:8"/><circle cx="104.7" cy="136.8" r="5.3" style="--i:9"/><circle cx="295.3" cy="136.8" r="5.3" style="--i:9"/><circle cx="93.2" cy="134.7" r="5.2" style="--i:10"/><circle cx="306.8" cy="134.7" r="5.2" style="--i:10"/><circle cx="82.6" cy="131.0" r="5.1" style="--i:11"/><circle cx="317.4" cy="131.0" r="5.1" style="--i:11"/><circle cx="72.7" cy="126.0" r="4.9" style="--i:12"/><circle cx="327.3" cy="126.0" r="4.9" style="--i:12"/><circle cx="63.6" cy="120.0" r="4.8" style="--i:13"/><circle cx="336.4" cy="120.0" r="4.8" style="--i:13"/><circle cx="55.3" cy="113.5" r="4.7" style="--i:14"/><circle cx="344.7" cy="113.5" r="4.7" style="--i:14"/><circle cx="47.7" cy="106.4" r="4.6" style="--i:15"/><circle cx="352.3" cy="106.4" r="4.6" style="--i:15"/><circle cx="40.7" cy="99.1" r="4.5" style="--i:16"/><circle cx="359.3" cy="99.1" r="4.5" style="--i:16"/><circle cx="34.1" cy="91.7" r="4.4" style="--i:17"/><circle cx="365.9" cy="91.7" r="4.4" style="--i:17"/><circle cx="28.0" cy="84.0" r="4.3" style="--i:18"/><circle cx="372.0" cy="84.0" r="4.3" style="--i:18"/><circle cx="22.3" cy="76.4" r="4.2" style="--i:19"/><circle cx="377.7" cy="76.4" r="4.2" style="--i:19"/><circle cx="17.1" cy="68.8" r="4.0" style="--i:20"/><circle cx="382.9" cy="68.8" r="4.0" style="--i:20"/><circle cx="12.1" cy="61.2" r="3.9" style="--i:21"/><circle cx="387.9" cy="61.2" r="3.9" style="--i:21"/><circle cx="7.4" cy="53.8" r="3.9" style="--i:22"/><circle cx="392.6" cy="53.8" r="3.9" style="--i:22"/><circle cx="2.9" cy="46.3" r="3.8" style="--i:23"/><circle cx="397.1" cy="46.3" r="3.8" style="--i:23"/><circle cx="-1.3" cy="38.8" r="3.7" style="--i:24"/><circle cx="401.3" cy="38.8" r="3.7" style="--i:24"/></g>
+        <use class="mono-portada" href="#mono" x="130" y="4" width="140" height="111"/>
+    </svg>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<div class="hero-fecha">
+    <span class="perlitas" aria-hidden="true"><i></i><i></i><i></i></span>
+    <p>{{ invitacion.fecha_evento|date:"l j · F · Y"|lower|capfirst }}</p>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="info-cabecera">
+    <svg class="mono-chico" viewBox="0 0 240 190" aria-hidden="true"><use href="#mono"/></svg>
+    <p class="kicker">Guarda la fecha</p>
+    <h2 class="titulo-script">La gran noche</h2>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- La invitacion llega envuelta como regalo. Nace oculta (hidden): solo el JS
+     del tema la muestra, asi si el JS falla nunca tapa la invitacion. -->
+<div class="regalo" id="regalo" hidden>
+    <button type="button" class="regalo-abrir" id="regalo-abrir" aria-label="Abrir la invitación">
+        <svg class="regalo-mono" viewBox="0 0 240 190" aria-hidden="true">
+            <g class="parte cola-i"><use href="#m-cola-i"/></g>
+            <g class="parte cola-d"><use href="#m-cola-d"/></g>
+            <g class="parte lazo-i"><use href="#m-lazo-i"/></g>
+            <g class="parte lazo-d"><use href="#m-lazo-d"/></g>
+            <g class="parte nudo"><use href="#m-nudo"/></g>
+        </svg>
+        <span class="regalo-textos">
+            <span class="regalo-para">Para ti, de</span>
+            <span class="regalo-nombre">{{ invitacion.anfitriones }}</span>
+            <span class="regalo-accion">Toca el moño para abrir</span>
+        </span>
+    </button>
+</div>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ballet:opsz@16..72&family=Gilda+Display&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        --lino: #FFF7F4;
+        --ballet: #F9DDE3;
+        --mono: #EBA9B8;
+        --frambuesa: #B8466A;
+        --frambuesa-honda: #963456;
+        --ciruela: #5B2B3C;
+        --ciruela-suave: rgba(91, 43, 60, 0.72);
+        --linea: rgba(184, 70, 106, 0.22);
+
+        --script: 'Ballet', 'Snell Roundhand', 'Apple Chancery', cursive;
+        --serif: 'Gilda Display', 'Didot', Georgia, serif;
+
+        --t-kicker: 400 0.72rem/1.4 var(--serif);
+        --t-script-titulo: 400 clamp(2.5rem, 12vw, 3.3rem)/1.25 var(--script);
+
+        --margen: clamp(1.25rem, 6vw, 2.5rem);
+        --ancho: 26rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+        /* papel tapiz de rayitas finas, como caja de regalo */
+        --rayas: repeating-linear-gradient(90deg, transparent 0 14px, rgba(235, 169, 184, 0.16) 14px 16px);
+        /* perla: brillo arriba a la izquierda y sombra abajo a la derecha */
+        --perla: radial-gradient(circle at 35% 30%, #FFFFFF 0, #FDF6F2 30%, #EBDCD3 72%, #C9B2A8 100%);
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    html.con-regalo,
+    html.con-regalo body {
+        overflow: hidden;   /* mientras la invitacion sigue "envuelta" no se hace scroll */
+    }
+    body {
+        margin: 0;
+        background: var(--lino);
+        color: var(--ciruela);
+        font-family: var(--serif);
+        font-size: 1rem;
+        line-height: 1.55;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(184, 70, 106, 0.12);
+    }
+    ::selection {
+        background: var(--mono);
+        color: var(--ciruela);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: var(--t-kicker);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    .titulo-script {
+        margin: 0;
+        font: var(--t-script-titulo);
+        color: var(--frambuesa);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       REGALO DE APERTURA (moño que se desata)
+       ============================================ */
+    .regalo {
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        background: var(--rayas), var(--ballet);
+        transition: opacity 0.7s ease 0.85s, visibility 0s linear 1.55s;
+    }
+    .regalo[hidden] {
+        display: none;
+    }
+    /* listones cruzados de la caja */
+    .regalo::before,
+    .regalo::after {
+        content: "";
+        position: absolute;
+        transition: scale 0.55s var(--curva) 0.35s;
+    }
+    .regalo::before {
+        top: 0;
+        bottom: 0;
+        left: 50%;
+        width: 2.6rem;
+        translate: -50% 0;
+        background: linear-gradient(90deg, #DE8EA3, #F2B8C6 40%, #F8CFD9 55%, #E49AAE);
+    }
+    .regalo::after {
+        left: 0;
+        right: 0;
+        top: 40%;
+        height: 2.6rem;
+        translate: 0 -50%;
+        background: linear-gradient(180deg, #DE8EA3, #F2B8C6 40%, #F8CFD9 55%, #E49AAE);
+    }
+    .regalo-abrir {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        cursor: pointer;
+    }
+    /* con teclado, el foco se marca en la etiqueta (no como marco de toda la pantalla) */
+    .regalo-abrir:focus-visible {
+        outline: none;
+    }
+    .regalo-abrir:focus-visible .regalo-textos {
+        outline: 2px solid var(--frambuesa);
+    }
+    .regalo-mono {
+        position: absolute;
+        left: 50%;
+        top: 40%;
+        width: min(15rem, 62vw);
+        translate: -50% -38%;
+        overflow: visible;
+        filter: drop-shadow(0 10px 12px rgba(91, 43, 60, 0.22));
+        animation: balanceo 3.2s ease-in-out infinite;
+    }
+    .regalo-mono .parte {
+        transform-box: fill-box;
+        transition: transform 0.75s var(--curva), opacity 0.6s ease;
+    }
+    .regalo-mono .lazo-i { transform-origin: right center; }
+    .regalo-mono .lazo-d { transform-origin: left center; }
+    .regalo-mono .cola-i,
+    .regalo-mono .cola-d { transform-origin: top center; }
+    .regalo-mono .nudo { transform-origin: center; }
+    /* etiqueta de regalo con el nombre */
+    .regalo-textos {
+        position: absolute;
+        left: 50%;
+        top: calc(40% + 7.6rem);
+        translate: -50% 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: min(17rem, 82vw);
+        padding: 1rem 1.2rem 1.1rem;
+        border-radius: 14px;
+        background: var(--lino);
+        outline: 1px dashed var(--mono);
+        outline-offset: -0.4rem;
+        box-shadow: 0 14px 28px -14px rgba(91, 43, 60, 0.45);
+        transition: opacity 0.3s ease;
+    }
+    .regalo-para {
+        font: var(--t-kicker);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    .regalo-nombre {
+        font: 400 clamp(2.8rem, 14vw, 3.8rem)/1.3 var(--script);
+        color: var(--frambuesa);
+    }
+    .regalo-accion {
+        margin-top: 0.6rem;
+        font: var(--t-kicker);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--ciruela-suave);
+        animation: invitar 2.2s ease-in-out infinite;
+    }
+    /* al tocar: los lazos se abren, las colas caen, los listones se recogen */
+    .regalo.abriendo {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+    .regalo.abriendo::before { scale: 1 0; }
+    .regalo.abriendo::after { scale: 0 1; }
+    .regalo.abriendo .regalo-mono { animation: none; }
+    .regalo.abriendo .lazo-i { transform: translate(-30%, -25%) rotate(-40deg) scale(0.6); opacity: 0; }
+    .regalo.abriendo .lazo-d { transform: translate(30%, -25%) rotate(40deg) scale(0.6); opacity: 0; }
+    .regalo.abriendo .cola-i { transform: translate(-20%, 60%) rotate(18deg); opacity: 0; }
+    .regalo.abriendo .cola-d { transform: translate(20%, 60%) rotate(-18deg); opacity: 0; }
+    .regalo.abriendo .nudo { transform: scale(0); opacity: 0; }
+    .regalo.abriendo .regalo-textos { opacity: 0; }
+
+    /* ============================================
+       BOTON DE MUSICA (una perla)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        top: max(0.9rem, env(safe-area-inset-top));
+        right: max(0.9rem, env(safe-area-inset-right));
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--perla);
+        color: var(--frambuesa);
+        cursor: pointer;
+        box-shadow: 0 0 0 1px rgba(201, 178, 168, 0.6), 0 6px 14px rgba(91, 43, 60, 0.22);
+    }
+    .boton-musica svg {
+        grid-area: 1 / 1;
+        width: 1.25rem;
+        height: 1.25rem;
+        transition: opacity 0.2s ease;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        opacity: 0;
+    }
+    .boton-musica.sonando .icono-pausa {
+        opacity: 1;
+    }
+    .boton-musica.sonando {
+        animation: latido 2.4s ease-in-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--frambuesa);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    /* la portada espera a que se abra el regalo; cada pieza trae su --retraso */
+    html:not(.con-regalo) .visible :is(.eyebrow, .nombres, .mensaje, .hero-fecha, .info-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario-item, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.9s var(--curva) var(--retraso, 0s) both;
+    }
+    html:not(.con-regalo) .hero.visible .collar circle {
+        animation: ensartar 0.5s var(--curva) calc(var(--i) * 45ms + 0.15s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.8rem; }
+    }
+    @keyframes ensartar {
+        from { opacity: 0; scale: 0.2; }
+    }
+    @keyframes balanceo {
+        50% { rotate: 2.5deg; }
+    }
+    @keyframes invitar {
+        50% { opacity: 0.45; }
+    }
+    @keyframes latido {
+        50% { box-shadow: 0 0 0 1px rgba(201, 178, 168, 0.6), 0 0 0 8px rgba(235, 169, 184, 0.35); }
+    }
+    @keyframes rebote {
+        40% { scale: 1.3; }
+    }
+
+    /* ============================================
+       PORTADA (hero)
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 var(--margen) 3.2rem;
+        background: var(--rayas), linear-gradient(180deg, var(--ballet) 0%, var(--ballet) 55%, #FCE9EC 100%);
+        overflow: hidden;
+    }
+    /* borde de encaje festoneado (con ojalitos) que "cose" la portada con la pagina siguiente */
+    .hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 1.2rem;
+        background:
+            radial-gradient(circle at 12px 13px, #FCE9EC 2.2px, transparent 2.7px) 0 0 / 24px 100% repeat-x,
+            radial-gradient(circle at 12px 19px, var(--lino) 11.5px, transparent 12px) 0 0 / 24px 100% repeat-x;
+    }
+    .marco-decorativo {
+        align-self: stretch;
+        margin-inline: calc(-1 * var(--margen));
+    }
+    .adorno-superior svg {
+        display: block;
+        width: 100%;
+        max-width: 34rem;
+        margin: 0 auto;
+        overflow: visible;
+    }
+    .collar circle {
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+    .mono-portada {
+        transform-box: fill-box;
+        transform-origin: 50% 40%;
+        filter: drop-shadow(0 6px 6px rgba(91, 43, 60, 0.18));
+        animation: balanceo 4s ease-in-out infinite;
+    }
+    .hero-contenido {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+        margin-top: clamp(-2rem, -4vh, -0.5rem);
+    }
+    .eyebrow {
+        --retraso: 0.05s;
+        margin: 0;
+        font: var(--t-kicker);
+        font-size: 0.8rem;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    /* el nombre en script, con una "XV" gigante detras como monograma */
+    .nombres {
+        --retraso: 0.2s;
+        position: relative;
+        z-index: 0;
+        max-width: 100%;   /* sin esto el titulo crece con el nombre y el JS no detecta que no cabe */
+        min-width: 0;
+        margin: 0.05em 0 0;
+        padding: 0 0.15em;
+        font-family: var(--script);
+        font-weight: 400;
+        font-size: clamp(4.2rem, 26vw, 8.5rem);
+        line-height: 1.3;
+        color: var(--frambuesa);
+        text-wrap: balance;
+    }
+    .nombres::before {
+        content: "XV";
+        position: absolute;
+        z-index: -1;
+        left: 50%;
+        top: 52%;
+        translate: -50% -50%;
+        font: 400 1.75em/1 var(--serif);
+        letter-spacing: -0.02em;
+        color: rgba(255, 255, 255, 0.72);
+        pointer-events: none;
+    }
+    .mensaje {
+        --retraso: 0.4s;
+        max-width: 30ch;
+        margin: 0.4rem 0 0;
+        font-size: 1.02rem;
+        line-height: 1.55;
+        color: var(--ciruela-suave);
+        text-wrap: pretty;
+    }
+    .hero-fecha {
+        --retraso: 0.55s;
+        margin-top: clamp(1rem, 3vh, 1.6rem);
+    }
+    .hero-fecha p {
+        margin: 0.5rem 0 0;
+        font-size: 1.15rem;
+        letter-spacing: 0.03em;
+        color: var(--ciruela);
+    }
+    /* tres perlitas como separador: chica, grande, chica */
+    .perlitas {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .perlitas i {
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 50%;
+        background: var(--perla);
+        box-shadow: 0 1px 2px rgba(91, 43, 60, 0.2);
+    }
+    .perlitas i:nth-child(2) {
+        width: 0.65rem;
+        height: 0.65rem;
+    }
+
+    /* ============================================
+       PANTALLA 2: LA GRAN NOCHE
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem var(--margen) 3.25rem;
+        background: var(--lino);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 1.1rem;
+    }
+    .info-cabecera {
+        --retraso: 0.05s;
+    }
+    .mono-chico {
+        display: block;
+        width: 3.4rem;
+        height: auto;
+        margin: 0 auto 0.3rem;
+        filter: drop-shadow(0 3px 3px rgba(91, 43, 60, 0.15));
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1.05rem;
+    }
+
+    /* ============================================
+       DETALLES: Dia · perla · Hora, lugares y vestimenta
+       ============================================ */
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    .detalle-divisor {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        background: var(--perla);
+        box-shadow: 0 1px 3px rgba(91, 43, 60, 0.25);
+    }
+    .detalle-label {
+        font: var(--t-kicker);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    .detalle-valor {
+        font-size: 1.1rem;
+        line-height: 1.3;
+        color: var(--ciruela);
+        text-wrap: balance;
+    }
+    /* Django escribe "13 de Marzo"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    /* Misa | Recepcion lado a lado, entre dos lineas finas */
+    .lugares {
+        --retraso: 0.25s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        padding: 0.9rem 0;
+        border-block: 1px solid var(--linea);
+    }
+    .lugares .lugar-item:only-child {
+        grid-column: 1 / -1;
+    }
+    .lugar-direccion {
+        font-size: 0.85rem;
+        color: var(--ciruela-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    /* cada color sugerido es una "perla" de ese tono */
+    .vestimenta-color {
+        width: 1.05rem;
+        height: 1.05rem;
+        border-radius: 50%;
+        background-image: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.85) 0, rgba(255, 255, 255, 0) 55%);
+        box-shadow: inset -2px -2px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(91, 43, 60, 0.25);
+    }
+    .vestimenta-valor .detalle-valor {
+        margin-left: 0.25rem;
+    }
+
+    /* ============================================
+       COUNTDOWN: cuatro perlas ensartadas en un hilo
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: clamp(0.5rem, 3vw, 1rem);
+        padding-top: 1.25rem;
+        font-variant-numeric: lining-nums tabular-nums;
+    }
+    .countdown::before {
+        content: "Faltan";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        font: var(--t-kicker);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    /* el hilo que une las perlas */
+    .countdown::after {
+        content: "";
+        position: absolute;
+        z-index: 0;
+        left: 8%;
+        right: 8%;
+        top: calc(1.25rem + 2.15rem);
+        height: 1px;
+        background: var(--mono);
+    }
+    .countdown div {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 4.3rem;
+        height: 4.3rem;
+        border-radius: 50%;
+        background: var(--perla);
+        box-shadow: inset -3px -4px 8px rgba(160, 120, 110, 0.25), 0 6px 12px -4px rgba(91, 43, 60, 0.3);
+    }
+    .countdown span {
+        font-size: 1.55rem;
+        line-height: 1;
+        color: var(--frambuesa);
+    }
+    .countdown label {
+        margin-top: 0.2rem;
+        font: var(--t-kicker);
+        font-size: 0.56rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ciruela-suave);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (listones redondos, 2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.3rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        padding: 0 0.9rem;
+        border: 1px solid var(--frambuesa);
+        border-radius: 999px;
+        color: var(--frambuesa);
+        text-decoration: none;
+        font: var(--t-kicker);
+        font-size: 0.74rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    .accion-icono:hover {
+        background: var(--ballet);
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--frambuesa);
+        color: var(--lino);
+    }
+    .accion-icono[href="#rsvp"]:hover {
+        background: var(--frambuesa-honda);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--frambuesa);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: familia, programa, regalos
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1.5rem;
+        padding: 3rem var(--margen) 3.5rem;
+        background: var(--rayas), #FDEFF1;
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    /* padres arriba a todo el ancho; padrinos en pares */
+    .familia {
+        --retraso: 0.05s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem 1rem;
+        padding-bottom: 1.3rem;
+        border-bottom: 1px solid var(--linea);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .familia-grupo:first-child,
+    .familia-grupo:last-child:nth-child(even) {
+        grid-column: 1 / -1;
+    }
+    .familia-rol {
+        font: var(--t-kicker);
+        font-size: 0.64rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--frambuesa);
+    }
+    .familia-nombres {
+        font-size: 1.02rem;
+        line-height: 1.35;
+        text-wrap: balance;
+    }
+    .itinerario h3 {
+        margin: 0 0 0.5rem;
+        font: var(--t-script-titulo);
+        color: var(--frambuesa);
+    }
+    /* programa: hora | perla sobre un liston | evento */
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1.6rem 1fr;
+        align-items: center;
+        padding: 0.42rem 0;
+    }
+    .itinerario-item:nth-child(3) { --retraso: 0.08s; }
+    .itinerario-item:nth-child(4) { --retraso: 0.16s; }
+    .itinerario-item:nth-child(5) { --retraso: 0.24s; }
+    .itinerario-item:nth-child(n+6) { --retraso: 0.32s; }
+    .itinerario-item::before {
+        content: "";
+        position: relative;
+        z-index: 1;
+        grid-row: 1;
+        grid-column: 2;
+        justify-self: center;
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: var(--perla);
+        box-shadow: 0 1px 3px rgba(91, 43, 60, 0.3);
+    }
+    .itinerario-item::after {
+        content: "";
+        position: absolute;
+        left: calc(50% - 1.5px);
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background: linear-gradient(90deg, #E49AAE, #F8CFD9, #E49AAE);
+        opacity: 0.7;
+    }
+    .itinerario-item:first-of-type::after { top: 50%; }
+    .itinerario-item:last-child::after { bottom: 50%; }
+    .itinerario-hora {
+        grid-row: 1;
+        grid-column: 1;
+        padding-right: 0.6rem;
+        text-align: right;
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+        color: var(--frambuesa);
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        grid-row: 1;
+        grid-column: 3;
+        padding-left: 0.6rem;
+        text-align: left;
+        font-size: 1.02rem;
+        line-height: 1.3;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        min-height: 3rem;
+        border-radius: 999px;
+        background: var(--frambuesa);
+        color: var(--lino);
+        text-decoration: none;
+        font: var(--t-kicker);
+        font-size: 0.78rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        box-shadow: 0 8px 18px -8px rgba(150, 52, 86, 0.6);
+        transition: background 0.25s ease;
+    }
+    .boton-mesa-regalos::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--perla);
+    }
+    .boton-mesa-regalos:hover {
+        background: var(--frambuesa-honda);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--frambuesa);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.3s;
+        margin: 0;
+        font: 400 1.9rem/1.3 var(--script);
+        color: var(--frambuesa);
+    }
+
+    /* ============================================
+       GALERIA (camafeos ovalados con marco de perla)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem 0.9rem;
+        align-content: center;
+        justify-items: center;
+        padding: 3rem max(var(--margen), (100% - 34rem) / 2) 3.5rem;
+        background: var(--rayas), var(--ballet);
+    }
+    .galeria::before {
+        content: "Recuerdos";
+        grid-column: 1 / -1;
+        font: var(--t-script-titulo);
+        color: var(--frambuesa);
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 5px solid var(--lino);
+        box-shadow: 0 0 0 2px var(--mono), 0 12px 22px -10px rgba(91, 43, 60, 0.45);
+    }
+    .galeria img:nth-of-type(3n+1) {
+        grid-column: 1 / -1;
+        width: 72%;
+    }
+
+    /* ============================================
+       RSVP: CARNET DE BAILE
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem var(--margen) 3.5rem;
+        background: repeating-linear-gradient(90deg, transparent 0 14px, rgba(255, 255, 255, 0.06) 14px 16px), var(--frambuesa);
+        color: var(--lino);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Carnet de baile";
+        font: var(--t-kicker);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--ballet);
+    }
+    .rsvp h2 {
+        margin: 0.7rem auto 0.3rem;
+        font: var(--t-script-titulo);
+        color: var(--lino);
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+    }
+    .rsvp p:has(#total-confirmados) {
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        gap: 0.45rem;
+        font-size: 1rem;
+        color: var(--ballet);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font-size: 1.6rem;
+        line-height: 1;
+        color: var(--lino);
+        font-variant-numeric: lining-nums;
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "20 de Febrero": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.3rem;
+        font-size: 0.95rem;
+        color: var(--ballet);
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+
+    /* --- La tarjeta: papel con encaje festoneado arriba y abajo --- */
+    #form-rsvp {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin: 1.6rem auto 0;
+        padding: 1.8rem 1.35rem 1.6rem;
+        background: var(--lino);
+        color: var(--ciruela);
+        outline: 1px solid var(--mono);
+        outline-offset: -0.5rem;
+        box-shadow: 0 24px 40px -22px rgba(60, 10, 30, 0.7);
+        text-align: left;
+    }
+    #form-rsvp::before,
+    #form-rsvp::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        height: 0.7rem;
+        background: radial-gradient(circle at 10px 0, var(--lino) 9.5px, transparent 10px) 0 0 / 20px 100% repeat-x;
+    }
+    #form-rsvp::before {
+        top: -0.68rem;
+        rotate: 180deg;
+    }
+    #form-rsvp::after {
+        bottom: -0.68rem;
+    }
+    /* renglones punteados, como las lineas del carnet (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"] {
+        width: 100%;
+        padding: 0.45rem 0;
+        border: 0;
+        border-bottom: 1px dotted rgba(91, 43, 60, 0.55);
+        border-radius: 0;
+        background: transparent;
+        color: var(--ciruela);
+        font: 400 1.1rem/1.4 var(--serif);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(91, 43, 60, 0.42);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--frambuesa);
+        border-bottom-style: solid;
+    }
+    #form-rsvp textarea {
+        width: 100%;
+        min-height: 4rem;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        background: repeating-linear-gradient(transparent 0 calc(2rem - 1px), rgba(184, 70, 106, 0.28) calc(2rem - 1px) 2rem);
+        background-attachment: local;
+        color: var(--ciruela);
+        font: 400 1.1rem/2rem var(--serif);
+        resize: vertical;
+    }
+
+    /* --- Si / No / Tal vez: listones con una perla que se "enciende" --- */
+    .opciones-asistencia {
+        display: flex;
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        min-height: 2.9rem;
+        padding: 0 0.3rem;
+        border: 1px solid var(--mono);
+        border-radius: 999px;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .opciones-asistencia label::before {
+        content: "";
+        flex: none;
+        width: 0.6rem;
+        height: 0.6rem;
+        border-radius: 50%;
+        border: 1px solid currentColor;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--frambuesa);
+        background: var(--frambuesa);
+        color: var(--lino);
+    }
+    .opciones-asistencia input[type="radio"]:checked + label::before {
+        border-color: transparent;
+        background: var(--perla);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--frambuesa);
+        outline-offset: 2px;
+    }
+
+    /* --- Acompanantes --- */
+    .campo-con-label {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: var(--t-kicker);
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ciruela-suave);
+    }
+    .campo-con-label input {
+        max-width: 3.5rem;
+        text-align: center;
+    }
+
+    /* --- Enviar --- */
+    #form-rsvp button {
+        min-height: 3.2rem;
+        margin-top: 0.2rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--frambuesa);
+        color: var(--lino);
+        font: var(--t-kicker);
+        font-size: 0.82rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 8px 18px -8px rgba(150, 52, 86, 0.7);
+        transition: background 0.25s ease;
+    }
+    #form-rsvp button:hover {
+        background: var(--frambuesa-honda);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--frambuesa);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.5em;
+        margin-top: 1.1rem;
+        font: 400 1.9rem/1.3 var(--script);
+        color: var(--lino);
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            transition-delay: 0s !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual (el regalo nace oculto y nunca la tapa).
+    (function () {
+        const raiz = document.documentElement;
+
+        // --- 1. El regalo de apertura ---
+        // Se muestra una vez por visita (sessionStorage); si el invitado
+        // recarga para revisar la hora, no tiene que volver a abrirlo.
+        const regalo = document.getElementById('regalo');
+        const clave = 'regalo-abierto:' + location.pathname;
+        let yaAbierto = false;
+        try { yaAbierto = sessionStorage.getItem(clave) === '1'; } catch (e) {}
+
+        if (regalo && !yaAbierto) {
+            regalo.hidden = false;
+            raiz.classList.add('con-regalo');
+            // como un modal: lo de atras queda "inerte" (ni Tab ni lector de
+            // pantalla llegan ahi) y el foco va directo al moño
+            const fondo = Array.from(document.body.children).filter(el => el !== regalo && el.tagName !== 'SCRIPT');
+            fondo.forEach(el => { el.inert = true; });
+            const boton = document.getElementById('regalo-abrir');
+            boton.focus({ preventScroll: true });
+
+            boton.addEventListener('click', () => {
+                if (regalo.classList.contains('abriendo')) return;
+                regalo.classList.add('abriendo');
+                raiz.classList.remove('con-regalo');   // la portada empieza su entrada
+                fondo.forEach(el => { el.inert = false; });
+
+                // Este toque ES la interaccion que el navegador pide para dejar
+                // sonar audio: aprovechamos para arrancar la cancion.
+                const musica = document.getElementById('musica-fondo');
+                const botonMusica = document.getElementById('boton-musica');
+                if (musica && botonMusica && musica.paused) botonMusica.click();
+
+                try { sessionStorage.setItem(clave, '1'); } catch (e) {}
+                const calma = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                setTimeout(() => regalo.remove(), calma ? 50 : 1600);
+            });
+        }
+
+        // --- 2. El nombre nunca se sale de la pantalla ---
+        // Ballet es una letra ancha y con trazos largos: si un nombre largo
+        // ("Maximiliana") no cabe a lo ancho, o un nombre compuesto ocupa mas
+        // de dos renglones, se reduce la letra hasta que quepa.
+        const titulo = document.querySelector('.nombres');
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            let vueltas = 0;
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 1.3 * 2.3;   // 1.3 = line-height
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 3. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+    })();
+</script>
+{% endblock %}

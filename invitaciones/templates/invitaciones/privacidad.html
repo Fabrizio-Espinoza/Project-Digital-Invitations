@@ -1,0 +1,71 @@
+{% comment %}
+  Aviso de privacidad integral. Plantilla base redactada para este producto
+  (invitaciones digitales con RSVP); conviene que la revise un abogado antes
+  de vender. Los datos del responsable vienen de settings (.env en el
+  servidor); si falta alguno se muestra entre corchetes para notarlo.
+  Página neutra a propósito: no hereda el diseño de ninguna invitación.
+{% endcomment %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aviso de privacidad{% if marca %} · {{ marca }}{% endif %}</title>
+    <style>
+        body { margin: 0; background: #FAF8F4; color: #26241F; font: 17px/1.6 Georgia, 'Times New Roman', serif; }
+        main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+        h1 { margin: 0; font-weight: 400; font-size: 2rem; line-height: 1.15; }
+        .actualizado { margin: 0.4rem 0 2rem; font: 0.85rem/1.4 system-ui, sans-serif; color: #6B665C; }
+        h2 { margin: 2rem 0 0.5rem; font: 700 1.02rem/1.3 system-ui, sans-serif; }
+        p, li { margin: 0 0 0.7rem; }
+        ul { padding-left: 1.2rem; }
+        .falta { background: #FFE9A8; padding: 0 0.2em; }
+        a { color: inherit; }
+    </style>
+</head>
+<body>
+<main>
+    <h1>Aviso de privacidad</h1>
+    <p class="actualizado">Última actualización: {{ actualizado }}</p>
+
+    <h2>1. Quién es responsable de tus datos</h2>
+    <p>{% if responsable %}{{ responsable }}{% else %}<span class="falta">[Nombre o razón social del responsable]</span>{% endif %}{% if marca %}, que opera la marca {{ marca }},{% endif %} con domicilio en {% if domicilio %}{{ domicilio }}{% else %}<span class="falta">[Domicilio completo]</span>{% endif %}, es responsable del tratamiento de los datos personales que se recaban a través de las invitaciones digitales publicadas en este sitio, en términos de la Ley Federal de Protección de Datos Personales en Posesión de los Particulares.</p>
+
+    <h2>2. Qué datos recabamos</h2>
+    <p><strong>Si eres invitado</strong> y respondes una invitación:</p>
+    <ul>
+        <li>Tu nombre, si asistirás o no, el número de acompañantes y el mensaje opcional que escribas.</li>
+        <li>Si la invitación tiene un juego de predicción (por ejemplo, "¿niña o niño?"), tu voto, que se guarda sin tu nombre.</li>
+    </ul>
+    <p><strong>Si eres cliente</strong> (quien contrata la invitación): los datos del evento que nos proporcionas, como nombres de los anfitriones, fecha, lugares, textos y fotografías.</p>
+    <p>No recabamos datos personales sensibles, ni datos financieros o bancarios a través de las invitaciones.</p>
+
+    <h2>3. Para qué los usamos</h2>
+    <p>Únicamente para:</p>
+    <ul>
+        <li>Mostrar la invitación del evento.</li>
+        <li>Registrar tu respuesta y mostrarle al anfitrión quién confirmó, cuántas personas asistirán y los mensajes recibidos.</li>
+        <li>Mostrar el conteo de confirmaciones y los resultados del juego de predicción.</li>
+    </ul>
+    <p>No usamos tus datos para publicidad, no te enviaremos mensajes promocionales y no tenemos finalidades secundarias.</p>
+
+    <h2>4. Con quién los compartimos</h2>
+    <p>Tu respuesta solo la ve el anfitrión del evento que te invitó. No vendemos, rentamos ni cedemos tus datos a terceros. El sitio se aloja con un proveedor de servicios de hospedaje que almacena la información por cuenta nuestra y bajo nuestras instrucciones, sin usarla para fines propios.</p>
+
+    <h2>5. Cuánto tiempo los conservamos</h2>
+    <p>Las confirmaciones y votos se eliminan a más tardar {{ dias_retencion }} días después de la fecha del evento. Los datos del cliente se conservan mientras dure la relación comercial y el tiempo que obliguen las leyes fiscales.</p>
+
+    <h2>6. Cookies y tecnologías similares</h2>
+    <p>La invitación usa una cookie técnica de seguridad (para proteger el envío de tu respuesta) y el almacenamiento de tu navegador para recordar si ya votaste y para abrir la invitación sin conexión. No usamos cookies de publicidad ni de rastreo. Para evitar envíos masivos falsos, tu dirección IP se usa de forma temporal y cifrada, y se descarta en menos de una hora.</p>
+
+    <h2>7. Tus derechos (ARCO)</h2>
+    <p>Puedes pedir en cualquier momento acceder a tus datos, corregirlos, cancelarlos u oponerte a su uso, así como revocar tu consentimiento, escribiendo a {% if correo %}<a href="mailto:{{ correo }}">{{ correo }}</a>{% else %}<span class="falta">[correo de contacto]</span>{% endif %}. Indica tu nombre, la invitación (el link) a la que respondiste y qué deseas hacer. Te responderemos en un plazo máximo de 20 días hábiles.</p>
+    <p>Si consideras que tu derecho a la protección de datos personales ha sido vulnerado, puedes acudir ante la autoridad competente en la materia.</p>
+
+    <h2>8. Menores de edad</h2>
+    <p>Si eres menor de edad, pide a tu mamá, papá o tutor que responda la invitación por ti.</p>
+
+    <h2>9. Cambios a este aviso</h2>
+    <p>Cualquier cambio a este aviso se publicará en esta misma página, con su nueva fecha de actualización.</p>
+</main>
+</body>
+</html>

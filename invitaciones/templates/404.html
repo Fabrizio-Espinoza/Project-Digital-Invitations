@@ -1,0 +1,28 @@
+{% comment %}
+  Página 404 (solo se ve con DEBUG=False, es decir, en producción).
+  Lo más común: una invitación que el cliente ya desactivó o un link mal
+  copiado. Sin CSS externo ni base de datos: tiene que funcionar siempre.
+{% endcomment %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Invitación no encontrada</title>
+    <style>
+        body { margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 1.5rem; box-sizing: border-box;
+               background: #FAF6EF; color: #2B2A26; font: 17px/1.5 Georgia, 'Times New Roman', serif; text-align: center; }
+        main { max-width: 26rem; }
+        .sobre { font-size: 3rem; line-height: 1; }
+        h1 { margin: 0.6rem 0 0.4rem; font-weight: 400; font-size: 1.8rem; }
+        p { margin: 0; color: rgba(43, 42, 38, 0.72); }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="sobre" aria-hidden="true">✉</div>
+        <h1>Esta invitación no está disponible</h1>
+        <p>Puede que el link esté incompleto o que el evento ya haya pasado. Pídele a quien te invitó que te lo vuelva a enviar.</p>
+    </main>
+</body>
+</html>

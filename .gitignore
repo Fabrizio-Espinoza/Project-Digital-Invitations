@@ -8,3 +8,7 @@ media/
 *.log
 .vscode/
 .idea/
+# Producción: archivos que solo existen en el servidor
+staticfiles/
+.cache/
+respaldos/

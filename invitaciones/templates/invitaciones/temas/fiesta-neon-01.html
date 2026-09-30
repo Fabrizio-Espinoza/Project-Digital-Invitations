@@ -1,0 +1,1547 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  Plantilla "Noche Neón" (fiesta). Concepto: flyer de club + boleto de
+  entrada. Cada pantalla es un "bloque de color" distinto, como historias
+  de Instagram: noche (hero) → violeta (boleto) → lima (el plan) →
+  rosa (fotos) → noche (RSVP).
+
+  Todo lo decorativo (bola disco, sello, stickers, cintas) es SVG/CSS
+  dibujado aquí mismo: cero imágenes externas, así que no hay licencias
+  ni atribuciones pendientes. Tipografías de Google Fonts (licencia OFL,
+  uso comercial permitido).
+{% endcomment %}
+
+{% block decoracion_superior %}
+<div class="luces" aria-hidden="true">
+    <span class="luz luz-rosa"></span>
+    <span class="luz luz-violeta"></span>
+    <span class="luz luz-naranja"></span>
+</div>
+<div class="rayos" aria-hidden="true"></div>
+
+<svg class="disco" viewBox="0 0 120 170" aria-hidden="true">
+    <defs>
+        <pattern id="disco-tesela" width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#6E6790"/>
+            <rect x="0.7" y="0.7" width="8.6" height="8.6" rx="1" fill="#D9D5EA"/>
+        </pattern>
+        <pattern id="disco-espejos" width="60" height="60" patternUnits="userSpaceOnUse">
+            <rect width="60" height="60" fill="url(#disco-tesela)"/>
+            <rect x="10.7" y="0.7" width="8.6" height="8.6" rx="1" fill="#FFFFFF"/>
+            <rect x="30.7" y="20.7" width="8.6" height="8.6" rx="1" fill="#D6FF3D"/>
+            <rect x="0.7" y="40.7" width="8.6" height="8.6" rx="1" fill="#FF3E9A"/>
+            <rect x="50.7" y="30.7" width="8.6" height="8.6" rx="1" fill="#FFFFFF"/>
+            <rect x="20.7" y="50.7" width="8.6" height="8.6" rx="1" fill="#8B6CFF"/>
+            <rect x="40.7" y="10.7" width="8.6" height="8.6" rx="1" fill="#A9A3C4"/>
+            <rect x="0.7" y="20.7" width="8.6" height="8.6" rx="1" fill="#F4F2FA"/>
+            <rect x="40.7" y="50.7" width="8.6" height="8.6" rx="1" fill="#958FB0"/>
+        </pattern>
+        <clipPath id="disco-forma">
+            <circle cx="60" cy="104" r="56"/>
+        </clipPath>
+        <radialGradient id="disco-sombra" cx="36%" cy="30%" r="75%">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity=".6"/>
+            <stop offset=".42" stop-color="#FFFFFF" stop-opacity="0"/>
+            <stop offset="1" stop-color="#0E0A1A" stop-opacity=".9"/>
+        </radialGradient>
+    </defs>
+    <line x1="60" y1="0" x2="60" y2="46" class="disco-cuerda"/>
+    <rect x="53" y="41" width="14" height="10" rx="2" fill="#4A4466"/>
+    <g clip-path="url(#disco-forma)">
+        <rect class="disco-espejos" x="-60" y="40" width="240" height="130" fill="url(#disco-espejos)"/>
+        <circle cx="60" cy="104" r="56" fill="url(#disco-sombra)"/>
+    </g>
+    <path class="disco-brillo" d="M42 62 C42.6 69 45 71.4 52 72 C45 72.6 42.6 75 42 82 C41.4 75 39 72.6 32 72 C39 71.4 41.4 69 42 62Z"/>
+</svg>
+
+<div class="sello" aria-hidden="true">
+    <svg class="sello-anillo" viewBox="0 0 200 200">
+        <defs>
+            <path id="sello-circulo" d="M100,100 m-74,0 a74,74 0 1,1 148,0 a74,74 0 1,1 -148,0"/>
+        </defs>
+        <circle cx="100" cy="100" r="97"/>
+        <text><textPath href="#sello-circulo" textLength="462" lengthAdjust="spacing">NO FALTES ✦ ESTÁS INVITADO ✦ </textPath></text>
+    </svg>
+    <span class="sello-fecha">
+        <b>{{ invitacion.fecha_evento|date:"d" }}</b>
+        {{ invitacion.fecha_evento|date:"M"|upper }}
+    </span>
+</div>
+
+<svg class="destello destello-1" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z"/></svg>
+<svg class="destello destello-2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z"/></svg>
+<svg class="destello destello-3" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z"/></svg>
+<svg class="destello destello-4" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z"/></svg>
+
+<!-- Cintas tipo marquesina: el texto se repite 16 veces y la animación
+     recorre exactamente la mitad, así el loop no tiene "brinco" visible -->
+<div class="cinta cinta-rosa" aria-hidden="true">
+    <div class="cinta-pista">
+        {% for vuelta in "0123456789abcdef" %}<span>Estás invitado</span><span class="cinta-estrella">✦</span><span>No faltes</span><span class="cinta-estrella">✦</span>{% endfor %}
+    </div>
+</div>
+<div class="cinta cinta-lima" aria-hidden="true">
+    <div class="cinta-pista">
+        {% for vuelta in "0123456789abcdef" %}<span>{{ invitacion.titulo_evento }}</span><span class="cinta-estrella">✦</span><span>{{ invitacion.fecha_evento|date:"j \d\e F" }}</span><span class="cinta-estrella">✦</span>{% endfor %}
+    </div>
+</div>
+
+<span class="indicador-scroll" aria-hidden="true">Desliza</span>
+{% endblock %}
+
+{% block decoracion_info %}
+<svg class="sticker sticker-fecha" viewBox="0 0 120 120" aria-hidden="true">
+    <polygon points="60.0,3.0 70.5,14.2 84.7,8.6 89.3,23.3 104.6,24.5 102.3,39.6 115.6,47.3 107.0,60.0 115.6,72.7 102.3,80.4 104.6,95.5 89.3,96.7 84.7,111.4 70.5,105.8 60.0,117.0 49.5,105.8 35.3,111.4 30.7,96.7 15.4,95.5 17.7,80.4 4.4,72.7 13.0,60.0 4.4,47.3 17.7,39.6 15.4,24.5 30.7,23.3 35.3,8.6 49.5,14.2"/>
+    <text x="60" y="56" text-anchor="middle">¡APARTA</text>
+    <text x="60" y="74" text-anchor="middle">LA FECHA!</text>
+</svg>
+<svg class="sticker sticker-carita" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46"/>
+    <ellipse cx="36" cy="40" rx="5.5" ry="9"/>
+    <ellipse cx="64" cy="40" rx="5.5" ry="9"/>
+    <path d="M27 58 Q50 84 73 58"/>
+</svg>
+<svg class="destello destello-info" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 0C12.8 7.5 16.5 11.2 24 12 16.5 12.8 12.8 16.5 12 24 11.2 16.5 7.5 12.8 0 12 7.5 11.2 11.2 7.5 12 0Z"/></svg>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% if mostrar_musica and invitacion.musica_url %}
+<span class="musica-pista" aria-hidden="true">♪ Dale play</span>
+{% endif %}
+<div class="grano" aria-hidden="true"></div>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES DE COLOR Y TIPOGRAFIA
+       ============================================ */
+    :root {
+        --tinta: #0E0A1A;
+        --tinta-2: #17112B;
+        --linea: #2C2447;
+        --crema: #FFF6E9;
+        --lima: #D6FF3D;
+        --rosa: #FF3E9A;
+        --violeta: #6A4BFF;
+        --violeta-claro: #8B6CFF;
+        --naranja: #FF8A3D;
+
+        --f-display: 'Bricolage Grotesque', 'Arial Narrow', sans-serif;
+        --f-serif: 'Instrument Serif', Georgia, serif;
+        --f-mono: 'Space Mono', ui-monospace, monospace;
+    }
+
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--tinta);
+    }
+    body {
+        margin: 0;
+        background: var(--tinta);
+        color: var(--crema);
+        font-family: var(--f-display);
+        text-align: center;
+        line-height: 1.5;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+    a,
+    button,
+    label {
+        -webkit-tap-highlight-color: transparent;
+    }
+    a:focus-visible,
+    button:focus-visible {
+        outline: 3px solid var(--lima);
+        outline-offset: 3px;
+    }
+    ::selection {
+        background: var(--rosa);
+        color: var(--tinta);
+    }
+
+    /* ============================================
+       SCROLL TIPO "PANTALLA POR PANTALLA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* ============================================
+       ANIMACION DE ENTRADA AL HACER SCROLL
+       ============================================ */
+    /* Aquí cada pantalla es un bloque de color: si la sección completa se
+       desplazara (como en la boda), se asomaría una franja oscura entre
+       bloques. Por eso lo que entra animado es su CONTENIDO. Se usa la
+       propiedad "translate" (no "transform") para no pisar las rotaciones
+       que ya tienen el boleto y las polaroids. */
+    .animar-entrada > * {
+        opacity: 0;
+        translate: 0 24px;
+        transition: opacity 0.7s ease, translate 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .animar-entrada.visible > * {
+        opacity: 1;
+        translate: 0 0;
+    }
+
+    /* ============================================
+       HERO: capa de fondo (luces, rayos, bola disco)
+       ============================================ */
+    .hero {
+        position: relative;
+        overflow: hidden;
+        padding: 150px 22px 200px;
+        background: radial-gradient(120% 70% at 50% 0%, #1E1638 0%, var(--tinta) 60%);
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+    .luz {
+        position: absolute;
+        width: 70vmax;
+        height: 70vmax;
+        border-radius: 50%;
+        opacity: 0.55;
+    }
+    .luz-rosa {
+        top: -25vmax;
+        left: -30vmax;
+        background: radial-gradient(circle, rgba(255, 62, 154, 0.55), transparent 62%);
+        animation: flotar 14s ease-in-out infinite;
+    }
+    .luz-violeta {
+        top: 10%;
+        right: -35vmax;
+        background: radial-gradient(circle, rgba(139, 108, 255, 0.6), transparent 62%);
+        animation: flotar 17s ease-in-out -4s infinite reverse;
+    }
+    .luz-naranja {
+        bottom: -40vmax;
+        left: -10vmax;
+        background: radial-gradient(circle, rgba(255, 138, 61, 0.38), transparent 62%);
+        animation: flotar 20s ease-in-out -8s infinite;
+    }
+    .rayos {
+        position: absolute;
+        top: 80px;
+        left: 50%;
+        width: 240vmax;
+        height: 240vmax;
+        background: repeating-conic-gradient(
+            rgba(255, 62, 154, 0.13) 0deg 4deg,
+            transparent 4deg 18deg,
+            rgba(214, 255, 61, 0.1) 18deg 21deg,
+            transparent 21deg 36deg
+        );
+        -webkit-mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.6) 12%, transparent 30%);
+        mask-image: radial-gradient(circle, #000 0%, rgba(0, 0, 0, 0.6) 12%, transparent 30%);
+        animation: rayos-girar 40s linear infinite;
+    }
+    .disco {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 92px;
+        transform-origin: 50% 0;
+        filter: drop-shadow(0 0 26px rgba(255, 255, 255, 0.28));
+        animation: columpio 5s ease-in-out infinite;
+    }
+    .disco-cuerda {
+        stroke: rgba(255, 246, 233, 0.45);
+        stroke-width: 1.5;
+    }
+    .disco-espejos {
+        animation: disco-girar 3.5s linear infinite;
+    }
+    .disco-brillo {
+        fill: #fff;
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: titilar 2.4s ease-in-out infinite;
+    }
+
+    /* ============================================
+       HERO: sello giratorio + destellos
+       ============================================ */
+    .sello {
+        position: absolute;
+        top: 112px;
+        right: -26px;
+        width: 118px;
+        height: 118px;
+        transform: rotate(8deg);
+    }
+    .sello-anillo {
+        width: 100%;
+        height: 100%;
+        animation: girar 18s linear infinite;
+    }
+    .sello-anillo circle {
+        fill: var(--lima);
+        stroke: var(--tinta);
+        stroke-width: 4;
+    }
+    .sello-anillo text {
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 19px;
+        fill: var(--tinta);
+    }
+    .sello-fecha {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.1em;
+        color: var(--tinta);
+        line-height: 1;
+    }
+    .sello-fecha b {
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 2.1rem;
+        letter-spacing: -0.02em;
+    }
+    .destello {
+        position: absolute;
+        width: 22px;
+        fill: var(--lima);
+        animation: titilar 2.6s ease-in-out infinite;
+    }
+    .destello-1 { top: 18%; left: 9%; }
+    .destello-2 { top: 34%; left: 84%; width: 14px; fill: var(--rosa); animation-delay: -0.8s; }
+    .destello-3 { top: 62%; left: 6%; width: 16px; fill: var(--crema); animation-delay: -1.5s; }
+    .destello-4 { top: 12%; left: 72%; width: 12px; fill: var(--crema); animation-delay: -2s; }
+
+    /* ============================================
+       HERO: cintas tipo marquesina
+       ============================================ */
+    .cinta {
+        position: absolute;
+        left: -15%;
+        width: 130%;
+        bottom: 92px;
+        overflow: hidden;
+        padding: 9px 0;
+        border-block: 2.5px solid var(--tinta);
+        color: var(--tinta);
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 1.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.01em;
+        line-height: 1.1;
+    }
+    .cinta-lima {
+        background: var(--lima);
+        transform: rotate(-5deg);
+    }
+    .cinta-rosa {
+        background: var(--rosa);
+        transform: rotate(4deg);
+    }
+    .cinta-pista {
+        display: flex;
+        width: max-content;
+        animation: marquesina 60s linear infinite;
+    }
+    .cinta-rosa .cinta-pista {
+        animation-direction: reverse;
+    }
+    .cinta-pista span {
+        padding: 0 0.4em;
+        white-space: nowrap;
+    }
+    .cinta-estrella {
+        font-size: 0.8em;
+    }
+    .indicador-scroll {
+        position: absolute;
+        left: 50%;
+        bottom: 156px;
+        transform: translateX(-50%);
+        font-family: var(--f-mono);
+        font-size: 0.62rem;
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(255, 246, 233, 0.6);
+    }
+    .indicador-scroll::after {
+        content: "↓";
+        display: block;
+        margin-top: 2px;
+        font-size: 0.9rem;
+        letter-spacing: 0;
+        animation: rebotar 1.6s ease-in-out infinite;
+    }
+
+    /* ============================================
+       HERO: contenido (sticker + nombres + mensaje)
+       ============================================ */
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        max-width: 640px;
+        margin: 0 auto;
+    }
+    .eyebrow {
+        display: inline-block;
+        margin: 0 0 22px;
+        padding: 8px 16px;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--lima);
+        color: var(--tinta);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        transform: rotate(-3deg);
+        box-shadow: 4px 4px 0 var(--rosa);
+    }
+    .hero.visible .eyebrow {
+        animation: pegar-sticker 0.6s 0.25s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+    }
+    .nombres {
+        margin: 0 0 22px;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: clamp(3.6rem, 18vw, 8.5rem);
+        line-height: 0.88;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+        color: var(--crema);
+        overflow-wrap: break-word;
+        text-shadow:
+            3px 3px 0 var(--rosa),
+            6px 6px 0 var(--violeta);
+    }
+    .hero.visible .nombres {
+        animation: subir 0.8s 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .mensaje {
+        max-width: 30ch;
+        margin: 0 auto;
+        font-family: var(--f-serif);
+        font-style: italic;
+        font-size: 1.35rem;
+        line-height: 1.3;
+        color: rgba(255, 246, 233, 0.86);
+    }
+    .hero.visible .mensaje {
+        animation: subir 0.8s 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+
+    /* ============================================
+       PANTALLA INFO: fondo cuadriculado + stickers
+       ============================================ */
+    .pantalla-info {
+        position: relative;
+        overflow: hidden;
+        padding: 56px 20px;
+        background:
+            radial-gradient(circle at 50% 50%, transparent 30%, rgba(14, 10, 26, 0.35) 100%),
+            repeating-conic-gradient(rgba(14, 10, 26, 0.11) 0 25%, transparent 0 50%) 0 0 / 56px 56px,
+            var(--violeta);
+    }
+    .marco-decorativo-info {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .sticker {
+        position: absolute;
+    }
+    .sticker-fecha {
+        top: 18px;
+        right: 12px;
+        width: 108px;
+        transform: rotate(14deg);
+        animation: girar-suave 7s ease-in-out infinite;
+    }
+    .sticker-fecha polygon {
+        fill: var(--rosa);
+        stroke: var(--tinta);
+        stroke-width: 3;
+    }
+    .sticker-fecha text {
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 12.5px;
+        fill: var(--tinta);
+    }
+    .sticker-carita {
+        bottom: 22px;
+        left: 14px;
+        width: 92px;
+        transform: rotate(-14deg);
+    }
+    .sticker-carita circle {
+        fill: var(--lima);
+        stroke: var(--tinta);
+        stroke-width: 4;
+    }
+    .sticker-carita ellipse {
+        fill: var(--tinta);
+    }
+    .sticker-carita path {
+        fill: none;
+        stroke: var(--tinta);
+        stroke-width: 5;
+        stroke-linecap: round;
+    }
+    .destello-info {
+        top: 22%;
+        left: 7%;
+        width: 26px;
+        fill: var(--crema);
+    }
+
+    /* ============================================
+       PANTALLA INFO: el boleto
+       ============================================ */
+    .pantalla-contenido {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 400px);
+        margin: 0 auto;
+        background: var(--crema);
+        color: var(--tinta);
+        border: 2.5px solid var(--tinta);
+        border-radius: 22px;
+        box-shadow: 8px 8px 0 var(--tinta);
+        transform: rotate(-1.5deg);
+        text-align: left;
+    }
+    .pantalla-contenido::before {
+        content: "✦  Pase VIP  ✦";
+        display: block;
+        padding: 10px 16px;
+        border-bottom: 2.5px solid var(--tinta);
+        border-radius: 19px 19px 0 0;
+        background: var(--rosa);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.78rem;
+        letter-spacing: 0.3em;
+        text-align: center;
+        text-transform: uppercase;
+        white-space: pre;
+    }
+    .pantalla-contenido::after {
+        content: "N.º {{ invitacion.id.hex|slice:':10'|upper }}";
+        display: block;
+        margin: 0 20px 18px;
+        padding-top: 50px;
+        background:
+            repeating-linear-gradient(90deg, var(--tinta) 0 2px, transparent 2px 5px, var(--tinta) 5px 6px, transparent 6px 9px, var(--tinta) 9px 13px, transparent 13px 15px) top / 100% 42px no-repeat;
+        font-family: var(--f-mono);
+        font-size: 0.66rem;
+        letter-spacing: 0.35em;
+        text-align: center;
+    }
+
+    /* ============================================
+       DETALLES (Dia / Hora)
+       ============================================ */
+    .detalles {
+        display: flex;
+        align-items: stretch;
+        gap: 16px;
+        padding: 20px 22px 14px;
+    }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+    }
+    .detalle-label {
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--violeta);
+    }
+    .detalle-valor {
+        margin-top: 4px;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 1.35rem;
+        line-height: 1.05;
+        text-transform: uppercase;
+    }
+    .detalle-divisor {
+        width: 0;
+        border-left: 2px dashed rgba(14, 10, 26, 0.35);
+    }
+
+    /* ============================================
+       LUGARES (Lugar / Ceremonia / Recepcion)
+       ============================================ */
+    .lugares {
+        display: flex;
+        gap: 16px;
+        margin: 0 22px;
+        padding: 14px 0;
+        border-top: 2px dashed rgba(14, 10, 26, 0.35);
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* ============================================
+       VESTIMENTA
+       ============================================ */
+    .vestimenta {
+        margin: 0 22px;
+        padding: 14px 0;
+        border-top: 2px dashed rgba(14, 10, 26, 0.35);
+    }
+    .vestimenta-valor {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 4px;
+    }
+    .vestimenta-valor .detalle-valor {
+        margin-top: 0;
+    }
+    .vestimenta-color {
+        flex: none;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2.5px solid var(--tinta);
+        box-shadow: 2px 2px 0 var(--tinta);
+    }
+
+    /* ============================================
+       COUNTDOWN (perforacion del boleto + tableros)
+       ============================================ */
+    .countdown {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 24px 18px 18px;
+        border-top: 2.5px dashed var(--tinta);
+    }
+    .countdown::before,
+    .countdown::after {
+        content: "";
+        position: absolute;
+        top: -15px;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2.5px solid var(--tinta);
+        background: var(--violeta);
+    }
+    .countdown::before {
+        left: -16px;
+        clip-path: inset(0 0 0 50%);
+    }
+    .countdown::after {
+        right: -16px;
+        clip-path: inset(0 50% 0 0);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        flex: 1;
+        max-width: 78px;
+    }
+    .countdown span {
+        position: relative;
+        display: block;
+        width: 100%;
+        padding: 10px 0;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #221A3D 0 50%, var(--tinta) 50% 100%);
+        color: var(--lima);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: clamp(1.5rem, 7.5vw, 2.1rem);
+        line-height: 1;
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 14px rgba(214, 255, 61, 0.45);
+    }
+    .countdown span::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 50%;
+        height: 1.5px;
+        background: rgba(0, 0, 0, 0.65);
+    }
+    .countdown label {
+        margin-top: 7px;
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.6rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (botones tipo sticker)
+       ============================================ */
+    .acciones-rapidas {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 4px 18px 22px;
+    }
+    .accion-icono {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px 8px 8px;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--lima);
+        color: var(--tinta);
+        text-decoration: none;
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        box-shadow: 3px 3px 0 var(--tinta);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .accion-icono:nth-child(2) {
+        background: var(--rosa);
+    }
+    .accion-icono:nth-child(3) {
+        background: var(--crema);
+    }
+    .accion-icono:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 var(--tinta);
+    }
+    .accion-icono:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 var(--tinta);
+    }
+    .icono-circulo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--tinta);
+        color: var(--lima);
+        font-size: 0.85rem;
+    }
+    .icono-svg {
+        display: block;
+        width: 16px;
+        height: 16px;
+        stroke-width: 2.4;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: "el plan" en formato line-up
+       ============================================ */
+    .pantalla-extra {
+        position: relative;
+        overflow: hidden;
+        align-items: center;
+        gap: 34px;
+        padding: 64px 22px;
+        background: var(--lima);
+        color: var(--tinta);
+    }
+    .pantalla-extra::before {
+        content: "¡Que se\A arme!";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-8deg);
+        white-space: pre;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 28vmax;
+        line-height: 0.85;
+        text-transform: uppercase;
+        color: transparent;
+        -webkit-text-stroke: 2px rgba(14, 10, 26, 0.12);
+        pointer-events: none;
+    }
+    .pantalla-extra > * {
+        position: relative;
+        z-index: 1;
+    }
+    /* Sin itinerario (lo normal en una fiesta), la pantalla se quedaría con
+       una sola línea. Entonces el "¡Que se arme!" deja de ser textura de
+       fondo y se vuelve el protagonista: una pantalla-póster de pausa entre
+       el boleto y el RSVP. :has() revisa si existe el bloque de itinerario;
+       en navegadores viejos que no lo entienden se queda como textura. */
+    .pantalla-extra:not(:has(.itinerario))::before {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: rotate(-4deg);
+        font-size: clamp(4rem, 24vw, 10rem);
+        line-height: 0.92;
+        color: var(--tinta);
+        -webkit-text-stroke: 0;
+        text-shadow: 5px 5px 0 var(--rosa);
+    }
+    .pantalla-extra.visible:not(:has(.itinerario))::before {
+        animation: pegar-poster 0.7s 0.15s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+    }
+    .pantalla-extra:not(:has(.itinerario)) .nota-ninos {
+        border: 2.5px solid var(--tinta);
+        background: var(--tinta);
+        color: var(--lima);
+        font-weight: 700;
+        box-shadow: 4px 4px 0 var(--rosa);
+    }
+    .itinerario {
+        width: min(100%, 440px);
+    }
+    .itinerario h3 {
+        margin: 0 0 22px;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: clamp(3rem, 16vw, 5.5rem);
+        line-height: 0.9;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+        text-shadow: 4px 4px 0 var(--rosa);
+    }
+    .itinerario h3::before {
+        content: "✦ El plan de la noche ✦";
+        display: table;
+        margin: 0 auto 14px;
+        padding: 6px 14px;
+        border-radius: 999px;
+        background: var(--tinta);
+        color: var(--lima);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.7rem;
+        letter-spacing: 0.14em;
+        line-height: 1.4;
+        text-shadow: none;
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 0;
+        border-top: 2.5px solid var(--tinta);
+        text-align: left;
+    }
+    .itinerario-item:last-child {
+        border-bottom: 2.5px solid var(--tinta);
+    }
+    .itinerario-hora {
+        padding: 5px 10px;
+        border: 2px solid var(--tinta);
+        border-radius: 999px;
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.75rem;
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 1.45rem;
+        line-height: 1.05;
+        text-transform: uppercase;
+    }
+    .pantalla-extra.visible .itinerario-item {
+        animation: entrar-lado 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    }
+    .pantalla-extra.visible .itinerario-item:nth-child(3) { animation-delay: 0.08s; }
+    .pantalla-extra.visible .itinerario-item:nth-child(4) { animation-delay: 0.16s; }
+    .pantalla-extra.visible .itinerario-item:nth-child(5) { animation-delay: 0.24s; }
+    .pantalla-extra.visible .itinerario-item:nth-child(6) { animation-delay: 0.32s; }
+    .pantalla-extra.visible .itinerario-item:nth-child(7) { animation-delay: 0.4s; }
+    .pantalla-extra.visible .itinerario-item:nth-child(n + 8) { animation-delay: 0.48s; }
+    .boton-mesa-regalos {
+        display: inline-block;
+        padding: 16px 28px;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--tinta);
+        color: var(--lima);
+        text-decoration: none;
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        box-shadow: 5px 5px 0 var(--rosa);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .boton-mesa-regalos::before {
+        content: "🎁  ";
+    }
+    .boton-mesa-regalos:active {
+        transform: translate(3px, 3px);
+        box-shadow: 2px 2px 0 var(--rosa);
+    }
+    .nota-ninos {
+        max-width: 320px;
+        margin: 0 auto;
+        padding: 10px 16px;
+        border: 2px dashed var(--tinta);
+        border-radius: 14px;
+        font-family: var(--f-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        transform: rotate(1.5deg);
+    }
+
+    /* ============================================
+       GALERIA (fotos tipo polaroid)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-content: center;
+        gap: 22px 16px;
+        padding: 64px max(20px, calc((100% - 880px) / 2));
+        background:
+            radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.18), transparent 60%),
+            var(--rosa);
+    }
+    .galeria::before {
+        content: "✦ Momentos ✦";
+        grid-column: 1 / -1;
+        margin-bottom: 10px;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: clamp(2.6rem, 13vw, 4.5rem);
+        line-height: 0.9;
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+    .galeria img {
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        padding: 8px 8px 30px;
+        background: #fff;
+        box-shadow: 0 14px 26px rgba(14, 10, 26, 0.35);
+        transform: rotate(-3deg);
+    }
+    .galeria img:nth-child(even) {
+        transform: rotate(2.5deg) translateY(10px);
+    }
+    .galeria img:nth-child(3n) {
+        transform: rotate(-1deg);
+    }
+    .galeria img:nth-child(2) { transition-delay: 0.08s; }
+    .galeria img:nth-child(3) { transition-delay: 0.16s; }
+    .galeria img:nth-child(4) { transition-delay: 0.24s; }
+    .galeria img:nth-child(n + 5) { transition-delay: 0.32s; }
+
+    /* ============================================
+       RSVP
+       ============================================ */
+    .rsvp {
+        align-items: center;
+        padding: 72px 20px 120px;
+        background:
+            radial-gradient(60% 40% at 50% 0%, rgba(139, 108, 255, 0.35), transparent 70%),
+            radial-gradient(55% 35% at 50% 100%, rgba(255, 62, 154, 0.22), transparent 70%),
+            var(--tinta);
+    }
+    .rsvp::before {
+        content: "RSVP";
+        padding: 6px 16px;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--lima);
+        color: var(--tinta);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.3em;
+        transform: rotate(-4deg);
+        box-shadow: 3px 3px 0 var(--rosa);
+    }
+    .rsvp h2 {
+        max-width: 11ch;
+        margin: 18px auto 18px;
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: clamp(2.8rem, 13vw, 4.8rem);
+        line-height: 0.9;
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+    }
+    .rsvp h2 + p {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0;
+        padding: 8px 16px;
+        border: 1.5px solid rgba(255, 246, 233, 0.16);
+        border-radius: 999px;
+        background: rgba(255, 246, 233, 0.06);
+        font-family: var(--f-mono);
+        font-size: 0.75rem;
+        letter-spacing: 0.04em;
+        color: rgba(255, 246, 233, 0.85);
+    }
+    .rsvp h2 + p::before {
+        content: "";
+        flex: none;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--rosa);
+        animation: en-vivo 1.6s ease-out infinite;
+    }
+    #total-confirmados {
+        color: var(--lima);
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .fecha-limite {
+        margin: 14px 0 0;
+        font-family: var(--f-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--rosa);
+    }
+
+    /* --- Formulario --- */
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        width: min(100%, 440px);
+        margin: 30px auto 0;
+        padding: 24px 20px;
+        border: 2px solid var(--linea);
+        border-radius: 26px;
+        background: var(--tinta-2);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.45);
+        text-align: left;
+    }
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 14px 16px;
+        border: 2px solid var(--linea);
+        border-radius: 14px;
+        background: var(--tinta);
+        color: var(--crema);
+        font-family: var(--f-display);
+        font-size: 1rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    #form-rsvp input::placeholder,
+    #form-rsvp textarea::placeholder {
+        color: rgba(255, 246, 233, 0.4);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--lima);
+        box-shadow: 0 0 0 4px rgba(214, 255, 61, 0.15);
+    }
+    #form-rsvp textarea {
+        min-height: 88px;
+        resize: vertical;
+    }
+    #form-rsvp button {
+        margin-top: 6px;
+        padding: 17px;
+        border: 2.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--lima);
+        color: var(--tinta);
+        font-family: var(--f-display);
+        font-stretch: 75%;
+        font-weight: 800;
+        font-size: 1.2rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 4px 4px 0 var(--rosa);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    #form-rsvp button::after {
+        content: "  →";
+        white-space: pre;
+    }
+    #form-rsvp button:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 5px 5px 0 var(--rosa);
+    }
+    #form-rsvp button:active {
+        transform: translate(3px, 3px);
+        box-shadow: 1px 1px 0 var(--rosa);
+    }
+
+    /* --- Chips de asistencia (radio oculto + label) --- */
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 12px 4px;
+        border: 2px solid var(--linea);
+        border-radius: 16px;
+        background: var(--tinta);
+        color: var(--crema);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+    .opciones-asistencia label::before {
+        font-size: 1.5rem;
+        line-height: 1;
+    }
+    .opciones-asistencia label[for="asistencia-si"]::before { content: "🥳"; }
+    .opciones-asistencia label[for="asistencia-no"]::before { content: "🥲"; }
+    .opciones-asistencia label[for="asistencia-tal_vez"]::before { content: "🤔"; }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--lima);
+        background: var(--lima);
+        color: var(--tinta);
+        transform: translateY(-2px) rotate(-2deg);
+        box-shadow: 3px 3px 0 var(--rosa);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 3px solid var(--lima);
+        outline-offset: 3px;
+    }
+
+    /* --- Campo con label visible (acompanantes) --- */
+    .campo-con-label label {
+        display: block;
+        margin-bottom: 6px;
+        font-family: var(--f-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 246, 233, 0.6);
+    }
+
+    #rsvp-status {
+        min-height: 1.4em;
+        margin: 20px 0 0;
+        max-width: 26ch;
+        font-family: var(--f-display);
+        font-weight: 700;
+        font-size: 1.15rem;
+        line-height: 1.3;
+        color: var(--lima);
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (vinil flotante)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: 18px;
+        bottom: calc(18px + env(safe-area-inset-bottom));
+        z-index: 20;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        border: none;
+        border-radius: 50%;
+        background: transparent;
+        font-size: 0;
+        color: transparent;
+        cursor: pointer;
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55), 0 0 0 2.5px var(--tinta), 0 0 0 5px var(--lima);
+    }
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle at 58% 42%, var(--lima) 0 2.5px, transparent 3px),
+            radial-gradient(circle, var(--tinta) 0 2px, var(--rosa) 2.5px 30%, #111 31% 33%, transparent 34%),
+            conic-gradient(from 20deg, transparent 0 18%, rgba(255, 255, 255, 0.2) 24%, transparent 30% 68%, rgba(255, 255, 255, 0.14) 74%, transparent 80%),
+            repeating-radial-gradient(circle, #1B1B1F 0 1.5px, #09090B 1.5px 3px);
+    }
+    .boton-musica.sonando::after {
+        animation: girar 2.4s linear infinite;
+    }
+    /* El motor trae íconos SVG (nota / pausa); en el vinil se usan los
+       símbolos ▶ / ❚❚ del ::before, así que los del motor se ocultan */
+    .boton-musica svg {
+        display: none;
+    }
+    .boton-musica::before {
+        content: "▶";
+        position: relative;
+        z-index: 1;
+        padding-left: 2px;
+        font-size: 0.72rem;
+        color: var(--tinta);
+    }
+    .boton-musica.sonando::before {
+        content: "❚❚";
+        padding-left: 0;
+        font-size: 0.55rem;
+        letter-spacing: -0.1em;
+    }
+    .musica-pista {
+        position: fixed;
+        right: 90px;
+        bottom: calc(34px + env(safe-area-inset-bottom));
+        z-index: 20;
+        padding: 6px 12px;
+        border: 2px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--lima);
+        color: var(--tinta);
+        font-family: var(--f-mono);
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        pointer-events: none;
+        animation: pista-aparecer 0.5s 1.2s both, pista-ocultar 0.5s 9s forwards;
+    }
+    .boton-musica.sonando ~ .musica-pista {
+        visibility: hidden;
+    }
+
+    /* ============================================
+       EFECTOS GLOBALES (grano de papel + confeti)
+       ============================================ */
+    .grano {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        pointer-events: none;
+        opacity: 0.07;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+    .confeti {
+        position: fixed;
+        z-index: 40;
+        width: 9px;
+        height: 14px;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       KEYFRAMES
+       ============================================ */
+    @keyframes flotar {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        50% { transform: translate(6vmax, 5vmax) scale(1.12); }
+    }
+    @keyframes rayos-girar {
+        from { transform: translate(-50%, -50%) rotate(0deg); }
+        to { transform: translate(-50%, -50%) rotate(360deg); }
+    }
+    @keyframes columpio {
+        0%, 100% { transform: translateX(-50%) rotate(-3deg); }
+        50% { transform: translateX(-50%) rotate(3deg); }
+    }
+    @keyframes disco-girar {
+        to { transform: translateX(60px); }
+    }
+    @keyframes girar {
+        to { transform: rotate(360deg); }
+    }
+    @keyframes girar-suave {
+        0%, 100% { transform: rotate(14deg) scale(1); }
+        50% { transform: rotate(4deg) scale(1.06); }
+    }
+    @keyframes titilar {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.25; transform: scale(0.55); }
+    }
+    @keyframes marquesina {
+        to { transform: translateX(-50%); }
+    }
+    @keyframes rebotar {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(5px); }
+    }
+    @keyframes pegar-sticker {
+        from { opacity: 0; transform: scale(1.8) rotate(-14deg); }
+        to { opacity: 1; transform: scale(1) rotate(-3deg); }
+    }
+    @keyframes pegar-poster {
+        from { opacity: 0; transform: scale(1.5) rotate(-12deg); }
+        to { opacity: 1; transform: scale(1) rotate(-4deg); }
+    }
+    @keyframes subir {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes entrar-lado {
+        from { opacity: 0; transform: translateX(-24px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes en-vivo {
+        0% { box-shadow: 0 0 0 0 rgba(255, 62, 154, 0.7); }
+        100% { box-shadow: 0 0 0 10px rgba(255, 62, 154, 0); }
+    }
+    @keyframes pista-aparecer {
+        from { opacity: 0; transform: translateX(10px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes pista-ocultar {
+        to { opacity: 0; transform: translateX(10px); }
+    }
+
+    /* ============================================
+       CELULARES BAJITOS (iPhone SE y similares)
+       ============================================ */
+    @media (max-height: 700px) {
+        .pantalla-info {
+            padding: 28px 16px;
+        }
+        .detalles {
+            padding: 14px 20px 10px;
+        }
+        .lugares,
+        .vestimenta {
+            padding: 10px 0;
+        }
+        .countdown {
+            padding: 18px 16px 12px;
+        }
+        .acciones-rapidas {
+            padding-bottom: 16px;
+        }
+        .pantalla-contenido::after {
+            margin-bottom: 14px;
+            padding-top: 40px;
+            background-size: 100% 34px;
+        }
+    }
+
+    /* ============================================
+       PANTALLAS GRANDES (tablet / compu)
+       ============================================ */
+    @media (min-width: 720px) {
+        .sello {
+            top: 16%;
+            right: 12%;
+            width: 150px;
+            height: 150px;
+        }
+        .sticker-fecha {
+            top: 12%;
+            right: calc(50% - 300px);
+            width: 140px;
+        }
+        .sticker-carita {
+            bottom: 12%;
+            left: calc(50% - 310px);
+            width: 120px;
+        }
+        .galeria {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+        .animar-entrada > * {
+            opacity: 1;
+            translate: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // --- Nombre "a la medida" (como en un póster): se mide la palabra más
+    // ancha del nombre y se escala la letra para que ocupe el ancho
+    // disponible. Así "Sofía" se ve enorme y "Maximiliano" no se rompe a
+    // media palabra. El CSS (clamp) queda como respaldo si el JS no corre.
+    (function () {
+        const titulo = document.querySelector('.nombres');
+        if (!titulo) return;
+        const palabras = titulo.textContent.trim().split(/\s+/);
+
+        function ajustarNombre() {
+            titulo.style.fontSize = '';
+            const tamBase = parseFloat(getComputedStyle(titulo).fontSize);
+            const disponible = titulo.clientWidth - 8; // margen para la sombra
+
+            const medidor = document.createElement('span');
+            medidor.style.cssText = 'position:absolute;visibility:hidden;white-space:nowrap;';
+            titulo.appendChild(medidor);
+            let masAncha = 0;
+            palabras.forEach(palabra => {
+                medidor.textContent = palabra;
+                masAncha = Math.max(masAncha, medidor.getBoundingClientRect().width);
+            });
+            medidor.remove();
+            if (!masAncha) return;
+
+            const tope = Math.min(disponible * 0.42, window.innerHeight * 0.19, 190);
+            titulo.style.fontSize = `${Math.min(tamBase * disponible / masAncha, tope)}px`;
+        }
+
+        // Solo recalcular si cambia el ANCHO: en iPhone la barra de Safari
+        // cambia el alto al hacer scroll y el nombre "brincaría".
+        let espera;
+        let anchoPrevio = window.innerWidth;
+        window.addEventListener('resize', () => {
+            if (window.innerWidth === anchoPrevio) return;
+            anchoPrevio = window.innerWidth;
+            clearTimeout(espera);
+            espera = setTimeout(ajustarNombre, 150);
+        });
+        ajustarNombre();
+        document.fonts.ready.then(ajustarNombre);
+    })();
+
+    // --- Confeti al confirmar (sin librerías): el motor avisa con el
+    // evento "rsvp:enviado" y aquí solo reaccionamos. Cada pedacito es un
+    // <span> animado con la Web Animations API y se borra al terminar.
+    (function () {
+        const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const colores = ['#D6FF3D', '#FF3E9A', '#8B6CFF', '#FF8A3D', '#FFF6E9'];
+        const mensajes = {
+            si: '¡Estás en la lista! Nos vemos en la pista 🪩',
+            tal_vez: '¡Anotado! Ojalá te veamos por ahí ✨',
+            no: 'Te vamos a extrañar. ¡Gracias por avisar! 💜',
+        };
+
+        function lanzarConfeti(origen) {
+            const caja = origen.getBoundingClientRect();
+            const x0 = caja.left + caja.width / 2;
+            const y0 = caja.top + caja.height / 2;
+
+            for (let i = 0; i < 90; i++) {
+                const pedazo = document.createElement('span');
+                pedazo.className = 'confeti';
+                pedazo.style.left = `${x0 - 4}px`;
+                pedazo.style.top = `${y0 - 7}px`;
+                pedazo.style.background = colores[i % colores.length];
+                if (i % 3 === 0) pedazo.style.borderRadius = '50%';
+                document.body.appendChild(pedazo);
+
+                const angulo = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.3;
+                const fuerza = 160 + Math.random() * 260;
+                const dx = Math.cos(angulo) * fuerza;
+                const dy = Math.sin(angulo) * fuerza;
+                const giro = (Math.random() - 0.5) * 1440;
+
+                pedazo.animate([
+                    { transform: 'translate(0, 0) rotate(0deg)', opacity: 1 },
+                    { transform: `translate(${dx}px, ${dy}px) rotate(${giro / 2}deg)`, opacity: 1, offset: 0.4 },
+                    { transform: `translate(${dx * 1.3}px, ${dy + 520}px) rotate(${giro}deg)`, opacity: 0 },
+                ], {
+                    duration: 1700 + Math.random() * 900,
+                    easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)',
+                    fill: 'forwards',
+                }).onfinish = () => pedazo.remove();
+            }
+        }
+
+        document.addEventListener('rsvp:enviado', (evento) => {
+            const { asistencia } = evento.detail;
+            const estado = document.getElementById('rsvp-status');
+            if (mensajes[asistencia]) estado.textContent = mensajes[asistencia];
+
+            if (asistencia !== 'no' && !sinMovimiento) {
+                lanzarConfeti(document.querySelector('#form-rsvp button'));
+                if (navigator.vibrate) navigator.vibrate(40);
+            }
+        });
+    })();
+</script>
+{% endblock %}

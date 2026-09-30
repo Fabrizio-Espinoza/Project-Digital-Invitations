@@ -1,3 +1,6 @@
+from urllib.parse import urlsplit
+
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 import uuid
@@ -16,6 +19,7 @@ class Plantilla(models.Model):
         ("graduacion", "Graduación"),
         ("evento", "Evento general"),
         ("fiesta", "Fiesta"),
+        ("baby_shower", "Baby Shower"),
     ]
 
     nombre = models.CharField(max_length=100)
@@ -24,7 +28,14 @@ class Plantilla(models.Model):
     soporta_rsvp = models.BooleanField(default=True)
     soporta_musica = models.BooleanField(default=True)
     soporta_galeria = models.BooleanField(default=True)
+    # default=False a propósito: la votación solo aparece en plantillas cuyo CSS
+    # ya sabe dibujarla. Las plantillas existentes (boda) quedan igual que antes.
+    soporta_votacion = models.BooleanField(default=False)
     vista_previa_url = models.URLField(blank=True)
+    # Color de fondo del diseño en hex (ej. "#FBF6F0"). Lo usa la PWA para
+    # pintar la barra de estado del celular y la pantalla de carga al abrir
+    # la invitación desde el ícono, así no hay un "flash" de otro color.
+    color_tema = models.CharField(max_length=7, default="#FFFFFF")
 
     def __str__(self):
         return f"{self.nombre} ({self.get_tipo_evento_display()})"
@@ -80,6 +91,22 @@ class Invitacion(models.Model):
     def __str__(self):
         return f"{self.titulo_evento} ({self.slug})"
 
+    @property
+    def musica_src(self):
+        """
+        La URL que usa el <audio>. Si la canción vive en nuestro propio
+        /static/ (ej. http://192.168.1.50:8000/static/.../cancion.mp3), se
+        devuelve solo la ruta: así suena igual abierta por la IP de la compu,
+        por localhost, por un túnel HTTPS o en el servidor final, sin tener
+        que volver a capturar la URL cuando cambia la IP o el dominio.
+        Una canción de otro sitio (https://...) se deja tal cual.
+        """
+        partes = urlsplit(self.musica_url or "")
+        ruta_static = "/" + settings.STATIC_URL.lstrip("/")
+        if partes.path.startswith(ruta_static):
+            return partes.path
+        return self.musica_url
+
 
 class ImagenGaleria(models.Model):
     """
@@ -116,3 +143,19 @@ class Confirmacion(models.Model):
 
     class Meta:
         ordering = ["-creada_en"]
+
+
+class Voto(models.Model):
+    """
+    Cada predicción del juego de votación en vivo (ej. "¿Niña o niño?" en un
+    baby shower). La opción se guarda como texto — la 'clave' definida en
+    invitacion.contenido_extra["votacion"]["opciones"] — en vez de choices
+    fijas: así cada invitación define sus propias opciones sin migraciones,
+    igual que el resto de datos por tipo de evento.
+    """
+    invitacion = models.ForeignKey(Invitacion, on_delete=models.CASCADE, related_name="votos")
+    opcion = models.CharField(max_length=40)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-creado_en"]
