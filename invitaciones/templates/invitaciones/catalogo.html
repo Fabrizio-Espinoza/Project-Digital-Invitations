@@ -1,0 +1,661 @@
+{% load static %}{% comment %}
+  Catálogo (página principal "/"). Es el escaparate de la marca: el link que
+  se manda por WhatsApp y al que llegan los anuncios de Meta.
+  Diseño neutro a propósito (papel cálido + tinta + un solo acento coral):
+  los protagonistas son los 15 diseños y ninguno debe verse "fuera de lugar".
+  Instrument Serif + Manrope (Google Fonts, OFL). Íconos SVG propios.
+  Filtros por tipo de evento con el hash de la URL (/#xv, /#boda…): así se
+  puede mandar por WhatsApp un link que ya abre solo los de XV años.
+  Sin JS todo sigue funcionando: se ven todas las secciones y los filtros
+  son anclas normales.
+{% endcomment %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>{{ marca }} · Invitaciones digitales interactivas</title>
+    <meta name="description" content="Invitaciones digitales para bodas, XV años, graduaciones, fiestas y baby showers: cuenta regresiva, confirmación en vivo, música y ubicación en un solo link.">
+    <meta name="theme-color" content="#F7F2EC">
+    <link rel="icon" href="{% static 'invitaciones/pwa/default-192.png' %}">
+
+    <!-- Lo que sale al pegar el link en WhatsApp / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ marca }}">
+    <meta property="og:title" content="{{ marca }} · Invitaciones que tus invitados sí abren">
+    <meta property="og:description" content="{{ total }} diseños para bodas, XV años, graduaciones, fiestas y baby showers. Ábrelos y pruébalos.">
+    <meta property="og:image" content="{{ imagen_compartir }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="es_MX">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+    /* ============================================
+       BASE
+       60 papel · 30 tinta · 10 coral (la "vibra")
+       ============================================ */
+    :root {
+        --papel: #F7F2EC;
+        --papel-hondo: #EFE6DB;
+        --tinta: #1B1714;
+        --tinta-suave: #5F564E;
+        --linea: #E0D5C8;
+        --vibra: #E4475B;
+        --vibra-hondo: #C4304A;
+        --whatsapp: #1DA851;
+        --serif: 'Instrument Serif', Georgia, serif;
+        --sans: 'Manrope', system-ui, sans-serif;
+        --radio: 18px;
+        --orilla: max(1.25rem, env(safe-area-inset-left));
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+    body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--tinta);
+        font: 500 1rem/1.55 var(--sans);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: clip;   /* nada decorativo debe dejar mover la página de lado */
+    }
+    img { display: block; max-width: 100%; }
+    a { color: inherit; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.02; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+    .envoltura { width: min(72rem, 100% - 2 * var(--orilla)); margin-inline: auto; }
+    .solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .eyebrow {
+        margin: 0 0 1rem;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--vibra-hondo);
+        text-wrap: balance;
+    }
+
+    /* ============================================
+       BOTONES
+       ============================================ */
+    .boton {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 3rem;
+        padding: 0.75rem 1.4rem;
+        border: 1.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--tinta);
+        color: var(--papel);
+        font: 700 0.95rem/1 var(--sans);
+        text-decoration: none;
+        transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+    }
+    .boton:hover { transform: translateY(-2px); }
+    .boton:active { transform: translateY(0); }
+    .boton:focus-visible, .filtros a:focus-visible, .celular:focus-visible, summary:focus-visible {
+        outline: 3px solid var(--vibra);
+        outline-offset: 3px;
+    }
+    .boton svg { width: 1.15em; height: 1.15em; flex: none; }
+    .boton-claro { background: transparent; color: var(--tinta); }
+    .boton-claro:hover { background: var(--tinta); color: var(--papel); }
+    .boton-vibra { background: var(--vibra); border-color: var(--vibra); color: #fff; }
+    .boton-vibra:hover { background: var(--vibra-hondo); border-color: var(--vibra-hondo); }
+    .boton-chico { min-height: 2.5rem; padding: 0.55rem 1rem; font-size: 0.85rem; }
+
+    /* ============================================
+       BARRA SUPERIOR
+       ============================================ */
+    .barra {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding-block: 1rem;
+    }
+    .marca {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font: 400 1.75rem/1 var(--serif);
+        text-decoration: none;
+    }
+    .marca svg { width: 1.5rem; height: 1.5rem; color: var(--vibra); }
+
+    /* ============================================
+       PORTADA
+       ============================================ */
+    .portada {
+        display: grid;
+        gap: 2.5rem;
+        padding-block: 2rem 3.5rem;
+        align-items: center;
+    }
+    .portada h1 { font-size: clamp(2.9rem, 11vw, 5.6rem); }
+    .portada h1 em { position: relative; font-style: italic; color: var(--vibra); white-space: nowrap; }
+    .onda {
+        position: absolute;
+        left: -4%;
+        bottom: -0.12em;
+        width: 108%;
+        height: 0.28em;
+        overflow: visible;
+    }
+    .onda path {
+        fill: none;
+        stroke: var(--vibra);
+        stroke-width: 3;
+        stroke-linecap: round;
+        stroke-dasharray: 160;
+        stroke-dashoffset: 160;
+        animation: trazar 1.1s 0.5s ease-out forwards;
+    }
+    @keyframes trazar { to { stroke-dashoffset: 0; } }
+    .bajada { max-width: 32rem; margin: 1.4rem 0 1.8rem; font-size: 1.1rem; color: var(--tinta-suave); }
+    .acciones { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+    .abanico {
+        position: relative;
+        height: clamp(22rem, 105vw, 34rem);
+        max-width: 34rem;
+        margin-inline: auto;
+        width: 100%;
+    }
+    .abanico .celular {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 40%;
+        translate: -50% -50%;
+        transition: rotate 0.35s ease, translate 0.35s ease;
+    }
+    .abanico .celular:nth-of-type(1) { rotate: -9deg; translate: -112% -46%; }
+    .abanico .celular:nth-of-type(2) { z-index: 1; width: 46%; }
+    .abanico .celular:nth-of-type(3) { rotate: 9deg; translate: 12% -46%; }
+    .abanico:hover .celular:nth-of-type(1) { rotate: -12deg; translate: -118% -47%; }
+    .abanico:hover .celular:nth-of-type(3) { rotate: 12deg; translate: 18% -47%; }
+    .destello {
+        position: absolute;
+        inset: 8% 4%;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(228, 71, 91, 0.22), rgba(228, 71, 91, 0));
+    }
+
+    /* El celular (se usa en la portada y en cada tarjeta) */
+    .celular {
+        display: block;
+        aspect-ratio: 390 / 844;
+        border: 6px solid var(--tinta);
+        border-radius: 30px;
+        overflow: hidden;
+        background: var(--tinta);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25) inset, 0 22px 40px -18px rgba(27, 23, 20, 0.45);
+    }
+    .celular img { width: 100%; height: 100%; object-fit: cover; object-position: top; border-radius: 24px; }
+
+    /* ============================================
+       LO QUE HACE (beneficios)
+       ============================================ */
+    .beneficios {
+        border-block: 1px solid var(--linea);
+        background: var(--papel-hondo);
+        padding-block: 3rem;
+    }
+    .beneficios h2 { font-size: clamp(2rem, 6vw, 2.8rem); max-width: 22ch; margin-bottom: 2rem; }
+    .beneficios ul {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+        gap: 1.75rem 2rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .beneficios li { display: grid; grid-template-columns: auto 1fr; gap: 0 0.9rem; }
+    .beneficios svg {
+        grid-row: span 2;
+        width: 2.6rem;
+        height: 2.6rem;
+        padding: 0.55rem;
+        border-radius: 50%;
+        background: var(--papel);
+        color: var(--vibra-hondo);
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .beneficios strong { font-weight: 800; }
+    .beneficios p { margin: 0.1rem 0 0; color: var(--tinta-suave); font-size: 0.95rem; }
+
+    /* ============================================
+       DISEÑOS (filtros + tarjetas)
+       ============================================ */
+    .disenos { padding-block: 3.5rem 2rem; }
+    .disenos > .envoltura > h2 { font-size: clamp(2.4rem, 8vw, 3.6rem); }
+    .disenos .intro { max-width: 34rem; margin: 0.8rem 0 0; color: var(--tinta-suave); }
+
+    .filtros {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        margin-top: 1.5rem;
+        padding-block: 0.75rem;
+        background: color-mix(in srgb, var(--papel) 92%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-bottom: 1px solid var(--linea);
+    }
+    .filtros ul {
+        display: flex;
+        gap: 0.5rem;
+        margin: 0;
+        padding: 0 var(--orilla);
+        list-style: none;
+        overflow-x: auto;
+        scrollbar-width: none;
+    }
+    .filtros ul::-webkit-scrollbar { display: none; }
+    @media (min-width: 72rem) {
+        .filtros ul { padding-inline: calc((100% - 72rem) / 2); }
+    }
+    .filtros a {
+        display: block;
+        padding: 0.5rem 1rem;
+        border: 1.5px solid var(--linea);
+        border-radius: 999px;
+        background: var(--papel);
+        font-size: 0.88rem;
+        font-weight: 700;
+        white-space: nowrap;
+        text-decoration: none;
+        transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+    .filtros a:hover { border-color: var(--tinta); }
+    .filtros a[aria-current="true"] { background: var(--tinta); border-color: var(--tinta); color: var(--papel); }
+
+    .grupo { padding-top: 2.5rem; }
+    .grupo-titulo { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; }
+    .grupo-titulo h3 { font-size: clamp(1.9rem, 6vw, 2.5rem); }
+    .grupo-titulo span { font-size: 0.85rem; color: var(--tinta-suave); white-space: nowrap; }
+
+    /* En el celular: carrusel horizontal que se desliza con el dedo */
+    .tarjetas {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: min(76%, 19rem);
+        gap: 1.25rem;
+        margin: 1.25rem calc(-1 * var(--orilla)) 0;
+        padding: 0.5rem var(--orilla) 1.25rem;
+        list-style: none;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scroll-padding-inline: var(--orilla);
+        scrollbar-width: none;
+    }
+    .tarjetas::-webkit-scrollbar { display: none; }
+    .tarjeta { display: flex; flex-direction: column; scroll-snap-align: start; }
+    .tarjeta .celular { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .tarjeta a.celular:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 30px 44px -18px rgba(27, 23, 20, 0.5); }
+    .tarjeta h4 { margin: 1.1rem 0 0.3rem; font: 400 1.7rem/1.05 var(--serif); }
+    .frase { margin: 0; font-size: 0.95rem; }
+    .ideal { margin: 0.5rem 0 1rem; font-size: 0.82rem; color: var(--tinta-suave); }
+    .ideal::before { content: "Ideal para · "; font-weight: 800; color: var(--vibra-hondo); }
+    .tarjeta-acciones { display: flex; gap: 0.5rem; margin-top: auto; }
+    .tarjeta-acciones .boton { flex: 1; padding-inline: 0.8rem; }
+    .deslizar { display: flex; align-items: center; gap: 0.4rem; margin: 0; font-size: 0.8rem; color: var(--tinta-suave); }
+    .deslizar svg { width: 1rem; height: 1rem; }
+
+    @media (min-width: 56rem) {
+        .tarjetas {
+            grid-auto-flow: row;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5rem;
+            margin-inline: 0;
+            padding-inline: 0;
+            overflow: visible;
+        }
+        .deslizar { display: none; }
+    }
+
+    /* ============================================
+       CÓMO FUNCIONA
+       ============================================ */
+    .pasos { padding-block: 3.5rem; }
+    .pasos h2 { font-size: clamp(2.2rem, 7vw, 3.2rem); margin-bottom: 2rem; }
+    .pasos ol {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+        gap: 1rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        counter-reset: paso;
+    }
+    .pasos li {
+        counter-increment: paso;
+        padding: 1.5rem;
+        border: 1px solid var(--linea);
+        border-radius: var(--radio);
+        background: #fff;
+    }
+    .pasos li::before {
+        content: counter(paso);
+        display: block;
+        margin-bottom: 0.6rem;
+        font: italic 400 3rem/1 var(--serif);
+        color: var(--vibra);
+    }
+    .pasos strong { display: block; font-size: 1.1rem; font-weight: 800; }
+    .pasos p { margin: 0.3rem 0 0; color: var(--tinta-suave); }
+
+    /* ============================================
+       PREGUNTAS FRECUENTES
+       ============================================ */
+    .preguntas { padding-block: 1rem 3.5rem; }
+    .preguntas h2 { font-size: clamp(2.2rem, 7vw, 3.2rem); margin-bottom: 1.25rem; }
+    .preguntas details { border-bottom: 1px solid var(--linea); }
+    .preguntas summary {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1.1rem 0;
+        font-weight: 700;
+        cursor: pointer;
+        list-style: none;
+    }
+    .preguntas summary::-webkit-details-marker { display: none; }
+    .preguntas summary::after {
+        content: "+";
+        flex: none;
+        font: 400 1.6rem/0.8 var(--serif);
+        color: var(--vibra);
+        transition: rotate 0.2s ease;
+    }
+    .preguntas details[open] summary::after { rotate: 45deg; }
+    .preguntas details p { margin: 0 0 1.2rem; max-width: 40rem; color: var(--tinta-suave); }
+
+    /* ============================================
+       LLAMADO FINAL + PIE
+       ============================================ */
+    .final {
+        padding-block: 4rem;
+        background: var(--tinta);
+        color: var(--papel);
+        text-align: center;
+    }
+    .final h2 { font-size: clamp(2.4rem, 8vw, 4rem); }
+    .final h2 em { color: var(--vibra); }
+    .final p { max-width: 30rem; margin: 1rem auto 1.8rem; color: rgba(247, 242, 236, 0.72); }
+    .final .boton { background: var(--whatsapp); border-color: var(--whatsapp); color: #fff; }
+
+    .pie {
+        padding-block: 1.5rem calc(5.5rem + env(safe-area-inset-bottom));
+        background: var(--tinta);
+        border-top: 1px solid rgba(247, 242, 236, 0.12);
+        color: rgba(247, 242, 236, 0.6);
+        font-size: 0.85rem;
+    }
+    .pie .envoltura { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.5rem 1.5rem; }
+
+    /* Botón flotante de WhatsApp (siempre a la mano en el celular) */
+    .flotante {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 10;
+        box-shadow: 0 12px 28px -10px rgba(27, 23, 20, 0.55);
+        background: var(--whatsapp);
+        border-color: var(--whatsapp);
+        color: #fff;
+    }
+
+    /* ============================================
+       PANTALLA GRANDE
+       ============================================ */
+    @media (min-width: 56rem) {
+        .portada { grid-template-columns: 1.1fr 1fr; padding-block: 3rem 5rem; }
+        .abanico { height: 34rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        *, *::before, *::after { transition: none !important; animation: none !important; }
+        .onda path { stroke-dashoffset: 0; }
+    }
+    </style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <!-- Globo de chat para los botones de WhatsApp (dibujo propio) -->
+    <symbol id="i-chat" viewBox="0 0 24 24">
+        <path d="M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M8.6 9.2c.3 2.6 3.3 5.6 6.2 6 .5-.1 1.1-.6 1.2-1.2l-1.8-.9-.9.8c-1-.4-2.2-1.6-2.6-2.6l.8-.9-.9-1.8c-.6.1-1.1.6-1.2 1.2z" fill="currentColor"/>
+    </symbol>
+</svg>
+
+<header class="envoltura barra">
+    <a class="marca" href="{% url 'catalogo' %}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2.5 0 2.5-6 5-6s2.5 12 5 12 2.5-12 5-12 2.5 6 5 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        {{ marca }}
+    </a>
+    <a class="boton boton-claro boton-chico" href="{{ whatsapp_general }}" target="_blank" rel="noopener">Cotizar</a>
+</header>
+
+<main>
+    <!-- ===== PORTADA ===== -->
+    <section class="envoltura portada">
+        <div>
+            <p class="eyebrow">Invitaciones digitales hechas en México</p>
+            <h1>Invitaciones que tus invitados <em>sí<svg class="onda" viewBox="0 0 120 12" preserveAspectRatio="none" aria-hidden="true"><path d="M2 7 Q 12 1 22 7 T 42 7 T 62 7 T 82 7 T 102 7 T 118 7"/></svg></em> abren.</h1>
+            <p class="bajada">Cuenta regresiva, confirmación en vivo, música y ubicación en un solo link para mandar por WhatsApp. Para bodas, XV años, graduaciones, fiestas y baby showers.</p>
+            <div class="acciones">
+                <a class="boton" href="#disenos">Ver los {{ total }} diseños</a>
+                <a class="boton boton-claro" href="{{ whatsapp_general }}" target="_blank" rel="noopener">
+                    <svg aria-hidden="true"><use href="#i-chat"/></svg>Cotizar por WhatsApp
+                </a>
+            </div>
+        </div>
+        <div class="abanico">
+            <div class="destello" aria-hidden="true"></div>
+            {% for diseno in portada %}
+            <a class="celular" {% if diseno.demo_url %}href="{{ diseno.demo_url }}" target="_blank" rel="noopener"{% endif %} aria-label="Abrir el demo de {{ diseno.nombre }}">
+                <img src="{% static diseno.captura %}" alt="" width="540" height="1169" {% if not forloop.counter == 2 %}loading="lazy"{% endif %}>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ===== LO QUE HACE ===== -->
+    <section class="beneficios">
+        <div class="envoltura">
+            <h2>Una invitación que hace más que verse bonita</h2>
+            <ul>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
+                    <strong>Confirmación en vivo</strong>
+                    <p>Tus invitados confirman ahí mismo y el conteo sube solo. Nada de perseguir a nadie por mensaje.</p>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg>
+                    <strong>Cuenta regresiva</strong>
+                    <p>Días, horas y minutos para el gran día, corriendo en vivo.</p>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5.5l11-2V16"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+                    <strong>Tu canción</strong>
+                    <p>Música de fondo que suena con un toque.</p>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                    <strong>Cómo llegar y agendar</strong>
+                    <p>Botón directo al mapa y para guardar la fecha en el calendario del celular.</p>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 15.5l-5-5-9 8.5"/></svg>
+                    <strong>Tus fotos</strong>
+                    <p>Una galería con el estilo de cada diseño.</p>
+                </li>
+                <li>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>
+                    <strong>Se guarda como app</strong>
+                    <p>Nada que descargar: es un link. Si quieren, la dejan en su pantalla de inicio.</p>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ===== DISEÑOS ===== -->
+    <section class="disenos" id="disenos" aria-labelledby="titulo-disenos">
+        <div class="envoltura">
+            <p class="eyebrow">Catálogo</p>
+            <h2 id="titulo-disenos">Elige tu diseño</h2>
+            <p class="intro">Cada demo es una invitación de verdad: ábrela, dale play a la música, cuenta los días y prueba confirmar.</p>
+        </div>
+
+        <nav class="filtros" aria-label="Filtrar por tipo de evento">
+            <ul>
+                <li><a href="#disenos" data-filtro="" aria-current="true">Todos</a></li>
+                {% for grupo in grupos %}
+                <li><a href="#{{ grupo.clave }}" data-filtro="{{ grupo.clave }}">{{ grupo.titulo }}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+
+        <div class="envoltura">
+            {% for grupo in grupos %}
+            <section class="grupo" id="{{ grupo.clave }}" aria-labelledby="titulo-{{ grupo.clave }}">
+                <div class="grupo-titulo">
+                    <h3 id="titulo-{{ grupo.clave }}">{{ grupo.titulo }}</h3>
+                    <span>{{ grupo.disenos|length }} diseños</span>
+                </div>
+                <ul class="tarjetas">
+                    {% for diseno in grupo.disenos %}
+                    <li class="tarjeta">
+                        {% if diseno.demo_url %}
+                        <a class="celular" href="{{ diseno.demo_url }}" target="_blank" rel="noopener" aria-label="Abrir el demo de {{ diseno.nombre }}">
+                        {% else %}
+                        <div class="celular">
+                        {% endif %}
+                            <img src="{% static diseno.captura %}" alt="Portada del diseño {{ diseno.nombre }}" width="540" height="1169" loading="lazy">
+                        {% if diseno.demo_url %}</a>{% else %}</div>{% endif %}
+                        <h4>{{ diseno.nombre }}</h4>
+                        <p class="frase">{{ diseno.frase }}</p>
+                        <p class="ideal">{{ diseno.ideal }}</p>
+                        <div class="tarjeta-acciones">
+                            {% if diseno.demo_url %}
+                            <a class="boton boton-claro boton-chico" href="{{ diseno.demo_url }}" target="_blank" rel="noopener">Ver demo</a>
+                            {% endif %}
+                            <a class="boton boton-vibra boton-chico" href="{{ diseno.whatsapp }}" target="_blank" rel="noopener">
+                                <svg aria-hidden="true"><use href="#i-chat"/></svg>La quiero
+                            </a>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <p class="deslizar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Desliza para ver más</p>
+            </section>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ===== CÓMO FUNCIONA ===== -->
+    <section class="envoltura pasos">
+        <p class="eyebrow">Cómo funciona</p>
+        <h2>De tu idea al link, en tres pasos</h2>
+        <ol>
+            <li><strong>Elige tu diseño</strong><p>Abre los demos, juega con ellos y escoge el que va con tu evento.</p></li>
+            <li><strong>Mándanos tus datos</strong><p>Por WhatsApp: nombres, fecha, lugares, tu canción y tus fotos.</p></li>
+            <li><strong>Comparte tu link</strong><p>Te entregamos tu invitación lista para mandar a tus invitados y ver quién confirma.</p></li>
+        </ol>
+    </section>
+
+    <!-- ===== PREGUNTAS FRECUENTES ===== -->
+    <section class="envoltura preguntas">
+        <h2>Preguntas frecuentes</h2>
+        <details>
+            <summary>¿Mis invitados tienen que descargar algo?</summary>
+            <p>No. Es un link que se abre en cualquier celular, iPhone o Android. Si quieren, la pueden guardar como app en su pantalla de inicio.</p>
+        </details>
+        <details>
+            <summary>¿Cómo confirman asistencia?</summary>
+            <p>En la misma invitación: escriben su nombre, si van y con cuántos acompañantes. El conteo de confirmados se actualiza solo.</p>
+        </details>
+        <details>
+            <summary>¿Cómo sé quién confirmó?</summary>
+            <p>Te compartimos la lista con los nombres, el número de acompañantes y los mensajes que te dejaron tus invitados.</p>
+        </details>
+        <details>
+            <summary>¿Puedo poner mi canción y mis fotos?</summary>
+            <p>Sí. La música suena con un toque (los celulares no dejan que suene sola) y las fotos van en una galería con el estilo del diseño.</p>
+        </details>
+        <details>
+            <summary>¿Puedo cambiar colores o pedir algo especial?</summary>
+            <p>Escríbenos por WhatsApp con tu idea y lo platicamos.</p>
+        </details>
+        <details>
+            <summary>¿También hacen invitaciones en imagen o PDF?</summary>
+            <p>Sí, para mandar por WhatsApp o para imprimir.</p>
+        </details>
+    </section>
+
+    <!-- ===== LLAMADO FINAL ===== -->
+    <section class="final">
+        <div class="envoltura">
+            <h2>¿Ya viste <em>la tuya</em>?</h2>
+            <p>Mándanos el nombre del diseño que te gustó y la fecha de tu evento. Te respondemos por WhatsApp.</p>
+            <a class="boton" href="{{ whatsapp_general }}" target="_blank" rel="noopener">
+                <svg aria-hidden="true"><use href="#i-chat"/></svg>Escribir por WhatsApp
+            </a>
+        </div>
+    </section>
+</main>
+
+<footer class="pie">
+    <div class="envoltura">
+        <span>© {% now "Y" %} {{ marca }}</span>
+        <a href="{% url 'aviso_privacidad' %}">Aviso de privacidad</a>
+    </div>
+</footer>
+
+<a class="boton flotante" href="{{ whatsapp_general }}" target="_blank" rel="noopener">
+    <svg aria-hidden="true"><use href="#i-chat"/></svg>WhatsApp
+</a>
+
+<script>
+/* Filtros por tipo de evento. El filtro vive en el hash (/#xv) para poder
+   mandar por WhatsApp un link que ya abre solo esa categoría. */
+(function () {
+    var grupos = document.querySelectorAll('.grupo');
+    var chips = document.querySelectorAll('.filtros a');
+
+    function aplicar() {
+        var clave = location.hash.slice(1);
+        var existe = clave && document.querySelector('.grupo[id="' + clave + '"]');
+        var filtro = existe ? clave : '';
+        grupos.forEach(function (g) { g.hidden = filtro !== '' && g.id !== filtro; });
+        chips.forEach(function (a) {
+            a.setAttribute('aria-current', a.dataset.filtro === filtro ? 'true' : 'false');
+        });
+        // centra el filtro activo en su fila (solo en horizontal: no mueve la página)
+        var activo = document.querySelector('.filtros a[aria-current="true"]');
+        var fila = activo && activo.closest('ul');
+        if (fila) fila.scrollLeft = activo.offsetLeft - (fila.clientWidth - activo.offsetWidth) / 2;
+    }
+
+    window.addEventListener('hashchange', aplicar);
+    aplicar();
+    // link directo (/#xv): el navegador ya intentó bajar antes de que se
+    // ocultaran las otras secciones; se baja de nuevo al tipo de evento
+    var inicial = location.hash.slice(1);
+    var destino = inicial && document.querySelector('.grupo[id="' + inicial + '"]');
+    if (destino) window.addEventListener('load', function () { destino.scrollIntoView(); });
+})();
+</script>
+</body>
+</html>

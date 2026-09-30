@@ -1,5 +1,7 @@
 import json
+import re
 from datetime import timedelta, timezone as dt_timezone
+from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib.staticfiles import finders
@@ -12,6 +14,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
+from .catalogo import DISENOS, TIPOS, captura
 from .limites import limite_superado
 from .models import Invitacion, Confirmacion, Voto
 
@@ -404,3 +407,66 @@ def aviso_privacidad(request):
         "actualizado": settings.AVISO_ACTUALIZADO,
         "dias_retencion": settings.DIAS_RETENCION_DATOS,
     })
+
+
+def enlace_whatsapp(texto):
+    """
+    Link que abre WhatsApp con el mensaje ya escrito. WHATSAPP_NUMERO va con
+    lada de país (52 + 10 dígitos); se le quitan espacios y guiones por si
+    se capturó "+52 55 1234 5678". Sin número, WhatsApp deja elegir el chat.
+    """
+    numero = re.sub(r"\D", "", settings.WHATSAPP_NUMERO)
+    return f"https://wa.me/{numero}?text={quote(texto)}"
+
+
+def catalogo(request):
+    """
+    Página principal (/): el escaparate que se manda por WhatsApp y al que
+    llegan los anuncios. Cada diseño enseña su captura, abre su demo real y
+    tiene su botón "La quiero" con el mensaje ya escrito, así el vendedor
+    sabe de inmediato qué diseño y qué evento le interesan al cliente.
+    """
+    demos_publicados = set(
+        Invitacion.objects.filter(slug__in=[d["demo"] for d in DISENOS], activa=True)
+        .values_list("slug", flat=True)
+    )
+    grupos = []
+    for clave, titulo, para in TIPOS:
+        disenos = [
+            {
+                **diseno,
+                "captura": captura(diseno),
+                # si el demo aún no se creó en esta base, la tarjeta se muestra sin link (no a un 404)
+                "demo_url": reverse("invitaciones:detalle", args=[diseno["demo"]])
+                if diseno["demo"] in demos_publicados else "",
+                "whatsapp": enlace_whatsapp(
+                    f"¡Hola! Me interesa la invitación «{diseno['nombre']}» para {para}. ¿Me das información?"
+                ),
+            }
+            for diseno in DISENOS if diseno["tipo"] == clave
+        ]
+        grupos.append({"clave": clave, "titulo": titulo, "disenos": disenos})
+
+    por_nombre = {d["nombre"]: d for grupo in grupos for d in grupo["disenos"]}
+    return render(request, "invitaciones/catalogo.html", {
+        "marca": settings.MARCA_NOMBRE,
+        "grupos": grupos,
+        "total": len(DISENOS),
+        # los tres celulares de la portada: XV, boda y baby shower (tres públicos distintos)
+        "portada": [por_nombre[n] for n in ("La Gira", "Hotel Amor", "Pancito en el Horno")],
+        "whatsapp_general": enlace_whatsapp("¡Hola! Quiero cotizar una invitación digital."),
+        "imagen_compartir": _url_absoluta(request, static("invitaciones/catalogo/compartir.jpg")),
+    })
+
+
+def _url_absoluta(request, ruta):
+    """
+    Open Graph pide URL absoluta (es la foto que sale al pegar el link en
+    WhatsApp). En producción el hosting recibe el HTTPS y le pasa a Django
+    la petición como http, así que ahí se fuerza https: el sitio solo se
+    sirve por HTTPS ("Force HTTPS").
+    """
+    url = request.build_absolute_uri(ruta)
+    if not settings.DEBUG and url.startswith("http://"):
+        url = "https://" + url.removeprefix("http://")
+    return url
