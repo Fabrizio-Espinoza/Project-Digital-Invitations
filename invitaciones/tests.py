@@ -521,3 +521,23 @@ class DemoLaGiraTests(TestCase):
         call_command("crear_demo_xv", stdout=StringIO())
         call_command("crear_demo_xv_gira", stdout=StringIO())
         self.assertEqual(Invitacion.objects.get(slug="demo-xv-valentina").plantilla.slug_tema, "xv-medianoche-01")
+
+
+class DemoProximaSalidaTests(TestCase):
+    def test_crear_demo_graduacion_salida_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_graduacion_salida", stdout=StringIO())
+        call_command("crear_demo_graduacion_salida", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="graduacion-salida-03").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-graduacion-camila")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "graduacion")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/graduacion-salida-03.html")
+        # tablero con destino = carrera, "Sáb" con acento, pase ESC -> FUT y la fila del pasajero
+        for fragmento in ('class="tablero-vuelo"', "Relaciones Internacionales", "Sáb 19 Jun",
+                          "<strong>FUT</strong>", "rsvp:enviado", 'id="estatus-vuelo"'):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/graduacion-salida-03-180.png")

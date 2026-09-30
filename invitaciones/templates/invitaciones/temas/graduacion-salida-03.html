@@ -1,0 +1,1388 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  PROXIMA SALIDA — tercera plantilla de graduacion.
+
+  Concepto: graduarse es despegar. La invitacion es un aeropuerto: el nombre
+  aparece en un tablero de salidas de paletas que giran (split-flap), la
+  carrera es el "destino" y la escuela el "origen".
+
+    Portada ....... tablero de salidas: franja amarilla de señaletica, el
+                    nombre en paletas que giran hasta acomodarse y la fila del
+                    vuelo (generacion, destino, origen, salida, estatus).
+    Pase .......... los datos como pase de abordar (ESC -> FUT); la cuenta
+                    regresiva en paletas que voltean cada segundo.
+    Ruta .......... el itinerario como ruta de vuelo con escalas; la familia
+                    como "Tripulacion" con alas de piloto; la mesa de regalos
+                    como "Duty free" y la nota de niños como etiqueta de maleta.
+    Ventanillas ... las fotos en ventanillas de avion con la cortinita que se
+                    abre al llegar a la pantalla.
+    Abordaje ...... RSVP; al confirmar, el tablero agrega una fila con el
+                    nombre del invitado y su asiento (12A) girando en paletas.
+    Musica ........ el letrero de audifonos del entretenimiento a bordo.
+
+  Opuesta a Laurel de Oro (noche, dorado, solemne) y a Tarea Cumplida
+  (cuaderno, humor escolar): señaletica de aeropuerto, negro tablero +
+  amarillo señal sobre cielo claro. Tipografia: Barlow Condensed (paletas y
+  letreros, estilo señaletica) + Barlow (lectura). Ambas OFL.
+  Todo el arte (avion, alas, ventanillas, nubes) es CSS/SVG propio.
+
+  Claves de contenido_extra que usa (las mismas que las otras graduaciones):
+    carrera -> destino · institucion -> origen · generacion -> vuelo
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Próxima salida{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <!-- avion visto desde arriba (dibujo propio) -->
+        <symbol id="s-avion" viewBox="0 0 24 24"><path d="M12 1.5C12.9 1.5 13.4 2.4 13.4 3.5V9.1L21.5 13.7V15.8L13.4 13.3V18.5L15.8 20.3V22L12 20.9L8.2 22V20.3L10.6 18.5V13.3L2.5 15.8V13.7L10.6 9.1V3.5C10.6 2.4 11.1 1.5 12 1.5Z"/></symbol>
+        <!-- alas de piloto -->
+        <symbol id="s-alas" viewBox="0 0 64 20"><path d="M25 8C17 8 8 6 0 2C4 10 14 13.5 25 13.5Z M39 8C47 8 56 6 64 2C60 10 50 13.5 39 13.5Z"/><circle cx="32" cy="10.5" r="6.5"/></symbol>
+    </defs>
+</svg>
+
+<!-- franja de señaletica: pictograma de despegue + "Salidas" -->
+<div class="senal-salidas" aria-hidden="true">
+    <svg><use href="#s-avion"/></svg>
+    <span>Salidas</span>
+    <span class="senal-reloj" id="reloj-tablero">--:--</span>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<dl class="tablero-vuelo">
+    {% if invitacion.contenido_extra.generacion %}
+    <div><dt>Vuelo</dt><dd class="flap-linea">Gen {{ invitacion.contenido_extra.generacion }}</dd></div>
+    {% endif %}
+    {% if invitacion.contenido_extra.carrera %}
+    <div><dt>Destino</dt><dd class="flap-linea">{{ invitacion.contenido_extra.carrera }}</dd></div>
+    {% endif %}
+    {% if invitacion.contenido_extra.institucion %}
+    <div><dt>Origen</dt><dd class="flap-linea">{{ invitacion.contenido_extra.institucion }}</dd></div>
+    {% endif %}
+    <div><dt>Salida</dt><dd class="flap-linea">{{ invitacion.fecha_evento|date:"l"|slice:":3" }} {{ invitacion.fecha_evento|date:"j M" }} · {{ invitacion.fecha_evento|date:"g:i A" }}</dd></div>
+    <div><dt>Estatus</dt><dd class="flap-linea estatus" id="estatus-vuelo" data-fecha="{{ invitacion.fecha_evento|date:'c' }}">A tiempo</dd></div>
+</dl>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="pase-cabecera">
+    <p class="kicker">Pase de abordar · Graduación</p>
+    <div class="pase-ruta" aria-label="De la escuela al futuro">
+        <p><strong>ESC</strong><span>Escuela</span></p>
+        <svg aria-hidden="true"><use href="#s-avion"/></svg>
+        <p><strong>FUT</strong><span>Futuro</span></p>
+    </div>
+    <p class="pase-pasajero"><span>Pasajero</span> Invitado especial <span>Clase</span> Primera</p>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 cielo/papel · 30 negro tablero · 10 amarillo señal + rojo pista */
+        --tablero: #15181C;
+        --paleta: #262B31;
+        --paleta-baja: #1E2227;
+        --amarillo: #FFCB1F;
+        --rojo: #E4402F;
+        --cielo: #CFE8F7;
+        --cielo-hondo: #8DC4E8;
+        --papel: #FBFAF6;
+        --tinta: #1C2127;
+        --tinta-suave: rgba(28, 33, 39, 0.7);
+        --gris: #8A939D;
+        --blanco: #F5F3EA;
+
+        --letrero: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+        --texto: 'Barlow', 'Helvetica Neue', Arial, sans-serif;
+
+        --margen: clamp(1.3rem, 6vw, 2.5rem);
+        --ancho: 26rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        /* audifonos del entretenimiento a bordo, para el boton de musica */
+        --audifonos: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M4 15v-3a8 8 0 0 1 16 0v3'/%3E%3Crect x='3' y='14' width='4.5' height='7' rx='1.5' fill='%23000'/%3E%3Crect x='16.5' y='14' width='4.5' height='7' rx='1.5' fill='%23000'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--tablero);
+        color: var(--tinta);
+        font-family: var(--texto);
+        font-size: 1.02rem;
+        line-height: 1.5;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(255, 203, 31, 0.3);
+    }
+    ::selection {
+        background: var(--amarillo);
+        color: var(--tinta);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 700 0.78rem/1.3 var(--letrero);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (letrero de audifonos a bordo)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.1rem;
+        height: 3.1rem;
+        padding: 0;
+        border: 3px solid var(--amarillo);
+        border-radius: 50%;
+        background: var(--tablero);
+        cursor: pointer;
+        box-shadow: 0 8px 16px -6px rgba(0, 0, 0, 0.6);
+    }
+    .boton-musica svg {
+        display: none;   /* los audifonos reemplazan los iconos del motor */
+    }
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0.62rem;
+        background: var(--amarillo);
+        -webkit-mask: var(--audifonos) center / contain no-repeat;
+        mask: var(--audifonos) center / contain no-repeat;
+    }
+    /* mientras suena, un anillo "transmite" como la señal de a bordo */
+    .boton-musica.sonando::after {
+        content: "";
+        position: absolute;
+        inset: -3px;
+        border-radius: 50%;
+        border: 2px solid var(--amarillo);
+        animation: onda 1.6s ease-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--rojo);
+        outline-offset: 4px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.7s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.eyebrow, .mensaje, .tablero-vuelo, .pase-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .itinerario, .familia, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    .visible .pase-ruta svg {
+        animation: despegar 1.4s var(--curva) 0.4s both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 1rem; }
+    }
+    @keyframes despegar {
+        from { translate: -3.5rem 0.6rem; opacity: 0; }
+    }
+    /* medio giro de la paleta: la mitad de arriba cae sobre la de abajo */
+    @keyframes paleta {
+        0% { transform: rotateX(0deg); }
+        50% { transform: rotateX(-90deg); }
+        100% { transform: rotateX(0deg); }
+    }
+    @keyframes onda {
+        to { scale: 1.5; opacity: 0; }
+    }
+    @keyframes parpadeo {
+        50% { opacity: 0.35; }
+    }
+    @keyframes nubes {
+        to { background-position: -40rem 0, -26rem 0; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; }
+    }
+
+    /* ============================================
+       PORTADA: el tablero de salidas
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 4.2rem var(--margen) 4.8rem;
+        /* renglones del tablero */
+        background:
+            repeating-linear-gradient(180deg, transparent 0 2.4rem, rgba(255, 255, 255, 0.025) 2.4rem 2.5rem),
+            radial-gradient(ellipse at 50% 0%, #22272E, var(--tablero) 70%);
+        color: var(--blanco);
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0 0 auto;
+    }
+    .senal-salidas {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.55rem var(--margen) 0.45rem;
+        background: var(--amarillo);
+        color: var(--tinta);
+        font: 800 1.35rem/1 var(--letrero);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .senal-salidas svg {
+        width: 1.5rem;
+        height: 1.5rem;
+        fill: var(--tinta);
+        rotate: 45deg;
+    }
+    .senal-reloj {
+        margin-left: auto;
+        padding: 0.25rem 0.45rem 0.15rem;
+        background: var(--tablero);
+        color: var(--amarillo);
+        font-size: 1rem;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.08em;
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 30rem;
+    }
+    .eyebrow {
+        --retraso: 0.1s;
+        margin: 0;
+        font: 700 0.85rem/1 var(--letrero);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+    }
+    /* sin JS el nombre se ve como letrero; con JS se vuelve paletas */
+    .nombres {
+        max-width: 100%;
+        min-width: 0;
+        margin: 0.8rem 0 0;
+        font: 800 clamp(2.6rem, 14vw, 4.4rem)/1.05 var(--letrero);
+        text-transform: uppercase;
+        color: var(--blanco);
+        text-wrap: balance;
+    }
+    .nombres.con-paletas {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.12em;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .palabra {
+        display: flex;
+        gap: 0.05em;
+    }
+    /* cada paleta: dos mitades de distinto gris con la bisagra al centro */
+    .paleta {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 0.66em;
+        height: 1.02em;
+        padding-top: 0.04em;
+        border-radius: 0.07em;
+        background: linear-gradient(180deg, var(--paleta) 50%, var(--paleta-baja) 50%);
+        box-shadow: 0 0.04em 0.08em rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transform-origin: 50% 50%;
+    }
+    .paleta::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% - 1px);
+        height: 2px;
+        background: rgba(0, 0, 0, 0.75);
+    }
+    .paleta.girando {
+        animation: paleta 0.07s linear;
+    }
+    .mensaje {
+        --retraso: 0.3s;
+        max-width: 32ch;
+        margin: 1.1rem 0 0;
+        font-size: 0.98rem;
+        color: rgba(245, 243, 234, 0.75);
+        text-wrap: pretty;
+    }
+    /* la fila del vuelo: etiqueta gris a la izquierda, valor amarillo a la derecha */
+    .tablero-vuelo {
+        --retraso: 0.45s;
+        width: 100%;
+        max-width: 24rem;
+        margin: 1.3rem 0 0;
+        padding: 0.3rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        text-align: left;
+    }
+    .tablero-vuelo div {
+        display: grid;
+        grid-template-columns: 5rem 1fr;
+        align-items: baseline;
+        gap: 0.6rem;
+        padding: 0.32rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .tablero-vuelo dt {
+        font: 600 0.72rem/1.2 var(--letrero);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+    .tablero-vuelo dd {
+        margin: 0;
+        font: 700 1.1rem/1.2 var(--letrero);
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+    }
+    .flap-linea span {
+        display: inline-block;
+        min-width: 0.25em;
+    }
+    .tablero-vuelo .estatus {
+        color: #7CE38B;
+        animation: parpadeo 1.4s steps(1) infinite;
+    }
+    .tablero-vuelo .estatus.abordando {
+        color: var(--amarillo);
+    }
+    .tablero-vuelo .estatus.despego {
+        color: var(--gris);
+        animation: none;
+    }
+
+    /* ============================================
+       PANTALLA 2: PASE DE ABORDAR
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.6rem var(--margen) 4.8rem;
+        /* cielo con dos capas de nubes que pasan despacio */
+        background:
+            radial-gradient(ellipse 5rem 1.6rem at 20% 14%, rgba(255, 255, 255, 0.9) 60%, transparent 62%),
+            radial-gradient(ellipse 7rem 2rem at 78% 88%, rgba(255, 255, 255, 0.8) 60%, transparent 62%),
+            linear-gradient(180deg, var(--cielo-hondo), var(--cielo) 60%);
+        background-size: 40rem 100%, 26rem 100%, 100% 100%;
+        animation: nubes 60s linear infinite;
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* cabecera negra del pase: la ruta ESC -> FUT */
+    .pase-cabecera {
+        --retraso: 0.05s;
+        padding: 0.9rem 1.1rem 0.8rem;
+        border-radius: 1rem 1rem 0 0;
+        background: var(--tablero);
+        color: var(--blanco);
+    }
+    .pase-cabecera .kicker {
+        color: var(--amarillo);
+    }
+    /* la ruta punteada va de fondo; codigos y avion la tapan con el negro */
+    .pase-ruta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 0.4rem;
+        background: repeating-linear-gradient(90deg, rgba(245, 243, 234, 0.4) 0 5px, transparent 5px 10px) 50% 38% / 100% 2px no-repeat;
+    }
+    .pase-ruta p {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        background: var(--tablero);
+    }
+    .pase-ruta p:first-child {
+        padding-right: 0.6rem;
+        text-align: left;
+    }
+    .pase-ruta p:last-child {
+        padding-left: 0.6rem;
+        text-align: right;
+    }
+    .pase-ruta strong {
+        font: 800 2.3rem/0.95 var(--letrero);
+        letter-spacing: 0.02em;
+    }
+    .pase-ruta span {
+        font: 600 0.68rem/1.2 var(--letrero);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+    .pase-ruta svg {
+        flex: none;
+        width: 2.2rem;
+        height: 2.2rem;
+        margin-bottom: 1rem;
+        padding: 0.25rem;
+        background: var(--tablero);
+        fill: var(--amarillo);
+        rotate: 90deg;
+    }
+    .pase-pasajero {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.2rem 0.5rem;
+        margin: 0.6rem 0 0;
+        padding-top: 0.5rem;
+        border-top: 1px dashed rgba(255, 255, 255, 0.25);
+        font: 600 0.95rem/1.2 var(--letrero);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .pase-pasajero span {
+        color: var(--gris);
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        align-self: center;
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* cuerpo del pase: papel blanco con franja amarilla a la izquierda */
+    .detalles,
+    .lugares,
+    .vestimenta {
+        padding: 0 1.1rem 0 1.5rem;
+        background: linear-gradient(90deg, var(--amarillo) 0 0.4rem, var(--papel) 0.4rem);
+        text-align: left;
+    }
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: start;
+        gap: 0 1rem;
+        padding-top: 0.9rem;
+        padding-bottom: 0.7rem;
+    }
+    .lugares {
+        --retraso: 0.25s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 1rem;
+    }
+    /* la ultima pieza cierra el pase con esquinas redondas */
+    .pantalla-contenido > :is(.detalles, .lugares, .vestimenta):not(:has(+ :is(.lugares, .vestimenta))) {
+        padding-bottom: 0.95rem;
+        border-radius: 0 0 1rem 1rem;
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+    .lugar-item {
+        padding-block: 0.5rem;
+        border-top: 1px dashed rgba(28, 33, 39, 0.2);
+    }
+    .detalle-divisor {
+        width: 1px;
+        align-self: stretch;
+        background: rgba(28, 33, 39, 0.15);
+    }
+    .detalle-label {
+        font: 600 0.68rem/1.3 var(--letrero);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+    .detalle-valor {
+        font: 700 1.2rem/1.15 var(--letrero);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+    .lugar-direccion {
+        font-size: 0.85rem;
+        color: var(--tinta-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding-block: 0.6rem;
+        border-top: 1px dashed rgba(28, 33, 39, 0.2);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(28, 33, 39, 0.3);
+    }
+
+    /* ============================================
+       COUNTDOWN: paletas de la puerta de abordaje
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        margin-top: 0.75rem;
+        padding: 0.6rem 0.7rem 0.55rem;
+        border-radius: 0.8rem;
+        background: var(--tablero);
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown::before {
+        content: "Despegue en";
+        grid-column: 1 / -1;
+        font: 700 0.72rem/1.2 var(--letrero);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .countdown span {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 100%;
+        padding: 0.2rem 0 0.1rem;
+        border-radius: 0.3rem;
+        background: linear-gradient(180deg, var(--paleta) 50%, var(--paleta-baja) 50%);
+        color: var(--blanco);
+        font: 700 1.75rem/1.1 var(--letrero);
+        transform-origin: 50% 50%;
+    }
+    .countdown span::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(50% - 1px);
+        height: 2px;
+        background: rgba(0, 0, 0, 0.75);
+    }
+    .countdown span.girando {
+        animation: paleta 0.18s linear;
+    }
+    .countdown label {
+        font: 600 0.62rem/1 var(--letrero);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS: letreros de aeropuerto (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.45rem;
+        margin-top: 0.75rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0.1rem 0.7rem 0;
+        border-radius: 0.4rem;
+        background: var(--tablero);
+        color: var(--amarillo);
+        text-decoration: none;
+        font: 700 0.95rem/1 var(--letrero);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--amarillo);
+        color: var(--tinta);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 3px solid var(--rojo);
+        outline-offset: 2px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+        margin-top: -0.1rem;
+    }
+    .icono-svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        stroke-width: 2.2;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: ruta de vuelo y tripulacion
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem var(--margen) 4.8rem;
+        /* mapa de puntitos, como el mapa de rutas de la revista de a bordo */
+        background:
+            radial-gradient(circle, rgba(28, 33, 39, 0.12) 1.2px, transparent 1.6px) 0 0 / 0.9rem 0.9rem,
+            var(--papel);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    /* el itinerario primero y la tripulacion despues (order), aunque el motor
+       pinte la familia antes */
+    .itinerario {
+        --retraso: 0.05s;
+        order: 1;
+        position: relative;
+        text-align: left;
+    }
+    .itinerario h3 {
+        margin: 0 0 0.7rem;
+        font: 800 2.1rem/1 var(--letrero);
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .itinerario h3::before {
+        content: "Ruta de vuelo";
+        display: block;
+        margin-bottom: 0.2rem;
+        font: 700 0.75rem/1.2 var(--letrero);
+        letter-spacing: 0.24em;
+        color: var(--rojo);
+    }
+    /* la linea punteada de la ruta une las escalas */
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 4.6rem 1fr;
+        align-items: baseline;
+        gap: 0.8rem;
+        padding: 0.35rem 0 0.35rem 1.7rem;
+        background: linear-gradient(var(--tinta) 50%, transparent 50%) 0.44rem 0 / 2px 0.5rem repeat-y;
+    }
+    .itinerario-item:first-of-type {
+        background-position: 0.44rem 50%;
+        background-size: 2px 50%;
+        background-repeat: no-repeat;
+        background-image: repeating-linear-gradient(var(--tinta) 0 0.25rem, transparent 0.25rem 0.5rem);
+    }
+    .itinerario-item:last-of-type {
+        background-size: 2px 50%;
+        background-repeat: no-repeat;
+        background-image: repeating-linear-gradient(var(--tinta) 0 0.25rem, transparent 0.25rem 0.5rem);
+    }
+    .itinerario-item::before {
+        content: "";
+        position: absolute;
+        left: 0.1rem;
+        top: 50%;
+        width: 0.7rem;
+        height: 0.7rem;
+        translate: 0 -50%;
+        border-radius: 50%;
+        background: var(--papel);
+        box-shadow: 0 0 0 2px var(--tinta);
+    }
+    /* la ultima escala es el destino final: el avion aterriza ahi */
+    .itinerario-item:last-of-type::before {
+        left: -0.15rem;
+        width: 1.2rem;
+        height: 1.2rem;
+        border-radius: 0;
+        background: var(--rojo);
+        box-shadow: none;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5C12.9 1.5 13.4 2.4 13.4 3.5V9.1L21.5 13.7V15.8L13.4 13.3V18.5L15.8 20.3V22L12 20.9L8.2 22V20.3L10.6 18.5V13.3L2.5 15.8V13.7L10.6 9.1V3.5C10.6 2.4 11.1 1.5 12 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5C12.9 1.5 13.4 2.4 13.4 3.5V9.1L21.5 13.7V15.8L13.4 13.3V18.5L15.8 20.3V22L12 20.9L8.2 22V20.3L10.6 18.5V13.3L2.5 15.8V13.7L10.6 9.1V3.5C10.6 2.4 11.1 1.5 12 1.5Z'/%3E%3C/svg%3E") center / contain no-repeat;
+        rotate: 180deg;
+    }
+    .itinerario-hora {
+        font: 800 1.15rem/1.1 var(--letrero);
+        letter-spacing: 0.02em;
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        font-weight: 600;
+        font-size: 0.98rem;
+        line-height: 1.3;
+    }
+    /* la familia como tripulacion, con alas de piloto */
+    .familia {
+        --retraso: 0.15s;
+        order: 2;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.5rem 1rem;
+        padding: 0.8rem 1rem 0.9rem;
+        border-radius: 0.8rem;
+        background: var(--tablero);
+        color: var(--blanco);
+    }
+    .familia::before {
+        content: "Tripulación";
+        grid-column: 1 / -1;
+        padding-top: 1.4rem;
+        font: 700 0.72rem/1.2 var(--letrero);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+        /* alas de piloto arriba del titulo */
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 20' fill='%23FFCB1F'%3E%3Cpath d='M25 8C17 8 8 6 0 2C4 10 14 13.5 25 13.5Z M39 8C47 8 56 6 64 2C60 10 50 13.5 39 13.5Z'/%3E%3Ccircle cx='32' cy='10.5' r='6.5'/%3E%3C/svg%3E") top center / 4rem 1.25rem no-repeat;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: 600 0.68rem/1.3 var(--letrero);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+    .familia-nombres {
+        font: 700 1.1rem/1.2 var(--letrero);
+        letter-spacing: 0.02em;
+        text-wrap: balance;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        order: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        border-radius: 0.4rem;
+        background: var(--amarillo);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 700 0.95rem/1 var(--letrero);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .boton-mesa-regalos::before {
+        content: "Duty free ·";
+        color: var(--rojo);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 3px solid var(--rojo);
+        outline-offset: 2px;
+    }
+    /* etiqueta de maleta con ojal y cordon (el JS pone el titulo) */
+    .nota-ninos {
+        --retraso: 0.35s;
+        order: 4;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        width: auto;
+        margin: 0.2rem 0 0 1.4rem;
+        padding: 0.6rem 1rem 0.55rem 2.2rem;
+        border-radius: 1.4rem 0.4rem 0.4rem 1.4rem;
+        background: var(--rojo);
+        color: var(--blanco);
+        font-weight: 600;
+        font-size: 0.88rem;
+        text-align: left;
+        rotate: -2deg;
+        -webkit-mask: radial-gradient(circle 0.32rem at 1.05rem 50%, transparent 95%, #000);
+        mask: radial-gradient(circle 0.32rem at 1.05rem 50%, transparent 95%, #000);
+    }
+    .nota-ninos::before {
+        content: var(--titulo-etiqueta, "Equipaje");
+        flex: none;
+        padding: 0.2rem 0.45rem 0.1rem;
+        border-radius: 0.2rem;
+        background: var(--blanco);
+        color: var(--rojo);
+        font: 800 0.8rem/1.1 var(--letrero);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       GALERIA: vista desde la ventanilla
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem 1rem;
+        align-content: center;
+        padding: 2rem max(var(--margen), (100% - 30rem) / 2) 4.8rem;
+        /* pared de la cabina: plastico claro con juntas de paneles */
+        background:
+            repeating-linear-gradient(90deg, transparent 0 calc(50% - 1px), rgba(0, 0, 0, 0.05) calc(50% - 1px) 50%),
+            linear-gradient(180deg, #F1F2F0, #DADDDF);
+    }
+    .galeria::before {
+        content: "Vista desde";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -1rem;
+        font: 700 0.78rem/1.3 var(--letrero);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--rojo);
+    }
+    .galeria::after {
+        content: "la ventanilla";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 800 2.3rem/1.05 var(--letrero);
+        text-transform: uppercase;
+    }
+    /* sin JS: la foto ya tiene forma y marco de ventanilla */
+    .galeria > img,
+    .ventanilla img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        border-radius: 42% / 30%;
+        border: 0.6rem solid #F7F7F5;
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12), 0 10px 18px -10px rgba(0, 0, 0, 0.5);
+    }
+    /* con JS: la ventanilla trae una cortinita que sube al llegar */
+    .ventanilla {
+        position: relative;
+        margin: 0;
+    }
+    .ventanilla::after {
+        content: "";
+        position: absolute;
+        inset: 0.6rem;
+        border-radius: 40% / 28%;
+        background:
+            linear-gradient(transparent calc(100% - 0.6rem), rgba(0, 0, 0, 0.15) calc(100% - 0.6rem) calc(100% - 0.35rem), transparent calc(100% - 0.35rem)),
+            linear-gradient(180deg, #ECEDEA, #D5D8DB);
+        clip-path: inset(0 0 0 0);
+        transition: clip-path 1.2s var(--curva) var(--retraso, 0s);
+    }
+    .visible .ventanilla::after {
+        clip-path: inset(0 0 88% 0);
+    }
+
+    /* ============================================
+       RSVP: abordaje
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.2rem var(--margen) 5rem;
+        background:
+            repeating-linear-gradient(180deg, transparent 0 2.4rem, rgba(255, 255, 255, 0.025) 2.4rem 2.5rem),
+            radial-gradient(ellipse at 50% 0%, #22272E, var(--tablero) 70%);
+        color: var(--blanco);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Última llamada";
+        font: 700 0.8rem/1.3 var(--letrero);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+        animation: parpadeo 1.4s steps(1) infinite;
+    }
+    .rsvp h2 {
+        margin: 0.2rem auto 0.4rem;
+        font: 800 clamp(2.2rem, 11vw, 3rem)/1 var(--letrero);
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: rgba(245, 243, 234, 0.75);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 800 1.35rem/1 var(--letrero);
+        color: var(--amarillo);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "22 de Mayo": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.15rem;
+        font-size: 0.9rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        margin: 1.2rem auto 0;
+        padding: 0 1.1rem 1.2rem;
+        border-radius: 1rem;
+        background: var(--papel);
+        color: var(--tinta);
+        text-align: left;
+        overflow: hidden;
+    }
+    #form-rsvp::before {
+        content: "Documenta tu lugar";
+        margin: 0 -1.1rem 0.1rem;
+        padding: 0.6rem 1rem 0.5rem;
+        background: var(--amarillo);
+        font: 800 0.95rem/1.1 var(--letrero);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    /* 16px o mas: el iPhone no hace zoom al escribir */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.6rem 0.8rem;
+        border: 2px solid rgba(28, 33, 39, 0.18);
+        border-radius: 0.4rem;
+        background: #FFFFFF;
+        color: var(--tinta);
+        font: 500 1rem/1.4 var(--texto);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(28, 33, 39, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--tinta);
+        box-shadow: 0 0 0 3px rgba(255, 203, 31, 0.6);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.7rem;
+        padding: 0.1rem 0.3rem 0;
+        border: 2px solid rgba(28, 33, 39, 0.18);
+        border-radius: 0.4rem;
+        font: 700 0.95rem/1.1 var(--letrero);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--tablero);
+        background: var(--tablero);
+        color: var(--amarillo);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 3px solid var(--rojo);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 700 0.85rem/1.2 var(--letrero);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        max-width: 4.5rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        border: 0;
+        border-radius: 0.4rem;
+        background: var(--tablero);
+        color: var(--amarillo);
+        font: 800 1.1rem/1 var(--letrero);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+    #form-rsvp button:focus-visible {
+        outline: 3px solid var(--rojo);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 800 1.3rem/1.2 var(--letrero);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--amarillo);
+    }
+
+    /* --- La fila del invitado que aparece en el tablero al confirmar --- */
+    .fila-pasajero {
+        margin-top: 0.8rem;
+        padding: 0.7rem 0.8rem;
+        border-radius: 0.6rem;
+        background: #0D0F12;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        text-align: left;
+    }
+    .fila-pasajero div {
+        display: grid;
+        grid-template-columns: 5.4rem 1fr;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0;
+    }
+    .fila-pasajero dt {
+        font: 600 0.7rem/1.2 var(--letrero);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gris);
+    }
+    .fila-pasajero dd {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.12rem;
+        margin: 0;
+        font: 700 1.6rem/1 var(--letrero);
+        text-transform: uppercase;
+        color: var(--blanco);
+    }
+    .fila-pasajero .paleta {
+        width: 0.8em;
+    }
+    .fila-pasajero .asiento .paleta {
+        color: var(--amarillo);
+    }
+    .fila-pasajero .abordando {
+        font-size: 1.05rem;
+        color: #7CE38B;
+        animation: parpadeo 1.4s steps(1) infinite;
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const SIGNOS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+        // --- Motor de paletas: cada caracter gira unas vueltas antes de quedarse ---
+        function girar(el, final, retraso) {
+            if (reducido || final.trim() === '') { el.textContent = final; return; }
+            let vueltas = 5 + Math.floor(Math.random() * 9);
+            setTimeout(function paso() {
+                if (vueltas-- <= 0) {
+                    el.textContent = final;
+                    return;
+                }
+                el.textContent = SIGNOS[Math.floor(Math.random() * SIGNOS.length)];
+                el.classList.remove('girando');
+                void el.offsetWidth;   // reinicia la animacion de medio giro
+                el.classList.add('girando');
+                setTimeout(paso, 75);
+            }, retraso);
+        }
+        // Convierte un texto en paletas (una por letra, palabras en renglones)
+        function enPaletas(contenedor, texto, retrasoBase) {
+            const palabras = texto.trim().split(/\s+/);
+            palabras.forEach((palabra, p) => {
+                const fila = document.createElement('span');
+                fila.className = 'palabra';
+                [...palabra].forEach((letra, i) => {
+                    const paleta = document.createElement('span');
+                    paleta.className = 'paleta';
+                    paleta.textContent = ' ';
+                    fila.appendChild(paleta);
+                    girar(paleta, letra, retrasoBase + (p * 6 + i) * 45);
+                });
+                contenedor.appendChild(fila);
+            });
+            return palabras;
+        }
+
+        // --- 1. El nombre en paletas, del tamaño justo para que quepa ---
+        const titulo = document.querySelector('.nombres');
+        let palabrasNombre = [];
+        if (titulo) {
+            const nombre = titulo.textContent.trim();
+            titulo.setAttribute('aria-label', nombre);
+            titulo.textContent = '';
+            titulo.classList.add('con-paletas');
+            const visual = document.createElement('span');
+            visual.setAttribute('aria-hidden', 'true');
+            visual.style.display = 'contents';
+            titulo.appendChild(visual);
+            palabrasNombre = enPaletas(visual, nombre, 350);
+        }
+        function ajustarNombre() {
+            if (!titulo || !palabrasNombre.length) return;
+            const ancho = titulo.parentElement.clientWidth;
+            const larga = Math.max(...palabrasNombre.map(p => [...p].length));
+            const maximo = parseFloat(getComputedStyle(document.documentElement).fontSize) * 4.4;
+            // cada paleta avanza 0.71em (0.66 de ancho + 0.05 de separacion)
+            titulo.style.fontSize = Math.min(maximo, ancho / (larga * 0.71)) + 'px';
+        }
+        ajustarNombre();
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 2. Estatus del vuelo segun cuanto falta ---
+        const estatus = document.getElementById('estatus-vuelo');
+        if (estatus) {
+            const dias = (new Date(estatus.dataset.fecha) - new Date()) / 86400000;
+            if (dias < 0) { estatus.textContent = 'Despegó'; estatus.classList.add('despego'); }
+            else if (dias <= 7) { estatus.textContent = 'Abordando'; estatus.classList.add('abordando'); }
+        }
+
+        // --- 3. Las filas del tablero giran letra por letra ---
+        document.querySelectorAll('.flap-linea').forEach((dd, fila) => {
+            const texto = dd.textContent.trim();
+            dd.setAttribute('aria-label', texto);
+            dd.textContent = '';
+            [...texto].forEach((letra, i) => {
+                const s = document.createElement('span');
+                s.setAttribute('aria-hidden', 'true');
+                s.textContent = ' ';
+                dd.appendChild(s);
+                girar(s, letra, 900 + fila * 180 + i * 18);
+            });
+        });
+
+        // --- 4. Reloj del tablero (hora del invitado) ---
+        const reloj = document.getElementById('reloj-tablero');
+        function tic() {
+            if (reloj) reloj.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+        tic();
+        setInterval(tic, 15000);
+
+        // --- 5. Cada dato con su nombre de aeropuerto ---
+        const etiquetas = { 'Día': 'Fecha', 'Hora': 'Abordaje', 'Código de vestimenta': 'Dress code' };
+        document.querySelectorAll('.pantalla-info .detalle-label').forEach(el => {
+            const original = el.textContent.trim();
+            if (etiquetas[original]) el.textContent = etiquetas[original];
+        });
+        const enviar = document.querySelector('#form-rsvp button');
+        if (enviar) enviar.textContent = 'Confirmar mi asiento';
+
+        // --- 6. La cuenta regresiva voltea su paleta cuando cambia el numero ---
+        document.querySelectorAll('.countdown span').forEach(numero => {
+            let anterior = numero.textContent;
+            new MutationObserver(() => {
+                if (numero.textContent === anterior) return;
+                anterior = numero.textContent;
+                if (reducido) return;
+                numero.classList.remove('girando');
+                void numero.offsetWidth;
+                numero.classList.add('girando');
+            }).observe(numero, { childList: true, characterData: true, subtree: true });
+        });
+
+        // --- 7. Etiqueta de maleta: "Solo adultos" o "Menores a bordo" ---
+        const nota = document.querySelector('.nota-ninos');
+        if (nota) {
+            const soloAdultos = nota.textContent.includes('adultos');
+            nota.style.setProperty('--titulo-etiqueta', soloAdultos ? '"Solo adultos"' : '"Menores a bordo"');
+        }
+
+        // --- 8. Fotos -> ventanillas con cortinita ---
+        document.querySelectorAll('.galeria > img').forEach((foto, i) => {
+            const ventana = document.createElement('figure');
+            ventana.className = 'ventanilla';
+            ventana.style.setProperty('--retraso', (0.3 + i * 0.15) + 's');
+            foto.before(ventana);
+            ventana.appendChild(foto);
+        });
+
+        // --- 9. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 10. Al confirmar, el tablero anuncia al pasajero y su asiento ---
+        // El asiento sale de su lugar en la lista: 6 asientos por fila (A-F).
+        // El motor borra el formulario antes de avisar, asi que guardamos el
+        // nombre al enviar; luego escuchamos "rsvp:enviado" del motor.
+        const form = document.getElementById('form-rsvp');
+        const status = document.getElementById('rsvp-status');
+        let pasajero = '';
+        if (form) form.addEventListener('submit', () => {
+            pasajero = (form.elements.nombre_invitado.value || '').trim();
+        });
+        document.addEventListener('rsvp:enviado', e => {
+            const previa = document.querySelector('.fila-pasajero');
+            if (previa) previa.remove();
+            if (!status || e.detail.asistencia !== 'si') return;
+            const n = Math.max(1, parseInt(e.detail.total_confirmados, 10) || 1);
+            const asiento = (Math.floor((n - 1) / 6) + 1) + 'ABCDEF'[(n - 1) % 6];
+            const primerNombre = ([...(pasajero.split(/\s+/)[0] || 'Invitado')].slice(0, 12).join(''));
+            const fila = document.createElement('dl');
+            fila.className = 'fila-pasajero';
+            fila.setAttribute('aria-label', 'Pasajero ' + primerNombre + ', asiento ' + asiento + ', abordando');
+            fila.innerHTML = '<div><dt>Pasajero</dt><dd class="pasajero" aria-hidden="true"></dd></div>' +
+                '<div><dt>Asiento</dt><dd class="asiento" aria-hidden="true"></dd></div>' +
+                '<div><dt>Estatus</dt><dd class="abordando">Abordando</dd></div>';
+            status.after(fila);
+            [[fila.querySelector('.pasajero'), primerNombre], [fila.querySelector('.asiento'), asiento]].forEach(([dd, texto], f) => {
+                [...texto].forEach((letra, i) => {
+                    const paleta = document.createElement('span');
+                    paleta.className = 'paleta';
+                    paleta.textContent = ' ';
+                    dd.appendChild(paleta);
+                    girar(paleta, letra, f * 500 + i * 60);
+                });
+            });
+        });
+    })();
+</script>
+{% endblock %}
