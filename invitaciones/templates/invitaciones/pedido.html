@@ -1,0 +1,447 @@
+{% load static %}{% comment %}
+  Formulario privado del cliente (/pedido/<token>/). Mismo lenguaje visual
+  que el catálogo (papel / tinta / coral, Instrument Serif + Manrope) para
+  que el cliente sienta que sigue con la misma marca a la que le compró.
+  Tres estados: formulario, "¡listo!" (después de enviar) y cerrado (la
+  invitación ya se publicó). Sin JS funciona igual: solo se pierde el botón
+  para agregar renglones (queda uno por grupo) y la vista de fotos.
+{% endcomment %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Datos de tu invitación · {{ marca }}</title>
+    <meta name="theme-color" content="#F7F2EC">
+    <link rel="icon" href="{% static 'invitaciones/pwa/default-192.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+    /* ============================================
+       BASE
+       ============================================ */
+    :root {
+        --papel: #F7F2EC;
+        --tinta: #1B1714;
+        --tinta-suave: #5F564E;
+        --linea: #E0D5C8;
+        --vibra: #E4475B;
+        --vibra-hondo: #C4304A;
+        --verde: #1DA851;
+        --serif: 'Instrument Serif', Georgia, serif;
+        --sans: 'Manrope', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+        margin: 0;
+        background: var(--papel);
+        color: var(--tinta);
+        font: 500 1rem/1.5 var(--sans);
+        -webkit-font-smoothing: antialiased;
+    }
+    main { width: min(40rem, 100% - 2rem); margin: 0 auto; padding-bottom: 7rem; }
+    h1, h2 { font-family: var(--serif); font-weight: 400; line-height: 1.05; margin: 0; text-wrap: balance; }
+    a { color: inherit; }
+
+    /* ============================================
+       BARRA + PRESENTACIÓN
+       ============================================ */
+    .barra { display: flex; align-items: center; gap: 0.5rem; padding: 1rem 0; font: 400 1.5rem/1 var(--serif); }
+    .barra svg { width: 1.3rem; height: 1.3rem; color: var(--vibra); }
+    .presentacion { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1.25rem; align-items: center; padding: 1rem 0 1.75rem; }
+    .presentacion img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 390 / 844;
+        object-fit: cover;
+        object-position: top;
+        border: 4px solid var(--tinta);
+        border-radius: 18px;
+    }
+    .eyebrow { margin: 0 0 0.4rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vibra-hondo); }
+    .presentacion h1 { font-size: clamp(2rem, 8vw, 2.6rem); }
+    .presentacion p { margin: 0.6rem 0 0; color: var(--tinta-suave); font-size: 0.95rem; }
+
+    /* ============================================
+       AVISOS
+       ============================================ */
+    .aviso { margin: 0 0 1.25rem; padding: 1rem 1.1rem; border-radius: 14px; background: #fff; border: 1px solid var(--linea); }
+    .aviso p { margin: 0; }
+    .aviso a { font-weight: 700; }
+    .aviso-error { border-color: var(--vibra); background: #FDECEE; }
+    .aviso-error ul { margin: 0.4rem 0 0; padding-left: 1.1rem; }
+
+    /* ============================================
+       SECCIONES Y CAMPOS
+       ============================================ */
+    .seccion {
+        margin: 0 0 1rem;
+        padding: 1.4rem 1.2rem 0.6rem;
+        border: 1px solid var(--linea);
+        border-radius: 18px;
+        background: #fff;
+        counter-increment: seccion;
+    }
+    form { counter-reset: seccion; }
+    .seccion > h2 { display: flex; align-items: baseline; gap: 0.6rem; font-size: 1.8rem; }
+    .seccion > h2::before { content: counter(seccion); font-style: italic; color: var(--vibra); }
+    .seccion > .ayuda-seccion { margin: 0.4rem 0 0; color: var(--tinta-suave); font-size: 0.9rem; }
+
+    .campo { margin: 1.1rem 0; padding: 0; border: 0; min-width: 0; }
+    .campo > label, .campo > legend { display: block; margin-bottom: 0.35rem; padding: 0; font-weight: 700; font-size: 0.95rem; }
+    .campo abbr { color: var(--vibra); text-decoration: none; }
+    .campo input:not([type="checkbox"], [type="radio"], [type="color"]), .campo textarea, .campo select, .fila input {
+        width: 100%;
+        min-height: 3rem;
+        padding: 0.7rem 0.85rem;
+        border: 1.5px solid var(--linea);
+        border-radius: 12px;
+        background: var(--papel);
+        color: var(--tinta);
+        font: 500 1rem/1.3 var(--sans);   /* 16px: con menos, el iPhone hace zoom al escribir */
+    }
+    .campo textarea { min-height: 6rem; resize: vertical; }
+    .campo input:focus, .campo textarea:focus, .campo select:focus, .fila input:focus {
+        outline: none;
+        border-color: var(--tinta);
+        background: #fff;
+    }
+    .campo input[type="color"] { width: 4rem; height: 3rem; padding: 0.25rem; border: 1.5px solid var(--linea); border-radius: 12px; background: #fff; }
+    .campo .ayuda { margin: 0.35rem 0 0; font-size: 0.82rem; color: var(--tinta-suave); }
+    .campo .error, .fila-error { margin: 0.35rem 0 0; font-size: 0.85rem; font-weight: 700; color: var(--vibra-hondo); }
+    .con-error input, .con-error textarea { border-color: var(--vibra); }
+
+    .campo-casilla label { display: flex; gap: 0.7rem; align-items: center; font-weight: 700; cursor: pointer; }
+    .campo-casilla input { width: 1.4rem; height: 1.4rem; accent-color: var(--vibra); flex: none; }
+    .campo-casilla .ayuda { padding-left: 2.1rem; }
+
+    .pastillas { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .pastilla { position: relative; cursor: pointer; }
+    .pastilla input { position: absolute; opacity: 0; }
+    .pastilla span {
+        display: block;
+        padding: 0.6rem 1rem;
+        border: 1.5px solid var(--linea);
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+    .pastilla input:checked + span { background: var(--tinta); border-color: var(--tinta); color: var(--papel); }
+    .pastilla input:focus-visible + span { outline: 3px solid var(--vibra); outline-offset: 2px; }
+
+    /* ============================================
+       FILAS REPETIBLES (programa, padrinos, mesas)
+       ============================================ */
+    .repetible { margin: 1.3rem 0; }
+    .repetible h3 { margin: 0; font-size: 0.95rem; font-weight: 700; }
+    .repetible > p { margin: 0.2rem 0 0.6rem; font-size: 0.82rem; color: var(--tinta-suave); }
+    .fila { display: flex; gap: 0.5rem; align-items: flex-end; margin-bottom: 0.6rem; }
+    .fila label { flex: 1; min-width: 0; font-size: 0.75rem; font-weight: 700; color: var(--tinta-suave); }
+    .fila label:first-child { flex: 0 0 34%; }
+    .fila-3 { flex-wrap: wrap; }
+    .fila-3 label, .fila-3 label:first-child { flex: 1 1 45%; }
+    .fila-3 label:nth-child(3) { flex-basis: 100%; }
+    .quitar {
+        flex: none;
+        width: 3rem;
+        height: 3rem;
+        border: 1.5px solid var(--linea);
+        border-radius: 12px;
+        background: transparent;
+        color: var(--tinta-suave);
+        font-size: 1.3rem;
+        cursor: pointer;
+    }
+    .agregar {
+        padding: 0.6rem 1rem;
+        border: 1.5px dashed var(--tinta-suave);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--tinta);
+        font: 700 0.88rem/1 var(--sans);
+        cursor: pointer;
+    }
+
+    /* ============================================
+       FOTOS
+       ============================================ */
+    .fotos { margin: 1.1rem 0; }
+    .fotos-titulo { margin: 0 0 0.3rem; font-weight: 700; font-size: 0.95rem; }
+    .fotos-actuales { display: grid; grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr)); gap: 0.5rem; margin: 0.6rem 0 1rem; }
+    .foto { position: relative; margin: 0; }
+    .foto img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 10px; }
+    .foto label { display: flex; gap: 0.3rem; align-items: center; margin-top: 0.25rem; font-size: 0.75rem; font-weight: 700; cursor: pointer; }
+    .foto:has(input:checked) img { opacity: 0.3; }
+    .subir {
+        display: grid;
+        place-items: center;
+        gap: 0.2rem;
+        padding: 1.4rem 1rem;
+        border: 1.5px dashed var(--tinta-suave);
+        border-radius: 16px;
+        text-align: center;
+        cursor: pointer;
+    }
+    .subir strong { font-size: 1rem; }
+    .subir span { font-size: 0.82rem; color: var(--tinta-suave); }
+    .subir input { width: 100%; max-width: 16rem; font-size: 0.8rem; }
+    .vista-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr)); gap: 0.4rem; margin-top: 0.6rem; }
+    .vista-fotos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+
+    /* ============================================
+       ENVIAR (barra fija abajo)
+       ============================================ */
+    .enviar {
+        position: fixed;
+        inset: auto 0 0;
+        z-index: 5;
+        padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+        background: color-mix(in srgb, var(--papel) 94%, transparent);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-top: 1px solid var(--linea);
+    }
+    .boton {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: min(40rem, 100%);
+        min-height: 3.25rem;
+        margin: 0 auto;
+        padding: 0.8rem 1.4rem;
+        border: 1.5px solid var(--tinta);
+        border-radius: 999px;
+        background: var(--tinta);
+        color: var(--papel);
+        font: 800 1rem/1 var(--sans);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .boton:disabled { opacity: 0.6; cursor: progress; }
+    .boton-vibra { background: var(--vibra); border-color: var(--vibra); color: #fff; }
+    .boton-claro { background: transparent; color: var(--tinta); }
+    .boton-verde { background: var(--verde); border-color: var(--verde); color: #fff; }
+    .privacidad { margin: 1.5rem 0 0; font-size: 0.8rem; color: var(--tinta-suave); text-align: center; }
+
+    /* ============================================
+       LISTO / CERRADO
+       ============================================ */
+    .final { padding: 2rem 0; text-align: center; }
+    .final .sello {
+        display: grid;
+        place-items: center;
+        width: 5rem;
+        height: 5rem;
+        margin: 0 auto 1.2rem;
+        border-radius: 50%;
+        background: var(--vibra);
+        color: #fff;
+    }
+    .final .sello svg { width: 2.4rem; height: 2.4rem; }
+    .final h1 { font-size: clamp(2.4rem, 10vw, 3.4rem); }
+    .final p { max-width: 28rem; margin: 0.9rem auto 1.6rem; color: var(--tinta-suave); }
+    .final .acciones { display: grid; gap: 0.6rem; max-width: 22rem; margin: 0 auto; }
+    </style>
+</head>
+<body>
+<main>
+    <header class="barra">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12c2.5 0 2.5-6 5-6s2.5 12 5 12 2.5-12 5-12 2.5 6 5 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+        {{ marca }}
+    </header>
+
+{% if cerrado %}
+    <!-- ===== CERRADO: ya se publicó ===== -->
+    <section class="final">
+        <div class="sello"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h1>Tu invitación ya está publicada</h1>
+        <p>Si quieres cambiar algo, escríbenos por WhatsApp y lo hacemos por ti.</p>
+        <div class="acciones">
+            <a class="boton boton-vibra" href="{% url 'invitaciones:detalle' pedido.invitacion.slug %}">Ver mi invitación</a>
+            <a class="boton boton-verde" href="{{ whatsapp }}" target="_blank" rel="noopener">Escribir por WhatsApp</a>
+        </div>
+    </section>
+
+{% elif listo %}
+    <!-- ===== LISTO: datos recibidos ===== -->
+    <section class="final">
+        <div class="sello"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <h1>¡Listo! Recibimos tus datos</h1>
+        <p>Ya puedes ver cómo va quedando tu invitación. La revisamos y te avisamos por WhatsApp cuando esté publicada, con el link para tus invitados.</p>
+        <div class="acciones">
+            <a class="boton boton-vibra" href="{% url 'pedido_vista_previa' pedido.token %}">Ver cómo se ve</a>
+            <a class="boton boton-claro" href="{% url 'pedido' pedido.token %}">Corregir algo</a>
+        </div>
+    </section>
+
+{% else %}
+    <!-- ===== FORMULARIO ===== -->
+    <section class="presentacion">
+        {% if diseno.captura %}<img src="{% static diseno.captura %}" alt="" width="540" height="1169">{% endif %}
+        <div>
+            <p class="eyebrow">Datos de tu invitación</p>
+            <h1>{{ diseno.nombre }}</h1>
+            <p>Toma unos 10 minutos. Si algo no lo sabes todavía, déjalo vacío: se puede agregar después.</p>
+        </div>
+    </section>
+
+    {% if pedido.invitacion %}
+    <div class="aviso">
+        <p>Ya nos mandaste tus datos. Puedes corregirlos aquí y volver a enviar. <a href="{% url 'pedido_vista_previa' pedido.token %}">Ver cómo va tu invitación</a></p>
+    </div>
+    {% endif %}
+
+    {% if errores or formulario.errors %}
+    <div class="aviso aviso-error" role="alert" id="errores">
+        <p><strong>Revisa lo que está en rojo</strong> y vuelve a enviar.</p>
+        {% if errores or formulario.non_field_errors %}
+        <ul>
+            {% for error in formulario.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            {% for error in errores %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="form-pedido" novalidate>
+        {% csrf_token %}
+        {% for seccion in secciones %}
+        <section class="seccion">
+            <h2>{{ seccion.titulo }}</h2>
+            {% if seccion.ayuda %}<p class="ayuda-seccion">{{ seccion.ayuda }}</p>{% endif %}
+
+            {% for campo in seccion.campos %}{% include "invitaciones/pedido_campo.html" %}{% endfor %}
+
+            {% for grupo in seccion.repetibles %}
+            <div class="repetible" data-grupo="{{ grupo.clave }}" data-maximo="{{ grupo.maximo }}">
+                <h3>{{ grupo.titulo }}</h3>
+                <p>{{ grupo.ayuda }}</p>
+                <div class="filas">
+                    {% for fila in grupo.filas %}
+                    <div class="fila{% if fila|length == 3 %} fila-3{% endif %}">
+                        {% for celda in fila %}
+                        <label>{{ celda.etiqueta }}<input name="{{ celda.nombre }}" maxlength="{{ celda.largo }}" placeholder="{{ celda.ejemplo }}" value="{{ celda.valor }}"></label>
+                        {% endfor %}
+                        <button type="button" class="quitar" aria-label="Quitar renglón" hidden>×</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                <template>
+                    <div class="fila{% if grupo.molde|length == 3 %} fila-3{% endif %}">
+                        {% for celda in grupo.molde %}
+                        <label>{{ celda.etiqueta }}<input name="{{ celda.nombre }}" maxlength="{{ celda.largo }}" placeholder="{{ celda.ejemplo }}"></label>
+                        {% endfor %}
+                        <button type="button" class="quitar" aria-label="Quitar renglón">×</button>
+                    </div>
+                </template>
+                <button type="button" class="agregar" hidden>+ {{ grupo.agregar }}</button>
+            </div>
+            {% endfor %}
+
+            {% if seccion.fotos %}
+            <div class="fotos">
+                <p class="fotos-titulo">Tus fotos</p>
+                {% if galeria %}
+                <div class="fotos-actuales">
+                    {% for foto in galeria %}
+                    <figure class="foto">
+                        <img src="{{ foto.imagen.url }}" alt="Foto {{ forloop.counter }}" loading="lazy">
+                        <label><input type="checkbox" name="borrar_foto" value="{{ foto.pk }}"> Quitar</label>
+                    </figure>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <label class="subir">
+                    <strong>Elegir fotos</strong>
+                    <span>Hasta {{ max_fotos }} en total. Las mejores, sin filtros ni textos encima.</span>
+                    <input type="file" name="fotos" accept="image/jpeg,image/png,image/webp" multiple>
+                </label>
+                <div class="vista-fotos" aria-live="polite"></div>
+            </div>
+            {% endif %}
+        </section>
+        {% endfor %}
+
+        <p class="privacidad">Usamos estos datos solo para armar tu invitación. <a href="{% url 'aviso_privacidad' %}" target="_blank" rel="noopener">Aviso de privacidad</a></p>
+
+        <div class="enviar">
+            <button type="submit" class="boton boton-vibra">{% if pedido.invitacion %}Guardar cambios{% else %}Enviar mis datos{% endif %}</button>
+        </div>
+    </form>
+{% endif %}
+
+    {% if not cerrado %}
+    <p class="privacidad">¿Dudas? <a href="{{ whatsapp }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></p>
+    {% endif %}
+</main>
+
+<script>
+(function () {
+    var form = document.getElementById('form-pedido');
+    if (!form) return;
+
+    // --- Filas repetibles: agregar y quitar renglones ---
+    form.querySelectorAll('.repetible').forEach(function (grupo) {
+        var filas = grupo.querySelector('.filas');
+        var molde = grupo.querySelector('template');
+        var agregar = grupo.querySelector('.agregar');
+        var maximo = parseInt(grupo.dataset.maximo, 10);
+        function revisar() {
+            var total = filas.children.length;
+            agregar.hidden = total >= maximo;
+            filas.querySelectorAll('.quitar').forEach(function (b) { b.hidden = total <= 1; });
+        }
+        agregar.addEventListener('click', function () {
+            filas.appendChild(molde.content.cloneNode(true));
+            filas.lastElementChild.querySelector('input').focus();
+            revisar();
+        });
+        filas.addEventListener('click', function (e) {
+            var boton = e.target.closest('.quitar');
+            if (!boton) return;
+            boton.closest('.fila').remove();
+            revisar();
+        });
+        revisar();
+    });
+
+    // --- El color solo aparece si quieren sugerir uno ---
+    var usarColor = form.querySelector('[name="usar_color"]');
+    var campoColor = document.getElementById('campo-color');
+    if (usarColor && campoColor) {
+        var mostrar = function () { campoColor.hidden = !usarColor.checked; };
+        usarColor.addEventListener('change', mostrar);
+        mostrar();
+    }
+
+    // --- Vista de las fotos elegidas (antes de subirlas) ---
+    var entrada = form.querySelector('input[name="fotos"]');
+    var vista = form.querySelector('.vista-fotos');
+    if (entrada && vista) {
+        entrada.addEventListener('change', function () {
+            vista.textContent = '';
+            Array.prototype.slice.call(entrada.files, 0, 24).forEach(function (archivo) {
+                var img = document.createElement('img');
+                img.alt = '';
+                img.src = URL.createObjectURL(archivo);
+                vista.appendChild(img);
+            });
+        });
+    }
+
+    // --- Enviar: evitar doble toque (las fotos pueden tardar en subir) ---
+    form.addEventListener('submit', function () {
+        var boton = form.querySelector('button[type="submit"]');
+        boton.disabled = true;
+        boton.textContent = 'Enviando…';
+    });
+
+    // Con errores, llevar la vista al primero
+    var primerError = document.querySelector('.con-error, #errores');
+    if (primerError) primerError.scrollIntoView({ block: 'center' });
+})();
+</script>
+</body>
+</html>

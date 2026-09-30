@@ -5,9 +5,10 @@ from urllib.parse import quote
 
 from django.conf import settings
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ValidationError
 from django.db.models import Count
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseNotAllowed
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
@@ -16,7 +17,8 @@ from django.views.decorators.http import require_POST
 
 from .catalogo import DISENOS, TIPOS, captura
 from .limites import limite_superado
-from .models import Invitacion, Confirmacion, Voto
+from .models import Invitacion, Confirmacion, Pedido, Voto
+from .pedidos import MAX_FOTOS, FormularioPedido, datos_iniciales, guardar_pedido, leer_filas, preparar_foto
 
 # Duración que se le pone al evento en el calendario del invitado. La
 # invitación solo guarda la hora de inicio; 4 h cubre bien un baby shower
@@ -87,7 +89,11 @@ def detalle_invitacion(request, slug):
         slug=slug,
         activa=True,
     )
+    return _pintar_invitacion(request, invitacion)
 
+
+def _pintar_invitacion(request, invitacion, **extra):
+    """La invitación con su plantilla. La usan la vista pública y la vista previa del pedido."""
     contexto = {
         "invitacion": invitacion,
         "plantilla": invitacion.plantilla,
@@ -100,6 +106,7 @@ def detalle_invitacion(request, slug):
     votacion = _votacion_habilitada(invitacion)
     contexto["mostrar_votacion"] = votacion is not None
     contexto["votacion"] = votacion or {}
+    contexto.update(extra)
     # el nombre de la plantilla HTML sale del slug_tema, así cada diseño
     # es literalmente un archivo distinto y no si/else gigantes en un solo template
     return render(request, f"invitaciones/temas/{invitacion.plantilla.slug_tema}.html", contexto)
@@ -470,3 +477,85 @@ def _url_absoluta(request, ruta):
     if not settings.DEBUG and url.startswith("http://"):
         url = "https://" + url.removeprefix("http://")
     return url
+
+
+def _diseno_del_catalogo(plantilla):
+    """Nombre comercial y captura del diseño (si está en el catálogo)."""
+    for diseno in DISENOS:
+        if diseno["slug_tema"] == plantilla.slug_tema:
+            return {**diseno, "captura": captura(diseno)}
+    return {"nombre": plantilla.nombre, "captura": ""}
+
+
+def pedido(request, token):
+    """
+    Formulario privado del cliente (/pedido/<token>/). Al enviarlo se crea
+    o se actualiza su invitación como borrador; se puede volver a abrir
+    para corregir hasta que la invitación se publica.
+    """
+    pedido = get_object_or_404(Pedido.objects.select_related("plantilla", "invitacion"), token=token)
+    contexto = {
+        "marca": settings.MARCA_NOMBRE,
+        "pedido": pedido,
+        "diseno": _diseno_del_catalogo(pedido.plantilla),
+        "whatsapp": enlace_whatsapp(
+            f"¡Hola! Tengo una duda con los datos de mi invitación «{_diseno_del_catalogo(pedido.plantilla)['nombre']}»."
+        ),
+    }
+    if not pedido.abierto:
+        return _respuesta_privada(render(request, "invitaciones/pedido.html", {**contexto, "cerrado": True}))
+    if request.GET.get("listo") and pedido.invitacion:
+        return _respuesta_privada(render(request, "invitaciones/pedido.html", {**contexto, "listo": True}))
+
+    galeria = list(pedido.invitacion.galeria.all()) if pedido.invitacion else []
+    errores = []
+    if request.method == "POST":
+        formulario = FormularioPedido(request.POST, pedido=pedido)
+        filas, errores = leer_filas(request.POST, formulario.repetibles())
+        fotos, borrar = [], []
+        if formulario.con_galeria:
+            ids = {str(foto.pk) for foto in galeria}
+            borrar = [pk for pk in request.POST.getlist("borrar_foto") if pk in ids]
+            archivos = request.FILES.getlist("fotos")
+            if len(galeria) - len(borrar) + len(archivos) > MAX_FOTOS:
+                errores.append(f"Máximo {MAX_FOTOS} fotos en total.")
+            else:
+                for archivo in archivos:
+                    try:
+                        fotos.append(preparar_foto(archivo))
+                    except ValidationError as error:
+                        errores.extend(error.messages)
+        if formulario.is_valid() and not errores:
+            guardar_pedido(pedido, formulario.cleaned_data, filas, fotos, borrar)
+            return redirect(f"{reverse('pedido', args=[token])}?listo=1")
+        if request.FILES:
+            errores.append("Por seguridad, vuelve a elegir tus fotos antes de enviar.")
+    else:
+        iniciales, filas = datos_iniciales(pedido)
+        formulario = FormularioPedido(initial=iniciales, pedido=pedido)
+
+    return _respuesta_privada(render(request, "invitaciones/pedido.html", {
+        **contexto,
+        "formulario": formulario,
+        "secciones": formulario.secciones(filas),
+        "errores": errores,
+        "galeria": galeria,
+        "max_fotos": MAX_FOTOS,
+    }))
+
+
+def pedido_vista_previa(request, token):
+    """La invitación del pedido tal como va a quedar, aunque todavía no esté publicada."""
+    pedido = get_object_or_404(Pedido.objects.select_related("invitacion"), token=token)
+    if pedido.invitacion is None:
+        return redirect("pedido", token=token)
+    invitacion = (Invitacion.objects.select_related("plantilla").prefetch_related("galeria")
+                  .get(pk=pedido.invitacion.pk))
+    return _respuesta_privada(_pintar_invitacion(request, invitacion, vista_previa=pedido))
+
+
+def _respuesta_privada(respuesta):
+    # links con token: que ningún buscador los guarde
+    respuesta["X-Robots-Tag"] = "noindex, nofollow"
+    respuesta["Cache-Control"] = "private, no-store"
+    return respuesta

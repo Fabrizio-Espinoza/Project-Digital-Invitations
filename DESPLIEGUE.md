@@ -174,6 +174,16 @@ Ahora el link que mandas al cliente es
 `https://www.tudominio.mx/invitaciones/<slug>/`, y la PWA ya se puede instalar
 en cualquier celular.
 
+## 6.5 Cómo atender un pedido
+
+1. Admin → **Pedidos** → *Agregar*: nombre del cliente, diseño y paquete → Guardar.
+2. **Copiar mensaje para WhatsApp** y mandárselo al cliente (el botón de copiar
+   necesita HTTPS; en la compu por IP, copia el link a mano).
+3. Cuando lo llene, el pedido dice "📝 Datos recibidos: revisar". Ábrelo →
+   *Vista previa*. Sube su canción y ajusta lo que haga falta en *Editar invitación*.
+4. En la lista de pedidos, márcalo → acción **Publicar la invitación** → manda
+   al cliente el link para sus invitados (aparece en el pedido).
+
 ## 7. Respaldos y limpieza diarios (tarea programada)
 
 Pestaña **Tasks** → tarea **diaria** (la hora está en UTC; 09:00 UTC = 3:00 a.m. en CDMX):
