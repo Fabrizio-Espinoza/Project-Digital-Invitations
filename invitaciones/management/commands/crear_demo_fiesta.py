@@ -23,7 +23,7 @@ class Command(BaseCommand):
     ajusta tipo y color.
     """
 
-    help = "Crea la plantilla de fiesta y una invitación demo en /invitaciones/demo-fiesta/"
+    help = "Crea la plantilla de fiesta y una invitación demo en /invitaciones/demo-fiesta-sofia/"
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -53,8 +53,14 @@ class Command(BaseCommand):
         # localtime => las 9:00 PM son hora de México, no de UTC
         fecha = (timezone.localtime() + timedelta(days=30)).replace(hour=21, minute=0, second=0, microsecond=0)
 
+        # Antes este demo vivía en /invitaciones/demo-fiesta/. Si tu base todavía lo
+        # tiene con ese nombre, se renombra (conserva sus fotos y confirmaciones)
+        # en vez de crear un segundo demo.
+        if not Invitacion.objects.filter(slug="demo-fiesta-sofia").exists():
+            Invitacion.objects.filter(slug="demo-fiesta").update(slug="demo-fiesta-sofia")
+
         invitacion, creada = Invitacion.objects.update_or_create(
-            slug="demo-fiesta",
+            slug="demo-fiesta-sofia",
             defaults={
                 "plantilla": plantilla,
                 "nivel": "premium",

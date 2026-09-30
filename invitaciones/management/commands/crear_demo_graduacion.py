@@ -17,7 +17,7 @@ class Command(BaseCommand):
     actualiza (update_or_create busca por slug y sobreescribe los datos).
     """
 
-    help = "Crea la plantilla de graduación y una invitación demo en /invitaciones/demo-graduacion/"
+    help = "Crea la plantilla de graduación y una invitación demo en /invitaciones/demo-graduacion-valeria-montes/"
 
     def handle(self, *args, **options):
         plantilla, _ = Plantilla.objects.update_or_create(
@@ -32,8 +32,14 @@ class Command(BaseCommand):
             },
         )
 
+        # Antes este demo vivía en /invitaciones/demo-graduacion/. Si tu base todavía lo
+        # tiene con ese nombre, se renombra (conserva sus fotos y confirmaciones)
+        # en vez de crear un segundo demo.
+        if not Invitacion.objects.filter(slug="demo-graduacion-valeria-montes").exists():
+            Invitacion.objects.filter(slug="demo-graduacion").update(slug="demo-graduacion-valeria-montes")
+
         invitacion, creada = Invitacion.objects.update_or_create(
-            slug="demo-graduacion",
+            slug="demo-graduacion-valeria-montes",
             defaults={
                 "plantilla": plantilla,
                 "nivel": "premium",

@@ -158,6 +158,7 @@ Terminado:
   – RSVP validado en el servidor (nombre 1–150, asistencia de las opciones, acompañantes 0–MAX_ACOMPANANTES, mensaje ≤1000; errores 400 con mensaje que el motor muestra en #rsvp-status) y el mismo nombre + respuesta en 10 min no cuenta doble. Rate limit (invitaciones/limites.py) en RSVP y votos: LIMITES_RSVP / LIMITES_VOTO = 10 por conexión cada 10 min y 300 por invitación por hora → 429 + Retry-After; la IP sale de CABECERA_IP_CLIENTE (PythonAnywhere: HTTP_X_REAL_IP, porque REMOTE_ADDR es el balanceador y sería igual para todos) y solo se guarda como hash con la SECRET_KEY en la caché. El motor apaga el botón mientras envía (doble toque).
   – Aviso de privacidad integral en /privacidad/ (datos del responsable desde .env; si faltan salen entre corchetes y check --deploy da invitaciones.W001) + aviso corto bajo cada RSVP en el motor (tamaño en em: en letras pixel 12px no se leían). borrar_datos_vencidos borra RSVP y votos DIAS_RETENCION_DATOS (90) días después del evento, lo que promete el aviso.
   – respaldar_bd [--fotos] [--conservar 14]: copia consistente con la API de backup de SQLite, PRAGMA integrity_check, gzip, rotación; restauración en DESPLIEGUE.md. 404/500 propias sin detalles técnicos. requirements.txt limpio (antes era un pip freeze de toda la compu).
+• Todos los demos siguen el patrón demo-<tipo>-<festejado>: los tres primeros se renombraron (demo-fiesta → demo-fiesta-sofia, demo-graduacion → demo-graduacion-valeria-montes, baby-shower-demo → demo-baby-mariana-diego); su comando renombra el registro viejo si existe, así no se pierden fotos ni confirmaciones. demo-xv-valentina ya cumplía el patrón.
 Pendiente dentro de Fase 1:
 • Estilizar en la plantilla de boda las secciones nuevas del motor (regalos con lista, lluvia de sobres) si algún cliente de boda las pide; la votación no aparece ahí porque soporta_votacion=False.
 • Revelar el resultado de la votación desde un botón del admin en vez de editar el JSON (hoy: "resultado": "nina" dentro de "votacion").
@@ -193,4 +194,4 @@ Claves de contenido_extra (todas opcionales):
 • lluvia_sobres: "texto"
 • lluvia_panales: [{"desde": "A", "hasta": "F", "talla": "Etapa 1"}, ...]
 • paleta: "rosa" | "azul" (solo Diez Lunas)
-Demo: python manage.py crear_demo_baby_shower → /invitaciones/baby-shower-demo/ (fechas relativas a hoy, se puede correr de nuevo).
+Demo: python manage.py crear_demo_baby_shower → /invitaciones/demo-baby-mariana-diego/ (fechas relativas a hoy, se puede correr de nuevo).

@@ -22,7 +22,8 @@ class Command(BaseCommand):
 
     help = "Crea/actualiza la plantilla 'Diez Lunas' y la invitación demo de baby shower."
 
-    SLUG_DEMO = "baby-shower-demo"
+    SLUG_DEMO = "demo-baby-mariana-diego"
+    SLUG_VIEJO = "baby-shower-demo"   # nombre anterior del demo
 
     def handle(self, *args, **options):
         plantilla, _ = Plantilla.objects.update_or_create(
@@ -43,6 +44,12 @@ class Command(BaseCommand):
             hour=17, minute=0, second=0, microsecond=0
         )
         fecha_parto = fecha_evento.date() + timedelta(days=56)
+
+        # Antes este demo vivía en /invitaciones/baby-shower-demo/. Si tu base
+        # todavía lo tiene con ese nombre, se renombra (conserva sus fotos,
+        # confirmaciones y votos) en vez de crear un segundo demo.
+        if not Invitacion.objects.filter(slug=self.SLUG_DEMO).exists():
+            Invitacion.objects.filter(slug=self.SLUG_VIEJO).update(slug=self.SLUG_DEMO)
 
         invitacion, creada = Invitacion.objects.update_or_create(
             slug=self.SLUG_DEMO,
