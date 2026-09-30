@@ -1,6 +1,7 @@
 import json
 from datetime import timedelta, timezone as dt_timezone
 
+from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.db.models import Count
 from django.http import Http404, HttpResponse, JsonResponse, HttpResponseNotAllowed
@@ -11,6 +12,7 @@ from django.utils import timezone
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_POST
 
+from .limites import limite_superado
 from .models import Invitacion, Confirmacion, Voto
 
 # Duración que se le pone al evento en el calendario del invitado. La
@@ -100,22 +102,91 @@ def detalle_invitacion(request, slug):
     return render(request, f"invitaciones/temas/{invitacion.plantilla.slug_tema}.html", contexto)
 
 
+MAX_MENSAJE = 1000
+# Si el mismo nombre manda la misma respuesta dentro de esta ventana (doble
+# toque al botón, conexión lenta), no se cuenta dos veces.
+VENTANA_DUPLICADO = timedelta(minutes=10)
+
+
+def _error(mensaje, status=400, **extra):
+    return JsonResponse({"ok": False, "error": mensaje, **extra}, status=status)
+
+
+def _demasiados_envios():
+    respuesta = _error(
+        "Recibimos demasiados envíos desde tu conexión. Espera unos minutos e inténtalo de nuevo.",
+        status=429,
+    )
+    respuesta["Retry-After"] = "600"
+    return respuesta
+
+
+def _validar_rsvp(data):
+    """
+    Revisa lo que mandó el navegador. Regresa (datos_limpios, None) o
+    (None, "mensaje de error"). El formulario ya valida en el navegador,
+    pero cualquiera puede mandar un fetch directo con lo que quiera: el
+    servidor nunca debe confiar en lo que llega.
+    """
+    if not isinstance(data, dict):
+        return None, "Datos no válidos."
+    nombre = data.get("nombre_invitado")
+    nombre = nombre.strip() if isinstance(nombre, str) else ""
+    if not nombre:
+        return None, "Escribe tu nombre."
+    if len(nombre) > Confirmacion._meta.get_field("nombre_invitado").max_length:
+        return None, "El nombre es demasiado largo."
+
+    asistencia = data.get("asistencia")
+    if asistencia not in dict(Confirmacion.ASISTENCIA):
+        return None, "Elige si vas a asistir."
+
+    try:
+        acompanantes = int(str(data.get("num_acompanantes", 0)).strip() or 0)
+    except ValueError:
+        return None, "El número de acompañantes no es válido."
+    if not 0 <= acompanantes <= settings.MAX_ACOMPANANTES:
+        return None, f"El número de acompañantes debe estar entre 0 y {settings.MAX_ACOMPANANTES}."
+
+    mensaje = data.get("mensaje") or ""
+    mensaje = mensaje.strip() if isinstance(mensaje, str) else ""
+    if len(mensaje) > MAX_MENSAJE:
+        return None, f"El mensaje es demasiado largo (máximo {MAX_MENSAJE} caracteres)."
+
+    return {
+        "nombre_invitado": nombre,
+        "asistencia": asistencia,
+        "num_acompanantes": acompanantes,
+        "mensaje": mensaje,
+    }, None
+
+
 @require_POST
 def enviar_confirmacion(request, slug):
     """
     Recibe el formulario de RSVP por fetch/AJAX (no recarga la página).
     Devuelve JSON para que el front actualice el contador sin refrescar.
+    Antes de guardar: límite anti-spam, validación y descarte de duplicados.
     """
     invitacion = get_object_or_404(Invitacion, slug=slug, activa=True)
-    data = json.loads(request.body)
+    if limite_superado(request, "rsvp", invitacion, settings.LIMITES_RSVP):
+        return _demasiados_envios()
 
-    confirmacion = Confirmacion.objects.create(
-        invitacion=invitacion,
-        nombre_invitado=data.get("nombre_invitado", "").strip(),
-        asistencia=data.get("asistencia"),
-        num_acompanantes=int(data.get("num_acompanantes", 0)),
-        mensaje=data.get("mensaje", "").strip(),
-    )
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        data = None
+    datos, error = _validar_rsvp(data)
+    if error:
+        return _error(error)
+
+    ya_estaba = invitacion.confirmaciones.filter(
+        nombre_invitado__iexact=datos["nombre_invitado"],
+        asistencia=datos["asistencia"],
+        creada_en__gte=timezone.now() - VENTANA_DUPLICADO,
+    ).exists()
+    if not ya_estaba:
+        Confirmacion.objects.create(invitacion=invitacion, **datos)
 
     return JsonResponse({
         "ok": True,
@@ -150,6 +221,8 @@ def enviar_voto(request, slug):
     votacion = _votacion_habilitada(invitacion)
     if votacion is None:
         raise Http404("Esta invitación no tiene votación.")
+    if limite_superado(request, "voto", invitacion, settings.LIMITES_VOTO):
+        return _demasiados_envios()
 
     resumen = _resumen_votacion(invitacion, votacion)
     if resumen["resultado"]:
@@ -315,3 +388,19 @@ def service_worker(request):
     # el navegador debe revisar siempre si hay versión nueva del SW
     respuesta["Cache-Control"] = "no-cache"
     return respuesta
+
+
+def aviso_privacidad(request):
+    """
+    Aviso de privacidad integral (Ley Federal de Protección de Datos
+    Personales en Posesión de los Particulares). Los datos del responsable
+    salen de settings (.env en producción) para no tenerlos en el código.
+    """
+    return render(request, "invitaciones/privacidad.html", {
+        "marca": settings.MARCA_NOMBRE,
+        "responsable": settings.AVISO_RESPONSABLE,
+        "domicilio": settings.AVISO_DOMICILIO,
+        "correo": settings.AVISO_CORREO,
+        "actualizado": settings.AVISO_ACTUALIZADO,
+        "dias_retencion": settings.DIAS_RETENCION_DATOS,
+    })

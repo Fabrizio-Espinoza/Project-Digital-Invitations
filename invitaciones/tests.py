@@ -617,3 +617,235 @@ class MusicaYPruebaEnCelularTests(TestCase):
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
         self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count() + Invitacion.objects.filter(slug="baby-shower-demo").count(), 14)
+
+
+# ---------------------------------------------------------------------------
+# Producción: validación y límite del RSVP, privacidad, retención, respaldos
+# ---------------------------------------------------------------------------
+import gzip
+import os
+import sqlite3
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+from django.conf import settings as django_settings
+from django.core.cache import cache
+
+from .checks import revisar_aviso_privacidad, revisar_ruta_admin
+from .management.commands.respaldar_bd import Command as ComandoRespaldo
+from .models import Confirmacion
+
+
+class BaseRsvpTests(TestCase):
+    def setUp(self):
+        cache.clear()
+        call_command("crear_demo_hotel", stdout=StringIO())
+        self.invitacion = Invitacion.objects.get(slug="demo-hotel-amor")
+        self.url = reverse("invitaciones:rsvp", args=[self.invitacion.slug])
+
+    def enviar(self, datos=None, cuerpo=None, **extra):
+        cuerpo = cuerpo if cuerpo is not None else json.dumps(datos)
+        return self.client.post(self.url, data=cuerpo, content_type="application/json", **extra)
+
+    def valido(self, **cambios):
+        datos = {"nombre_invitado": "Ana López", "asistencia": "si", "num_acompanantes": "1", "mensaje": ""}
+        datos.update(cambios)
+        return datos
+
+
+class ValidacionRsvpTests(BaseRsvpTests):
+    def test_respuesta_valida_se_guarda(self):
+        respuesta = self.enviar(self.valido())
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta.json()["total_confirmados"], 1)
+        self.assertEqual(Confirmacion.objects.get().num_acompanantes, 1)
+
+    def test_datos_malos_dan_400_y_no_500(self):
+        casos = [
+            ({"asistencia": "si"}, "Escribe tu nombre."),
+            (self.valido(nombre_invitado="   "), "Escribe tu nombre."),
+            (self.valido(nombre_invitado="x" * 151), "El nombre es demasiado largo."),
+            (self.valido(asistencia="quizas"), "Elige si vas a asistir."),
+            (self.valido(num_acompanantes="abc"), "El número de acompañantes no es válido."),
+            (self.valido(num_acompanantes=500), "El número de acompañantes debe estar entre 0 y 20."),
+            (self.valido(num_acompanantes=-1), "El número de acompañantes debe estar entre 0 y 20."),
+            (self.valido(mensaje="x" * 1001), "El mensaje es demasiado largo (máximo 1000 caracteres)."),
+            (["no", "es", "objeto"], "Datos no válidos."),
+        ]
+        for datos, mensaje in casos:
+            with self.subTest(datos=str(datos)[:60]):
+                respuesta = self.enviar(datos)
+                self.assertEqual(respuesta.status_code, 400)
+                self.assertEqual(respuesta.json()["error"], mensaje)
+        self.assertEqual(self.enviar(cuerpo="{esto no es json").status_code, 400)
+        self.assertFalse(Confirmacion.objects.exists())
+
+    def test_doble_toque_no_cuenta_doble(self):
+        self.enviar(self.valido())
+        respuesta = self.enviar(self.valido(nombre_invitado="ana lópez"))
+        self.assertEqual(respuesta.json()["total_confirmados"], 1)
+        self.assertEqual(Confirmacion.objects.count(), 1)
+        # otra persona, u otra respuesta, sí cuenta
+        self.enviar(self.valido(nombre_invitado="Luis"))
+        self.enviar(self.valido(asistencia="no"))
+        self.assertEqual(Confirmacion.objects.count(), 3)
+
+
+class LimiteRsvpTests(BaseRsvpTests):
+    @override_settings(LIMITES_RSVP={"por_ip": (2, 600), "por_invitacion": (100, 3600)})
+    def test_por_ip(self):
+        for i in range(2):
+            self.assertEqual(self.enviar(self.valido(nombre_invitado=f"Invitado {i}")).status_code, 200)
+        bloqueada = self.enviar(self.valido(nombre_invitado="Spam"))
+        self.assertEqual(bloqueada.status_code, 429)
+        self.assertIn("Espera unos minutos", bloqueada.json()["error"])
+        self.assertEqual(bloqueada["Retry-After"], "600")
+        # otra conexión sigue pudiendo confirmar
+        otra = self.enviar(self.valido(nombre_invitado="Prima"), REMOTE_ADDR="10.0.0.99")
+        self.assertEqual(otra.status_code, 200)
+        self.assertEqual(Confirmacion.objects.count(), 3)
+
+    @override_settings(LIMITES_RSVP={"por_ip": (100, 600), "por_invitacion": (3, 3600)})
+    def test_tope_por_invitacion(self):
+        for i in range(3):
+            self.enviar(self.valido(nombre_invitado=f"Invitado {i}"), REMOTE_ADDR=f"10.0.0.{i}")
+        self.assertEqual(self.enviar(self.valido(nombre_invitado="Uno más"), REMOTE_ADDR="10.0.0.50").status_code, 429)
+
+    @override_settings(LIMITES_RSVP={"por_ip": (1, 600), "por_invitacion": (100, 3600)},
+                       CABECERA_IP_CLIENTE="HTTP_X_REAL_IP")
+    def test_detras_del_balanceador_usa_la_ip_real(self):
+        # todos llegan desde la misma IP del balanceador, pero con distinta X-Real-IP
+        for i in range(3):
+            respuesta = self.enviar(self.valido(nombre_invitado=f"Invitado {i}"),
+                                    REMOTE_ADDR="10.9.9.9", HTTP_X_REAL_IP=f"187.1.1.{i}")
+            self.assertEqual(respuesta.status_code, 200)
+        repetido = self.enviar(self.valido(nombre_invitado="Otra vez"),
+                               REMOTE_ADDR="10.9.9.9", HTTP_X_REAL_IP="187.1.1.0")
+        self.assertEqual(repetido.status_code, 429)
+
+    @override_settings(LIMITES_VOTO={"por_ip": (2, 600), "por_invitacion": (100, 3600)})
+    def test_votos_tambien_tienen_limite(self):
+        call_command("crear_demo_baby_pancito", stdout=StringIO())
+        url = reverse("invitaciones:votar", args=["demo-baby-pancito"])
+        codigos = [
+            self.client.post(url, data=json.dumps({"opcion": "nina"}), content_type="application/json").status_code
+            for _ in range(3)
+        ]
+        self.assertEqual(codigos, [200, 200, 429])
+        self.assertEqual(Voto.objects.count(), 2)
+
+
+class PrivacidadTests(TestCase):
+    def test_pagina_con_datos_faltantes_los_marca(self):
+        respuesta = self.client.get(reverse("aviso_privacidad"))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "[Nombre o razón social del responsable]")
+        self.assertContains(respuesta, f"{django_settings.DIAS_RETENCION_DATOS} días después")
+
+    @override_settings(AVISO_RESPONSABLE="Fabrizio Espinoza", AVISO_DOMICILIO="Calle 1, CDMX",
+                       AVISO_CORREO="privacidad@ejemplo.mx", MARCA_NOMBRE="Marca")
+    def test_pagina_con_datos(self):
+        respuesta = self.client.get(reverse("aviso_privacidad"))
+        self.assertContains(respuesta, "Fabrizio Espinoza")
+        self.assertContains(respuesta, "mailto:privacidad@ejemplo.mx")
+        self.assertNotContains(respuesta, 'class="falta"')
+        self.assertEqual(revisar_aviso_privacidad(None), [])
+
+    def test_cada_invitacion_enlaza_el_aviso(self):
+        call_command("crear_demo_xv_gira", stdout=StringIO())
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=["demo-xv-ximena"]))
+        self.assertContains(respuesta, 'class="aviso-privacidad"')
+        self.assertContains(respuesta, 'href="/privacidad/"')
+
+    def test_check_deploy_avisa_lo_pendiente(self):
+        self.assertEqual(revisar_aviso_privacidad(None)[0].id, "invitaciones.W001")
+        self.assertEqual(revisar_ruta_admin(None)[0].id, "invitaciones.W002")
+        with override_settings(ADMIN_URL="panel-7k2q/"):
+            self.assertEqual(revisar_ruta_admin(None), [])
+
+
+class RetencionDatosTests(TestCase):
+    def test_borra_solo_eventos_viejos(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        call_command("crear_demo_baby_pancito", stdout=StringIO())
+        vieja = Invitacion.objects.get(slug="demo-hotel-amor")
+        vieja.fecha_evento = timezone.now() - timedelta(days=120)
+        vieja.save()
+        reciente = Invitacion.objects.get(slug="demo-baby-pancito")
+        for inv in (vieja, reciente):
+            Confirmacion.objects.create(invitacion=inv, nombre_invitado="Ana", asistencia="si")
+            Voto.objects.create(invitacion=inv, opcion="nina")
+
+        call_command("borrar_datos_vencidos", "--simular", stdout=StringIO())
+        self.assertEqual(Confirmacion.objects.count(), 2)
+
+        call_command("borrar_datos_vencidos", stdout=StringIO())
+        self.assertEqual(list(Confirmacion.objects.values_list("invitacion__slug", flat=True)), ["demo-baby-pancito"])
+        self.assertEqual(list(Voto.objects.values_list("invitacion__slug", flat=True)), ["demo-baby-pancito"])
+        self.assertTrue(Invitacion.objects.filter(slug="demo-hotel-amor").exists())   # la invitación se queda
+
+
+class RespaldoTests(TestCase):
+    def test_copia_consistente_y_rotacion(self):
+        with tempfile.TemporaryDirectory() as carpeta:
+            carpeta = Path(carpeta)
+            original = carpeta / "original.sqlite3"
+            conexion = sqlite3.connect(original)
+            conexion.execute("create table rsvp (nombre text)")
+            conexion.execute("insert into rsvp values ('Ana'), ('Luis')")
+            conexion.commit()
+            conexion.close()
+
+            comando = ComandoRespaldo(stdout=StringIO())
+            for sello in ("2026-01-01", "2026-01-02", "2026-01-03"):
+                comando._respaldar_sqlite(original, carpeta / f"bd-{sello}.sqlite3.gz")
+            comando._rotar(carpeta, "bd-", 2)
+            respaldos = sorted(p.name for p in carpeta.glob("bd-*"))
+            self.assertEqual(respaldos, ["bd-2026-01-02.sqlite3.gz", "bd-2026-01-03.sqlite3.gz"])
+
+            restaurada = carpeta / "restaurada.sqlite3"
+            restaurada.write_bytes(gzip.decompress((carpeta / respaldos[-1]).read_bytes()))
+            conexion = sqlite3.connect(restaurada)
+            self.assertEqual(conexion.execute("select count(*) from rsvp").fetchone()[0], 2)
+            conexion.close()
+
+
+class PaginasDeErrorTests(TestCase):
+    @override_settings(DEBUG=False, ALLOWED_HOSTS=["testserver"])
+    def test_404_amable_sin_detalles_tecnicos(self):
+        respuesta = self.client.get("/invitaciones/no-existe/")
+        self.assertEqual(respuesta.status_code, 404)
+        self.assertContains(respuesta, "Esta invitación no está disponible", status_code=404)
+        self.assertNotContains(respuesta, "Traceback", status_code=404)
+
+
+class SettingsProduccionTests(TestCase):
+    """Se importan en un proceso aparte para no mezclar con los settings de prueba."""
+
+    def correr(self, codigo, **entorno):
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("DJANGO_", "AVISO_", "MARCA_"))}
+        env["DJANGO_ARCHIVO_ENV"] = "/no/existe/.env"   # que no lea un .env real de la compu
+        env.update(entorno)
+        return subprocess.run([sys.executable, "-c", codigo], cwd=django_settings.BASE_DIR,
+                              env=env, capture_output=True, text=True)
+
+    def test_produccion_segura(self):
+        resultado = self.correr(
+            "from invitaciones_core import settings_produccion as s;"
+            "print(s.DEBUG, s.SECRET_KEY, s.ALLOWED_HOSTS, s.CSRF_TRUSTED_ORIGINS, s.ADMIN_URL,"
+            " s.SESSION_COOKIE_SECURE, s.CSRF_COOKIE_SECURE, 'whitenoise.middleware.WhiteNoiseMiddleware' in s.MIDDLEWARE)",
+            DJANGO_SECRET_KEY="llave-de-prueba", DJANGO_ALLOWED_HOSTS="www.ejemplo.mx, .ejemplo.mx",
+            DJANGO_ADMIN_URL="/panel-x/",
+        )
+        self.assertEqual(resultado.returncode, 0, resultado.stderr)
+        self.assertEqual(resultado.stdout.strip(),
+                         "False llave-de-prueba ['www.ejemplo.mx', '.ejemplo.mx'] "
+                         "['https://www.ejemplo.mx', 'https://*.ejemplo.mx'] panel-x/ True True True")
+
+    def test_sin_secret_key_no_arranca(self):
+        resultado = self.correr("from invitaciones_core import settings_produccion",
+                                DJANGO_ALLOWED_HOSTS="www.ejemplo.mx")
+        self.assertNotEqual(resultado.returncode, 0)
+        self.assertIn("Falta la variable DJANGO_SECRET_KEY", resultado.stderr)

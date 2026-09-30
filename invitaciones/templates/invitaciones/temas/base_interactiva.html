@@ -40,6 +40,14 @@
     <meta name="apple-mobile-web-app-title" content="{{ invitacion.anfitriones }}">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
+    <!-- Estilos mínimos de lo que agrega el motor (no de ningún tema). Cada
+         tema puede sobreescribirlos; aquí solo se asegura que se vea discreto. -->
+    <style>
+        /* em (no rem): relativo a la letra de cada tema; en una letra pixel 12px no se leen */
+        .rsvp .aviso-privacidad { margin-top: 1.2rem; font-size: 0.78em; line-height: 1.45; opacity: 0.8; text-wrap: pretty; }
+        .rsvp .aviso-privacidad a { color: inherit; text-decoration: underline; }
+        #form-rsvp button:disabled { opacity: 0.6; cursor: progress; }
+    </style>
     {% block estilos %}
     <!-- cada tema sobreescribe este bloque con su propio <style> o <link> -->
     {% endblock %}
@@ -389,7 +397,7 @@
         {% endif %}
 
         <form id="form-rsvp">
-            <input type="text" name="nombre_invitado" placeholder="Tu nombre" required>
+            <input type="text" name="nombre_invitado" placeholder="Tu nombre" required maxlength="150" autocomplete="name">
 
             <div class="opciones-asistencia">
                 <input type="radio" id="asistencia-si" name="asistencia" value="si" checked>
@@ -404,13 +412,15 @@
 
             <div class="campo-con-label">
                 <label for="num_acompanantes">Acompañantes (sin contarte)</label>
-                <input type="number" id="num_acompanantes" name="num_acompanantes" min="0" value="0">
+                <input type="number" id="num_acompanantes" name="num_acompanantes" min="0" max="20" value="0">
             </div>
 
-            <textarea name="mensaje" placeholder="{% if plantilla.tipo_evento == 'baby_shower' %}Un deseo o consejo para el bebé (opcional){% else %}Mensaje (opcional){% endif %}"></textarea>
+            <textarea name="mensaje" maxlength="1000" placeholder="{% if plantilla.tipo_evento == 'baby_shower' %}Un deseo o consejo para el bebé (opcional){% else %}Mensaje (opcional){% endif %}"></textarea>
             <button type="submit">Enviar</button>
         </form>
         <p id="rsvp-status"></p>
+        <!-- Aviso de privacidad corto (el completo vive en /privacidad/) -->
+        <p class="aviso-privacidad">Tu nombre y tu respuesta solo se usan para organizar este evento y únicamente los ve quien te invitó. <a href="{% url 'aviso_privacidad' %}" target="_blank" rel="noopener">Aviso de privacidad</a></p>
     </section>
     {% endif %}
 
@@ -814,6 +824,10 @@
             e.preventDefault();
             const form = new FormData(e.target);
             const payload = Object.fromEntries(form.entries());
+            // el botón se apaga mientras viaja el envío: un doble toque no manda dos
+            const botonEnviar = e.target.querySelector('button[type="submit"]');
+            if (botonEnviar) botonEnviar.disabled = true;
+            const estadoRsvp = document.getElementById('rsvp-status');
 
             fetch(`/invitaciones/${slug}/rsvp/`, {
                 method: 'POST',
@@ -823,12 +837,18 @@
                 },
                 body: JSON.stringify(payload),
             })
-            .then(r => {
-                if (!r.ok) throw new Error(`Status ${r.status}`);
-                return r.json();
-            })
+            // si el servidor rechaza el envío (datos incompletos, demasiados
+            // intentos), explica por qué en vez de un error genérico
+            .then(r => r.json().catch(() => ({})).then(data => {
+                if (!r.ok) {
+                    const error = new Error(`Status ${r.status}`);
+                    error.mensaje = data.error;
+                    throw error;
+                }
+                return data;
+            }))
             .then(data => {
-                document.getElementById('rsvp-status').textContent = '¡Gracias por confirmar!';
+                estadoRsvp.textContent = '¡Gracias por confirmar!';
                 document.getElementById('total-confirmados').textContent = data.total_confirmados;
                 e.target.reset();
                 // Aviso para las plantillas: cada tema puede reaccionar a una
@@ -840,7 +860,10 @@
             })
             .catch(err => {
                 console.error('Error al enviar RSVP:', err);
-                document.getElementById('rsvp-status').textContent = 'Hubo un error, intenta de nuevo.';
+                estadoRsvp.textContent = err.mensaje || 'Hubo un error, intenta de nuevo.';
+            })
+            .finally(() => {
+                if (botonEnviar) botonEnviar.disabled = false;
             });
         });
         {% endif %}

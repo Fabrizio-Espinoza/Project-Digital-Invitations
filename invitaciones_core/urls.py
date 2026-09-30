@@ -19,9 +19,13 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
+from invitaciones import views as vistas_invitaciones
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
-     path('invitaciones/', include('invitaciones.urls')),
+    # la ruta del admin sale de settings (en producción se cambia en el .env)
+    path(settings.ADMIN_URL, admin.site.urls),
+    path('invitaciones/', include('invitaciones.urls')),
+    path('privacidad/', vistas_invitaciones.aviso_privacidad, name='aviso_privacidad'),
 ]
 
 # En desarrollo, runserver sirve también las fotos subidas (media/).
