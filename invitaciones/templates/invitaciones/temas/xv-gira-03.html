@@ -1,0 +1,1548 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  LA GIRA — tercera plantilla de XV años.
+
+  Concepto: la quinceañera como estrella pop y su fiesta como la unica fecha
+  de su gira. Habla el idioma de las chavas de 15 hoy: conciertos, photocards
+  coleccionables y pulseras de la amistad que se intercambian en el show.
+
+    Portada ....... poster de la gira: marquesina con texto corriendo, nombre
+                    en letras cromadas, mariposas Y2K y "Una sola fecha".
+    Boleto ........ los datos como boleto de concierto (holograma, talon
+                    perforado con la cuenta regresiva y codigo de barras).
+    Setlist ....... el itinerario como setlist pegado con cinta en el
+                    escenario; padres y padrinos como "Creditos"; mesa de
+                    regalos como "Merch oficial"; la nota de niños como pulsera
+                    de acceso.
+    Photocards .... fotos como photocards firmadas, en carrusel.
+    Lista VIP ..... el RSVP como pase VIP con lanyard; al confirmar, el
+                    invitado recibe una pulsera de la amistad con su nombre en
+                    cuentas de letras.
+    Musica ........ un CD holografico que gira mientras suena.
+
+  Opuesta a Medianoche Dorada (noche, dorado, clasica) y a Carnet de Baile
+  (coquette, rosa ballet, perlas): de dia, pastel holografico y cromo.
+  Tipografia: Unbounded (display ancha y redonda, cartel de gira) + Figtree
+  (lectura) + Mrs Saint Delafield solo para la firma de las photocards.
+  Todas OFL. Todo el arte (mariposas, destellos, CD, pulsera) es CSS/SVG propio.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}La gira de mis XV{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="g-holo" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FFB8DF"/><stop offset=".35" stop-color="#C9B6FF"/><stop offset=".7" stop-color="#9DEFE3"/><stop offset="1" stop-color="#FFD9F0"/>
+        </linearGradient>
+        <symbol id="g-destello" viewBox="0 0 24 24"><path d="M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z"/></symbol>
+        <symbol id="g-mariposa" viewBox="0 0 64 52">
+            <path d="M31 24C24 6 6 0 3 10C0 20 14 26 31 26Z M31 28C18 29 8 36 12 45C16 52 28 44 31 31Z M33 24C40 6 58 0 61 10C64 20 50 26 33 26Z M33 28C46 29 56 36 52 45C48 52 36 44 33 31Z" fill="url(#g-holo)" stroke="#fff" stroke-width="1.2" stroke-linejoin="round"/>
+            <path d="M14 11C18 12 23 16 27 22 M50 11C46 12 41 16 37 22" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".8"/>
+            <rect x="30.4" y="17" width="3.2" height="22" rx="1.6" fill="#26143F"/>
+            <path d="M31 18C29 12 26 9 23 8 M33 18C35 12 38 9 41 8" fill="none" stroke="#26143F" stroke-width="1.2" stroke-linecap="round"/>
+        </symbol>
+    </defs>
+</svg>
+
+<!-- Django abrevia "sábado" como "Sab" (sin acento): por eso arriba se recorta "l" -->
+<!-- marquesina de concierto: el texto corre sin fin (8 copias; se recorre la mitad) -->
+<div class="marquesina" aria-hidden="true">
+    <div class="marquesina-pista">
+        {% for i in "12345678" %}<span>La gira de mis XV</span><svg><use href="#g-destello"/></svg><span>{{ invitacion.anfitriones }}</span><svg><use href="#g-destello"/></svg><span>{{ invitacion.fecha_evento|date:"d.m.y" }}</span><svg><use href="#g-destello"/></svg>{% endfor %}
+    </div>
+</div>
+
+<!-- el "logo" de la gira: un XV enorme en contorno detras del nombre -->
+<span class="xv-gigante" aria-hidden="true">XV</span>
+
+<!-- destellos y mariposas Y2K (decoracion, no estorban al tocar) -->
+<svg class="destello" style="--x: 9%; --y: 16%; --t: 1.4rem; --d: 0s" aria-hidden="true"><use href="#g-destello"/></svg>
+<svg class="destello" style="--x: 86%; --y: 22%; --t: 1rem; --d: 0.7s" aria-hidden="true"><use href="#g-destello"/></svg>
+<svg class="destello" style="--x: 78%; --y: 58%; --t: 1.6rem; --d: 1.3s" aria-hidden="true"><use href="#g-destello"/></svg>
+<svg class="destello" style="--x: 12%; --y: 70%; --t: 0.9rem; --d: 0.4s" aria-hidden="true"><use href="#g-destello"/></svg>
+<svg class="destello" style="--x: 55%; --y: 88%; --t: 1.1rem; --d: 1.8s" aria-hidden="true"><use href="#g-destello"/></svg>
+<svg class="mariposa m1" aria-hidden="true"><use href="#g-mariposa"/></svg>
+<svg class="mariposa m2" aria-hidden="true"><use href="#g-mariposa"/></svg>
+<svg class="mariposa m3" aria-hidden="true"><use href="#g-mariposa"/></svg>
+{% endblock %}
+
+{% block hero_extra %}
+<div class="cartel-fecha">
+    <span class="cartel-etiqueta">Una sola fecha</span>
+    <p class="cartel-fila">
+        <span class="cartel-dia">{{ invitacion.fecha_evento|date:"l"|slice:":3" }} {{ invitacion.fecha_evento|date:"j M Y" }}</span>
+        {% if invitacion.contenido_extra.ciudad %}<span class="cartel-ciudad">{{ invitacion.contenido_extra.ciudad }}</span>{% endif %}
+    </p>
+    <span class="sticker-gira">Entrada solo con invitación</span>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="boleto-cabecera">
+    <p class="kicker">Sección VIP · Fila XV · Asiento: el tuyo</p>
+    <h2 class="titulo-gira">Tu boleto</h2>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400..800;1,400&family=Unbounded:wght@400..900&display=swap" rel="stylesheet">
+<!-- la firma solo necesita las letras del nombre: Google manda un archivo diminuto -->
+<link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&text={{ invitacion.anfitriones|urlencode }}&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 lila/blanco · 30 tinta morada · 10 chicle + holograma */
+        --lila: #F1EAFF;
+        --lila-2: #E2D6FF;
+        --lavanda: #9C85F2;
+        --lavanda-oscuro: #6A55C4;
+        --chicle: #E3228A;
+        --rosa: #FFC6E5;
+        --aqua: #7FE6D6;
+        --tinta: #26143F;
+        --tinta-suave: rgba(38, 20, 63, 0.72);
+        --blanco: #FFFFFF;
+
+        --gira: 'Unbounded', 'Arial Black', sans-serif;
+        --texto: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+        --firma: 'Mrs Saint Delafield', 'Brush Script MT', cursive;
+
+        --margen: clamp(1.3rem, 6vw, 2.5rem);
+        --ancho: 26rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        --holo: linear-gradient(115deg, #FFD1EC, #E3D4FF 25%, #C7F3F0 50%, #FFEFD1 70%, #F4CBFF 90%);
+        /* letras cromadas: bandas claras y oscuras como un reflejo de metal */
+        --cromo: linear-gradient(180deg, #FFFFFF 6%, #D9CCFF 32%, #54428F 48%, #F6F2FF 52%, #FFB3DA 74%, #7E62D0 100%);
+        --destello: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 0C13 8 16 11 24 12C16 13 13 16 12 24C11 16 8 13 0 12C8 11 11 8 12 0Z'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--lila);
+        color: var(--tinta);
+        font-family: var(--texto);
+        font-size: 1.02rem;
+        line-height: 1.5;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(227, 34, 138, 0.2);
+    }
+    ::selection {
+        background: var(--rosa);
+        color: var(--tinta);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 600 0.62rem/1.4 var(--gira);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+    .titulo-gira {
+        margin: 0.25rem 0 0;
+        font: 800 clamp(2rem, 10vw, 2.8rem)/1 var(--gira);
+        letter-spacing: -0.02em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (un CD holografico)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 3.3rem;
+        height: 3.3rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: none;
+        color: var(--tinta);
+        cursor: pointer;
+        filter: drop-shadow(0 6px 10px rgba(38, 20, 63, 0.35));
+    }
+    /* el disco: arcoiris conico + reflejo, con el centro transparente */
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.7), transparent 40% 60%, rgba(255, 255, 255, 0.5)),
+            conic-gradient(from 20deg, #FFC6E5, #C9B6FF, #9DEFE3, #FFF1B8, #FFC6E5, #C9B6FF, #9DEFE3, #FFC6E5);
+        box-shadow: inset 0 0 0 1px rgba(38, 20, 63, 0.25);
+        -webkit-mask: radial-gradient(circle, transparent 0.32rem, #000 0.34rem);
+        mask: radial-gradient(circle, transparent 0.32rem, #000 0.34rem);
+    }
+    /* el centro del disco, donde vive el icono del motor */
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        width: 1.35rem;
+        height: 1.35rem;
+        border-radius: 50%;
+        background: var(--blanco);
+        box-shadow: 0 0 0 1px rgba(38, 20, 63, 0.2);
+    }
+    .boton-musica svg {
+        position: relative;
+        z-index: 1;
+        width: 0.8rem;
+        height: 0.8rem;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    .boton-musica.sonando::before {
+        animation: girar 2.4s linear infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--chicle);
+        outline-offset: 4px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.7s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.eyebrow, .nombres, .mensaje, .cartel-fecha, .boleto-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    .visible .sticker-gira {
+        animation: pegar 0.6s var(--curva) 1.1s both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 1rem; }
+    }
+    @keyframes pegar {
+        from { opacity: 0; scale: 1.8; }
+    }
+    @keyframes marquesina {
+        to { translate: -50% 0; }
+    }
+    @keyframes holograma {
+        to { background-position: 100% 50%; }
+    }
+    @keyframes titilar {
+        0%, 100% { opacity: 0.25; scale: 0.6; }
+        50% { opacity: 1; scale: 1; }
+    }
+    @keyframes aletear {
+        to { scale: 0.35 1; }
+    }
+    @keyframes volar-1 {
+        50% { translate: 1.2rem -1.4rem; }
+    }
+    @keyframes volar-2 {
+        50% { translate: -1.5rem 1rem; }
+    }
+    @keyframes girar {
+        to { rotate: 360deg; }
+    }
+    @keyframes brillo {
+        0%, 55% { background-position: 150% 0; }
+        100% { background-position: -50% 0; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; }
+    }
+    @keyframes cuenta {
+        from { opacity: 0; translate: 0 -1.2rem; }
+    }
+    @keyframes mecer {
+        50% { rotate: -3deg; }
+    }
+
+    /* ============================================
+       PORTADA: el poster de la gira
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 3.6rem var(--margen) 4.8rem;
+        background: var(--holo);
+        background-size: 300% 300%;
+        animation: holograma 14s ease-in-out infinite alternate;
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+    .marquesina {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        overflow: hidden;
+        padding: 0.55rem 0 0.45rem;
+        background: var(--tinta);
+        color: var(--lila);
+    }
+    .marquesina-pista {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        width: max-content;
+        animation: marquesina 40s linear infinite;
+        font: 600 0.66rem/1 var(--gira);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .marquesina-pista svg {
+        width: 0.7rem;
+        height: 0.7rem;
+        fill: var(--aqua);
+    }
+    .xv-gigante {
+        position: absolute;
+        left: 50%;
+        top: 54%;
+        translate: -50% -50%;
+        font: 900 clamp(14rem, 78vw, 30rem)/0.8 var(--gira);
+        letter-spacing: -0.06em;
+        color: rgba(255, 255, 255, 0.5);
+        white-space: nowrap;
+    }
+    .destello {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--t);
+        height: var(--t);
+        fill: var(--blanco);
+        filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+        animation: titilar 2.6s ease-in-out var(--d) infinite;
+    }
+    /* aletean con scale y vuelan con translate: dos animaciones en el mismo elemento */
+    .mariposa {
+        position: absolute;
+        width: 3.4rem;
+        height: 2.8rem;
+        filter: drop-shadow(0 6px 8px rgba(38, 20, 63, 0.25));
+    }
+    .mariposa.m1 {
+        left: 6%;
+        top: 9%;
+        rotate: -18deg;
+        animation: aletear 0.5s ease-in-out infinite alternate, volar-1 7s ease-in-out infinite;
+    }
+    .mariposa.m2 {
+        right: 5%;
+        top: 38%;
+        width: 2.5rem;
+        height: 2.1rem;
+        rotate: 22deg;
+        animation: aletear 0.42s ease-in-out 0.2s infinite alternate, volar-2 8s ease-in-out infinite;
+    }
+    .mariposa.m3 {
+        left: 7%;
+        bottom: 13%;
+        width: 2.2rem;
+        height: 1.8rem;
+        rotate: 10deg;
+        animation: aletear 0.46s ease-in-out 0.1s infinite alternate, volar-1 9s ease-in-out 1s infinite;
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 30rem;
+    }
+    .eyebrow {
+        --retraso: 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0;
+        font: 700 0.72rem/1 var(--gira);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .eyebrow::before,
+    .eyebrow::after {
+        content: "";
+        width: 0.8rem;
+        height: 0.8rem;
+        background: var(--chicle);
+        -webkit-mask: var(--destello) center / contain no-repeat;
+        mask: var(--destello) center / contain no-repeat;
+    }
+    /* el nombre en cromo: degradado recortado al texto + sombra solida para el volumen */
+    .nombres {
+        --retraso: 0.35s;
+        max-width: 100%;   /* sin esto el titulo crece con el nombre y el JS no detecta que no cabe */
+        min-width: 0;
+        margin: 0.7rem 0 0;
+        padding: 0 0.05em 0.08em;
+        font: 900 clamp(2.6rem, 17vw, 6.2rem)/0.98 var(--gira);
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        background: var(--cromo);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        /* contorno con sombras (no text-stroke: en una fuente variable dibuja las uniones internas) */
+        filter:
+            drop-shadow(1.5px 0 0 var(--tinta)) drop-shadow(-1.5px 0 0 var(--tinta))
+            drop-shadow(0 -1.5px 0 var(--tinta)) drop-shadow(0 0.05em 0 var(--tinta))
+            drop-shadow(0 0.12em 0.18em rgba(38, 20, 63, 0.3));
+    }
+    .mensaje {
+        --retraso: 0.5s;
+        max-width: 30ch;
+        margin: 1rem 0 0;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--tinta-suave);
+        text-wrap: pretty;
+    }
+    /* la fecha del poster, como la lista de fechas de una gira (aqui solo hay una) */
+    .cartel-fecha {
+        --retraso: 0.65s;
+        position: relative;
+        width: min(100%, 19rem);
+        margin-top: 1.5rem;
+        padding: 1rem 0.9rem 0.8rem;
+        border: 2px solid var(--tinta);
+        border-radius: 0.7rem;
+        background: rgba(255, 255, 255, 0.55);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+    }
+    .cartel-etiqueta {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        translate: -50% -55%;
+        padding: 0.3rem 0.7rem 0.25rem;
+        border-radius: 99px;
+        background: var(--tinta);
+        color: var(--blanco);
+        font: 700 0.56rem/1 var(--gira);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .cartel-fila {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        margin: 0;
+    }
+    .cartel-dia {
+        font: 800 1.05rem/1.2 var(--gira);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .cartel-ciudad {
+        font-weight: 700;
+        font-size: 0.8rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+    .sticker-gira {
+        position: absolute;
+        right: -1.3rem;
+        top: -2.3rem;
+        display: grid;
+        place-items: center;
+        width: 4.9rem;
+        height: 4.9rem;
+        padding: 0.55rem;
+        border-radius: 50%;
+        background: var(--aqua);
+        color: var(--tinta);
+        font: 700 0.5rem/1.25 var(--gira);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        rotate: 14deg;
+        box-shadow: 0 0 0 2px var(--tinta), 3px 4px 0 var(--tinta);
+    }
+
+    /* ============================================
+       PANTALLA 2: TU BOLETO
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.8rem var(--margen) 4.8rem;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255, 198, 229, 0.8), transparent 40%),
+            radial-gradient(circle at 90% 80%, rgba(127, 230, 214, 0.5), transparent 45%),
+            var(--lila);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 0.8rem;
+    }
+    .boleto-cabecera {
+        --retraso: 0.05s;
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* detalles + lugares + vestimenta = el cuerpo del boleto */
+    .detalles,
+    .lugares,
+    .vestimenta {
+        padding: 0 1.1rem;
+        background: var(--blanco);
+    }
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: auto auto auto;
+        justify-content: center;
+        align-items: center;
+        gap: 0 1.3rem;
+        padding-top: 1.35rem;
+        padding-bottom: 0.7rem;
+        border-radius: 1rem 1rem 0 0;
+        /* franja holografica de seguridad, como en los boletos reales */
+        background: var(--holo) top / 100% 0.5rem no-repeat, var(--blanco);
+    }
+    .lugares {
+        --retraso: 0.25s;
+    }
+    /* la ultima pieza del cuerpo (sea cual sea) lleva las muescas del perforado */
+    .pantalla-contenido > :is(.detalles, .lugares, .vestimenta):not(:has(+ :is(.lugares, .vestimenta))) {
+        padding-bottom: 0.9rem;
+        -webkit-mask:
+            radial-gradient(circle 0.6rem at 0 100%, transparent 97%, #000) left / 51% 100% no-repeat,
+            radial-gradient(circle 0.6rem at 100% 100%, transparent 97%, #000) right / 51% 100% no-repeat;
+        mask:
+            radial-gradient(circle 0.6rem at 0 100%, transparent 97%, #000) left / 51% 100% no-repeat,
+            radial-gradient(circle 0.6rem at 100% 100%, transparent 97%, #000) right / 51% 100% no-repeat;
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.1rem;
+    }
+    .lugar-item {
+        padding-block: 0.55rem;
+        border-top: 1px solid var(--lila-2);
+    }
+    .detalle-divisor {
+        width: 1px;
+        height: 2.2rem;
+        background: var(--lila-2);
+    }
+    .detalle-label {
+        font: 600 0.55rem/1.3 var(--gira);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+    .detalle-valor {
+        font-weight: 700;
+        font-size: 1.05rem;
+        line-height: 1.25;
+        text-wrap: balance;
+    }
+    /* Django escribe "12 de Junio"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        font-size: 0.85rem;
+        color: var(--tinta-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+        padding-block: 0.65rem;
+        border-top: 1px solid var(--lila-2);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px rgba(38, 20, 63, 0.3), inset 0 -2px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ============================================
+       COUNTDOWN: el talon del boleto
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0 0.3rem;
+        padding: 0.9rem 1rem 0.8rem;
+        border-radius: 0 0 1rem 1rem;
+        /* linea perforada arriba + codigo de barras abajo */
+        background:
+            repeating-linear-gradient(90deg, var(--lavanda) 0 5px, transparent 5px 10px) top / calc(100% - 1.6rem) 2px no-repeat,
+            var(--blanco);
+        font-variant-numeric: tabular-nums;
+        -webkit-mask:
+            radial-gradient(circle 0.6rem at 0 0, transparent 97%, #000) left / 51% 100% no-repeat,
+            radial-gradient(circle 0.6rem at 100% 0, transparent 97%, #000) right / 51% 100% no-repeat;
+        mask:
+            radial-gradient(circle 0.6rem at 0 0, transparent 97%, #000) left / 51% 100% no-repeat,
+            radial-gradient(circle 0.6rem at 100% 0, transparent 97%, #000) right / 51% 100% no-repeat;
+    }
+    .countdown::before {
+        content: "El show empieza en";
+        grid-column: 1 / -1;
+        margin-bottom: 0.35rem;
+        font: 600 0.55rem/1.3 var(--gira);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--chicle);
+    }
+    .countdown::after {
+        content: "";
+        grid-column: 1 / -1;
+        height: 1rem;
+        margin-top: 0.5rem;
+        background: repeating-linear-gradient(90deg, var(--tinta) 0 2px, transparent 2px 4px, var(--tinta) 4px 7px, transparent 7px 9px, var(--tinta) 9px 10px, transparent 10px 13px);
+        opacity: 0.85;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .countdown span {
+        font: 800 1.55rem/1.1 var(--gira);
+        letter-spacing: -0.02em;
+    }
+    .countdown label {
+        font-weight: 700;
+        font-size: 0.66rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS: botones pastilla (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.85rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0 0.8rem;
+        border-radius: 99px;
+        border: 2px solid var(--tinta);
+        background: var(--blanco);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 700 0.62rem/1 var(--gira);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        box-shadow: 0 3px 0 var(--tinta);
+        transition: translate 0.15s ease, box-shadow 0.15s ease;
+    }
+    .accion-icono:active {
+        translate: 0 3px;
+        box-shadow: 0 0 0 var(--tinta);
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--chicle);
+        color: var(--blanco);
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--chicle);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+        stroke-width: 2;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: el escenario (setlist y creditos)
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 2rem var(--margen) 4.8rem;
+        /* piso del escenario con dos reflectores de colores */
+        background:
+            conic-gradient(from 168deg at 50% -8%, transparent 0 6deg, rgba(255, 198, 229, 0.22) 9deg, transparent 13deg 16deg, rgba(127, 230, 214, 0.16) 19deg, transparent 23deg),
+            radial-gradient(ellipse at 50% 0%, #3E2466, var(--tinta) 70%);
+        color: var(--lila);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    /* hoja del setlist pegada al piso con dos tiras de cinta; con order va
+       primero y luego los creditos (como en un disco), aunque el motor
+       pinte la familia antes */
+    .itinerario {
+        --retraso: 0.05s;
+        order: 1;
+        position: relative;
+        padding: 1rem 1rem 0.8rem;
+        background: #FFFDF8;
+        color: var(--tinta);
+        rotate: -1.2deg;
+        box-shadow: 0 16px 28px -14px rgba(0, 0, 0, 0.8);
+        counter-reset: cancion;
+    }
+    .itinerario::before {
+        content: "Setlist";
+        display: block;
+        font: 900 1.7rem/1 var(--gira);
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+    }
+    .itinerario h3 {
+        margin: 0.2rem 0 0.5rem;
+        font: 600 0.58rem/1.3 var(--gira);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--chicle);
+    }
+    .itinerario h3::before,
+    .itinerario h3::after {
+        content: "";
+        position: absolute;
+        top: -0.7rem;
+        width: 4.2rem;
+        height: 1.4rem;
+        background: rgba(214, 208, 228, 0.85);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .itinerario h3::before {
+        left: -1rem;
+        rotate: -28deg;
+    }
+    .itinerario h3::after {
+        right: -1rem;
+        rotate: 24deg;
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: 1.8rem 1fr auto;
+        align-items: baseline;
+        gap: 0.4rem;
+        padding: 0.26rem 0;
+        border-top: 1px solid rgba(38, 20, 63, 0.12);
+        text-align: left;
+        counter-increment: cancion;
+    }
+    .itinerario-item::before {
+        content: counter(cancion, decimal-leading-zero);
+        font: 800 0.72rem/1.2 var(--gira);
+        color: var(--chicle);
+    }
+    .itinerario-evento {
+        order: 1;
+        font: 700 0.74rem/1.3 var(--gira);
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .itinerario-hora {
+        order: 2;
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: var(--lavanda-oscuro);
+        white-space: nowrap;
+    }
+    .itinerario-item:last-child .itinerario-evento::after {
+        content: "Encore";
+        display: inline-block;
+        margin-left: 0.4rem;
+        padding: 0.18rem 0.4rem 0.12rem;
+        border-radius: 99px;
+        background: var(--chicle);
+        color: var(--blanco);
+        font-size: 0.48rem;
+        letter-spacing: 0.12em;
+        vertical-align: 0.15em;
+    }
+    /* creditos, como en la contraportada de un disco */
+    .familia {
+        --retraso: 0.15s;
+        order: 2;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        gap: 0.5rem 1rem;
+    }
+    .familia::before {
+        content: "Créditos";
+        grid-column: 1 / -1;
+        font: 700 0.6rem/1.3 var(--gira);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--aqua);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font-weight: 600;
+        font-size: 0.66rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #C9B8FF;
+    }
+    .familia-nombres {
+        font-weight: 700;
+        font-size: 0.95rem;
+        line-height: 1.25;
+        color: var(--blanco);
+        text-wrap: balance;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        order: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        border-radius: 99px;
+        background: var(--holo);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 700 0.62rem/1 var(--gira);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+    }
+    .boton-mesa-regalos::before {
+        content: "Merch oficial ·";
+        color: var(--chicle);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--aqua);
+        outline-offset: 3px;
+    }
+    /* pulsera de acceso de festival (el JS pone "Todas las edades" o "Solo adultos") */
+    .nota-ninos {
+        --retraso: 0.35s;
+        order: 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0.55rem 1rem 0.5rem 1.6rem;
+        border-radius: 0.5rem;
+        background:
+            radial-gradient(circle 0.32rem at 0.75rem 50%, var(--tinta) 90%, transparent),
+            repeating-linear-gradient(-55deg, rgba(255, 255, 255, 0.35) 0 6px, transparent 6px 12px),
+            var(--holo);
+        color: var(--tinta);
+        font-weight: 700;
+        font-size: 0.8rem;
+        rotate: 1.5deg;
+    }
+    .nota-ninos::before {
+        content: var(--titulo-pulsera, "Acceso");
+        flex: none;
+        padding: 0.25rem 0.5rem 0.2rem;
+        border-radius: 99px;
+        background: var(--tinta);
+        color: var(--blanco);
+        font: 700 0.5rem/1.2 var(--gira);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       GALERIA: photocards coleccionables
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.9rem;
+        align-content: center;
+        padding: 2.2rem max(var(--margen), (100% - 30rem) / 2) 4.8rem;
+        background:
+            radial-gradient(circle at 85% 12%, rgba(255, 198, 229, 0.9), transparent 40%),
+            radial-gradient(circle at 10% 90%, rgba(201, 182, 255, 0.8), transparent 45%),
+            var(--lila);
+    }
+    /* kicker + titulo con los dos pseudo-elementos; order los sube antes de las fotos */
+    .galeria::before {
+        content: "Colección oficial";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -0.7rem;
+        font: 600 0.62rem/1.4 var(--gira);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+    .galeria::after {
+        content: "Photocards";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 900 clamp(2rem, 10vw, 2.8rem)/1 var(--gira);
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+    }
+    /* sin JS: cuadricula de fotos con orilla holografica */
+    .galeria > img {
+        width: 100%;
+        aspect-ratio: 55 / 85;
+        object-fit: cover;
+        border: 0.3rem solid transparent;
+        border-radius: 0.9rem;
+        background: var(--holo) border-box;
+    }
+    /* con JS: carrusel horizontal que se desliza con el dedo */
+    .galeria.con-carrusel {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .photocards {
+        display: flex;
+        gap: 1rem;
+        margin-inline: calc(-1 * var(--margen));
+        /* el % es del contenedor (sin el margen): se suma para centrar la primera carta */
+        padding: 0.8rem calc(50% + var(--margen) - min(7rem, 31vw));
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+    }
+    .photocards::-webkit-scrollbar {
+        display: none;
+    }
+    .photocard {
+        position: relative;
+        flex: none;
+        width: min(14rem, 62vw);
+        margin: 0;
+        padding: 0.3rem;
+        border-radius: 1rem;
+        background: conic-gradient(from 200deg, #FFC6E5, #C9B6FF, #9DEFE3, #FFF1B8, #FFC6E5);
+        box-shadow: 0 14px 24px -12px rgba(38, 20, 63, 0.55);
+        scroll-snap-align: center;
+        rotate: -2deg;
+    }
+    .photocard:nth-child(even) {
+        rotate: 2deg;
+    }
+    .photocard img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 55 / 85;
+        object-fit: cover;
+        border-radius: 0.75rem;
+    }
+    /* reflejo holografico que pasa de vez en cuando */
+    .photocard::after {
+        content: "";
+        position: absolute;
+        inset: 0.3rem;
+        border-radius: 0.75rem;
+        background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, 0.55) 46%, rgba(255, 198, 229, 0.35) 52%, transparent 62%) 150% 0 / 250% 100% no-repeat;
+        animation: brillo 5s ease-in-out infinite;
+        pointer-events: none;
+    }
+    .photocard figcaption {
+        position: absolute;
+        inset: auto 0.3rem 0.3rem;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        padding: 2rem 0.7rem 0.5rem;
+        border-radius: 0 0 0.75rem 0.75rem;
+        background: linear-gradient(transparent, rgba(38, 20, 63, 0.55));
+        color: var(--blanco);
+    }
+    .photocard .firma {
+        font: 400 2.3rem/0.9 var(--firma);
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+    .photocard .numero {
+        padding: 0.2rem 0.4rem 0.15rem;
+        border-radius: 99px;
+        background: rgba(255, 255, 255, 0.85);
+        color: var(--tinta);
+        font: 700 0.5rem/1.2 var(--gira);
+        letter-spacing: 0.1em;
+    }
+    .photocards-pista {
+        margin: -0.2rem 0 0;
+        font-weight: 700;
+        font-size: 0.72rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+
+    /* ============================================
+       RSVP: lista VIP (pase con lanyard)
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.2rem var(--margen) 5rem;
+        background: var(--holo);
+        background-size: 300% 300%;
+        animation: holograma 14s ease-in-out infinite alternate;
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Lista VIP";
+        font: 600 0.62rem/1.4 var(--gira);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--lavanda-oscuro);
+    }
+    .rsvp h2 {
+        margin: 0.25rem auto 0.4rem;
+        font: 900 clamp(1.7rem, 8.4vw, 2.4rem)/1.02 var(--gira);
+        letter-spacing: -0.03em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        font-weight: 500;
+        color: var(--tinta-suave);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 800 1.2rem/1 var(--gira);
+        color: var(--chicle);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "22 de Mayo": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.15rem;
+        font-size: 0.88rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    /* el pase: tarjeta enmicada colgando de un lanyard */
+    #form-rsvp {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        margin: 3rem auto 0;
+        padding: 1.8rem 1.1rem 1.2rem;
+        border-radius: 1.1rem;
+        background: var(--blanco);
+        text-align: left;
+        box-shadow: 0 0 0 2px var(--tinta), 0 18px 30px -16px rgba(38, 20, 63, 0.6);
+    }
+    /* el lanyard: dos cintas que suben en V (como colgado del cuello) y el broche */
+    #form-rsvp::before {
+        content: "";
+        position: absolute;
+        bottom: calc(100% - 0.7rem);
+        left: 50%;
+        width: 13rem;
+        height: 3rem;
+        translate: -50% 0;
+        background:
+            linear-gradient(#EDEAF3, #9E98B0) bottom / 1.4rem 0.9rem no-repeat,
+            repeating-linear-gradient(90deg, var(--chicle) 0 0.8rem, #F25AA8 0.8rem 0.95rem);
+        clip-path: polygon(0 0, 13% 0, 50% 72%, 87% 0, 100% 0, 55.5% 100%, 44.5% 100%);
+    }
+    #form-rsvp::after {
+        content: "VIP";
+        position: absolute;
+        top: 0.8rem;
+        right: 0.9rem;
+        padding: 0.25rem 0.55rem 0.2rem;
+        border-radius: 99px;
+        background: var(--tinta);
+        color: var(--aqua);
+        font: 900 0.62rem/1 var(--gira);
+        letter-spacing: 0.14em;
+    }
+    /* 16px o mas: el iPhone no hace zoom al escribir */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        border: 2px solid var(--lila-2);
+        border-radius: 0.7rem;
+        background: #FBF9FF;
+        color: var(--tinta);
+        font: 500 1rem/1.4 var(--texto);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(38, 20, 63, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-color: var(--lavanda);
+        box-shadow: 0 0 0 3px rgba(156, 133, 242, 0.25);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.7rem;
+        padding: 0 0.3rem;
+        border-radius: 99px;
+        border: 2px solid var(--lila-2);
+        font-weight: 700;
+        font-size: 0.82rem;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--tinta);
+        background: var(--tinta);
+        color: var(--blanco);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--chicle);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font-weight: 700;
+        font-size: 0.82rem;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        max-width: 4.5rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        border: 2px solid var(--tinta);
+        border-radius: 99px;
+        background: var(--chicle);
+        color: var(--blanco);
+        font: 800 0.72rem/1 var(--gira);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 4px 0 var(--tinta);
+        transition: translate 0.15s ease, box-shadow 0.15s ease;
+    }
+    #form-rsvp button:active {
+        translate: 0 4px;
+        box-shadow: 0 0 0 var(--tinta);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--lavanda-oscuro);
+        outline-offset: 4px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 800 1.05rem/1.25 var(--gira);
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+
+    /* --- La pulsera de la amistad que recibe cada invitado al confirmar --- */
+    .pulsera-caja {
+        margin-top: 0.4rem;
+    }
+    .pulsera {
+        position: relative;
+        width: min(19rem, 86vw);
+        margin: 0 auto;
+        transform-origin: 50% 0;
+        animation: mecer 4s ease-in-out 1.5s infinite;
+    }
+    .pulsera-hilo {
+        position: absolute;
+        border: 2px solid rgba(38, 20, 63, 0.35);
+        border-radius: 50%;
+    }
+    /* cada cuenta se centra con margin para dejar translate libre a la animacion */
+    .cuenta {
+        position: absolute;
+        animation: cuenta 0.45s var(--curva) calc(var(--i) * 0.04s) both;
+    }
+    .cuenta-letra {
+        display: grid;
+        place-items: center;
+        width: 1.5rem;
+        height: 1.5rem;
+        margin: -0.75rem 0 0 -0.75rem;
+        border-radius: 0.3rem;
+        background: linear-gradient(160deg, #FFFFFF 40%, #E5E0EE);
+        color: var(--tinta);
+        font: 800 0.78rem/1 var(--gira);
+        box-shadow: 0 0 0 1px rgba(38, 20, 63, 0.18), 0 2px 3px rgba(38, 20, 63, 0.25);
+    }
+    .cuenta-redonda {
+        width: 1rem;
+        height: 1rem;
+        margin: -0.5rem 0 0 -0.5rem;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.9), transparent 35%), var(--color);
+        box-shadow: 0 1px 2px rgba(38, 20, 63, 0.3);
+    }
+    .rsvp .pulsera-texto {
+        margin: 0.2rem auto 0;
+        font: 800 0.72rem/1.4 var(--gira);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+    .pulsera-texto span {
+        display: block;
+        font: 600 0.9rem/1.4 var(--texto);
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       ESCRITORIO: las photocards caben todas a la vista
+       ============================================ */
+    @media (min-width: 64rem) {
+        .galeria {
+            padding-inline: max(var(--margen), (100% - 64rem) / 2);
+        }
+        .photocards {
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.4rem;
+            margin-inline: 0;
+            padding-inline: 0;
+            overflow: visible;
+        }
+        .photocards-pista {
+            display: none;
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        const titulo = document.querySelector('.nombres');
+        const nombre = titulo ? titulo.textContent.trim() : '';
+
+        // --- 1. Cada dato con su nombre de concierto ---
+        const etiquetas = { 'Día': 'Fecha', 'Código de vestimenta': 'Dress code' };
+        document.querySelectorAll('.pantalla-info .detalle-label').forEach(el => {
+            const original = el.textContent.trim();
+            if (etiquetas[original]) el.textContent = etiquetas[original];
+        });
+        const enviar = document.querySelector('#form-rsvp button');
+        if (enviar) enviar.textContent = 'Apartar mi lugar';
+
+        // --- 2. La pulsera de acceso: "Todas las edades" o "Solo adultos" ---
+        const nota = document.querySelector('.nota-ninos');
+        if (nota) {
+            const soloAdultos = nota.textContent.includes('adultos');
+            nota.style.setProperty('--titulo-pulsera', soloAdultos ? '"Solo adultos"' : '"Todas las edades"');
+        }
+
+        // --- 3. Fotos -> photocards firmadas en carrusel ---
+        const galeria = document.querySelector('.galeria');
+        const fotos = galeria ? [...galeria.querySelectorAll(':scope > img')] : [];
+        if (fotos.length) {
+            const firma = nombre.split(/\s+/)[0] || nombre;
+            const pista = document.createElement('div');
+            pista.className = 'photocards';
+            fotos.forEach((foto, i) => {
+                const carta = document.createElement('figure');
+                carta.className = 'photocard';
+                const pie = document.createElement('figcaption');
+                const autografo = document.createElement('span');
+                autografo.className = 'firma';
+                autografo.textContent = firma;
+                const numero = document.createElement('span');
+                numero.className = 'numero';
+                numero.textContent = String(i + 1).padStart(2, '0') + '/' + String(fotos.length).padStart(2, '0');
+                pie.append(autografo, numero);
+                carta.append(foto, pie);
+                pista.appendChild(carta);
+            });
+            galeria.appendChild(pista);
+            if (fotos.length > 1) {
+                const aviso = document.createElement('p');
+                aviso.className = 'photocards-pista';
+                aviso.textContent = 'Desliza para ver la colección →';
+                galeria.appendChild(aviso);
+            }
+            galeria.classList.add('con-carrusel');
+        }
+
+        // --- 4. El nombre nunca se sale de la pantalla (ni pasa de 2 renglones) ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 0.98 * 2.4;   // 0.98 = line-height
+            let vueltas = 0;
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 5. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 6. Al confirmar, el invitado recibe su pulsera de la amistad ---
+        // Las cuentas de letras forman su nombre al frente de la pulsera y las
+        // redondas le dan la vuelta por detras (mas chicas y oscuras: perspectiva).
+        // El motor borra el formulario antes de avisar, asi que guardamos el
+        // nombre al enviar; luego escuchamos "rsvp:enviado" del motor.
+        const form = document.getElementById('form-rsvp');
+        const status = document.getElementById('rsvp-status');
+        let invitado = '';
+        if (form) form.addEventListener('submit', () => {
+            invitado = (form.elements.nombre_invitado.value || '').trim();
+        });
+
+        function hacerPulsera(texto) {
+            const caja = document.createElement('div');
+            caja.className = 'pulsera-caja';
+            const pulsera = document.createElement('div');
+            pulsera.className = 'pulsera';
+            pulsera.setAttribute('role', 'img');
+            pulsera.setAttribute('aria-label', 'Tu pulsera de la amistad: ' + texto);
+            caja.appendChild(pulsera);
+            const leyenda = document.createElement('p');
+            leyenda.className = 'pulsera-texto';
+            leyenda.innerHTML = 'Tu pulsera de la gira<span>Tómale captura y presúmela</span>';
+            caja.appendChild(leyenda);
+            status.after(caja);
+
+            const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+            const ancho = pulsera.offsetWidth;
+            const rx = ancho / 2 - rem;
+            const ry = rx * 0.34;
+            const cx = ancho / 2;
+            const cy = ry + rem;
+            pulsera.style.height = (2 * ry + 2.2 * rem) + 'px';
+
+            const hilo = document.createElement('div');
+            hilo.className = 'pulsera-hilo';
+            Object.assign(hilo.style, { left: (cx - rx) + 'px', top: (cy - ry) + 'px', width: 2 * rx + 'px', height: 2 * ry + 'px' });
+            pulsera.appendChild(hilo);
+
+            const letras = [...texto];
+            const paso = (1.62 * rem) / rx;          // separacion de las letras sobre el arco
+            const inicio = Math.PI / 2 + (letras.length - 1) / 2 * paso;
+            const colores = ['#FF8FC8', '#B9A5FF', '#7FE6D6', '#FFE08A', '#FFFFFF'];
+            let n = 0;
+            function poner(el, angulo, esLetra) {
+                const frente = (Math.sin(angulo) + 1) / 2;     // 1 = al frente, 0 = atras
+                el.style.left = (cx + rx * Math.cos(angulo)) + 'px';
+                el.style.top = (cy + ry * Math.sin(angulo)) + 'px';
+                el.style.scale = (0.6 + 0.4 * frente).toFixed(3);
+                el.style.zIndex = Math.round(frente * 100);
+                el.style.filter = 'brightness(' + (0.72 + 0.28 * frente).toFixed(2) + ')';
+                if (esLetra) {
+                    const giro = Math.atan2(-ry * Math.cos(angulo), rx * Math.sin(angulo));
+                    el.style.rotate = (giro * 180 / Math.PI).toFixed(1) + 'deg';
+                }
+                el.style.setProperty('--i', n++);
+                pulsera.appendChild(el);
+            }
+            letras.forEach((letra, i) => {
+                const cuenta = document.createElement('span');
+                cuenta.className = 'cuenta cuenta-letra';
+                cuenta.textContent = letra;
+                poner(cuenta, inicio - i * paso, true);
+            });
+            // cuentas redondas: de la ultima letra, dando la vuelta por atras, hasta la primera
+            const desde = inicio + paso * 0.95;
+            const hasta = inicio - (letras.length - 1) * paso - paso * 0.95 + 2 * Math.PI;
+            const pasoRedondas = (1.05 * rem) / rx;
+            const cuantas = Math.max(0, Math.floor((hasta - desde) / pasoRedondas));
+            const ajuste = (hasta - desde) / Math.max(cuantas, 1);
+            for (let k = 0; k <= cuantas; k++) {
+                const cuenta = document.createElement('span');
+                cuenta.className = 'cuenta cuenta-redonda';
+                cuenta.style.setProperty('--color', colores[k % colores.length]);
+                poner(cuenta, desde + k * ajuste, false);
+            }
+        }
+
+        document.addEventListener('rsvp:enviado', e => {
+            const previa = document.querySelector('.pulsera-caja');
+            if (previa) previa.remove();
+            if (!status || e.detail.asistencia !== 'si') return;
+            const primerNombre = (invitado.split(/\s+/)[0] || 'XV').toUpperCase();
+            hacerPulsera([...primerNombre].slice(0, 12).join(''));   // 12 cuentas caben al frente
+        });
+    })();
+</script>
+{% endblock %}

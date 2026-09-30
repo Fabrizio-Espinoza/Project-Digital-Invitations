@@ -496,3 +496,28 @@ class DemoHotelAmorTests(TestCase):
                           'id="h-llave"', "rsvp:enviado", 'class="nota-ninos"'):
             self.assertContains(respuesta, fragmento)
         self.assertContains(respuesta, "/static/invitaciones/pwa/boda-hotel-03-180.png")
+
+
+class DemoLaGiraTests(TestCase):
+    def test_crear_demo_xv_gira_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_xv_gira", stdout=StringIO())
+        call_command("crear_demo_xv_gira", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="xv-gira-03").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-xv-ximena")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "xv")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 18)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/xv-gira-03.html")
+        # "Sáb" con acento (Django abrevia "Sab"), la ciudad del poster y la pulsera del RSVP
+        for fragmento in ('class="marquesina"', "Sáb 12 Jun 2027", "Guadalajara, Jal.", "Tu boleto",
+                          "rsvp:enviado", "family=Mrs+Saint+Delafield&text=Ximena"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/xv-gira-03-180.png")
+
+    def test_no_pisa_el_demo_de_medianoche_dorada(self):
+        call_command("crear_demo_xv", stdout=StringIO())
+        call_command("crear_demo_xv_gira", stdout=StringIO())
+        self.assertEqual(Invitacion.objects.get(slug="demo-xv-valentina").plantilla.slug_tema, "xv-medianoche-01")
