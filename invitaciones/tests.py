@@ -1169,32 +1169,24 @@ class PedidoValoresPorDefectoTests(TestCase):
         self.assertIn("query=Sal%C3%B3n%20Aurora%2C%20Monterrey%2C%20N.L.", inv.lugar_mapa_url)
 
 
-class DemoFormularioTests(TestCase):
-    def setUp(self):
-        call_command("crear_demo_hotel", stdout=StringIO())
-        call_command("crear_demos_formulario", stdout=StringIO())
-        self.url = reverse("pedido", args=["demo-boda-hotel-03"])
 
-    def test_el_demo_ensena_la_invitacion_y_no_guarda_nada(self):
-        antes = (Invitacion.objects.count(), ImagenGaleria.objects.count())
-        respuesta = self.client.get(self.url)
-        self.assertContains(respuesta, "Prueba el formulario")
-        self.assertContains(respuesta, "no se guarda nada")
-        self.assertNotContains(respuesta, 'type="file"')
-
-        respuesta = self.client.post(self.url, {
-            "anfitriones": "Prospecto & Pareja", "fecha": "2027-09-18", "hora": "19:00",
-            "recepcion_nombre": "Hacienda Prueba", "fotos": [foto_de_prueba()],
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class VistaPreviaProtegidaTests(TestCase):
+    def test_la_vista_previa_lleva_marca_de_agua_y_desaparece_al_publicar(self):
+        plantilla = Plantilla.objects.create(nombre="Hotel Amor", tipo_evento="boda", slug_tema="boda-hotel-03")
+        pedido = Pedido.objects.create(cliente="Ana", plantilla=plantilla, nivel="premium")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00", "recepcion_nombre": "Jardín",
         })
-        self.assertEqual(respuesta.status_code, 200)
-        self.assertContains(respuesta, "Prospecto &amp; Pareja")      # su invitación armada
-        self.assertContains(respuesta, "Demo · así quedaría la tuya")
-        self.assertContains(respuesta, "https://wa.me/")
-        # y nada quedó en la base
-        self.assertEqual((Invitacion.objects.count(), ImagenGaleria.objects.count()), antes)
-        demo = Pedido.objects.get(token="demo-boda-hotel-03")
-        self.assertIsNone(demo.invitacion)
-        self.assertIsNone(demo.enviado_en)
+        previa = reverse("pedido_vista_previa", args=[pedido.token])
+        respuesta = self.client.get(previa)
+        self.assertContains(respuesta, 'class="marca-agua"')
+        # el RSVP de un borrador no recibe confirmaciones
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(self.client.post(reverse("invitaciones:rsvp", args=[inv.slug]),
+                                          {"nombre": "X", "asistencia": "si"}).status_code, 404)
 
-    def test_el_catalogo_enlaza_el_demo_del_formulario(self):
-        self.assertContains(self.client.get("/"), 'href="/pedido/demo-boda-hotel-03/"')
+        inv.activa = True
+        inv.save()
+        self.assertRedirects(self.client.get(previa), reverse("invitaciones:detalle", args=[inv.slug]))
+        self.assertNotContains(self.client.get(reverse("invitaciones:detalle", args=[inv.slug])), 'class="marca-agua"')

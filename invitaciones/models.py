@@ -176,16 +176,13 @@ class Pedido(models.Model):
     su Invitacion como borrador (activa=False) para que la revises y la
     publiques. Mientras no la publiques, el cliente puede corregir sus datos.
     """
-    token = models.CharField(max_length=40, unique=True, default=_token_pedido, editable=False)
+    token = models.CharField(max_length=24, unique=True, default=_token_pedido, editable=False)
     cliente = models.CharField(max_length=120, help_text="Para ti: cómo identificas a este cliente (no se publica).")
     plantilla = models.ForeignKey(Plantilla, on_delete=models.PROTECT, related_name="pedidos")
     nivel = models.CharField(max_length=20, choices=Invitacion.NIVEL, default="interactiva")
     invitacion = models.OneToOneField(
         Invitacion, on_delete=models.SET_NULL, null=True, blank=True, related_name="pedido"
     )
-    # Demo para prospectos: el formulario funciona y al enviar enseña cómo
-    # quedaría, pero no guarda nada (ni fotos). Lo crea crear_demos_formulario.
-    es_demo = models.BooleanField(default=False)
     # lo que el cliente pide y no cabe en la invitación
     cancion = models.CharField(max_length=300, blank=True)
     notas = models.TextField(blank=True)

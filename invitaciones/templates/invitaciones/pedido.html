@@ -281,13 +281,9 @@
     <section class="presentacion">
         {% if diseno.captura %}<img src="{% static diseno.captura %}" alt="" width="540" height="1169">{% endif %}
         <div>
-            <p class="eyebrow">{% if pedido.es_demo %}Prueba el formulario{% else %}Datos de tu invitación{% endif %}</p>
+            <p class="eyebrow">Datos de tu invitación</p>
             <h1>{{ diseno.nombre }}</h1>
-            {% if pedido.es_demo %}
-            <p>Así de fácil se arma tu invitación. Llénalo como si fuera tu evento y al enviar ves cómo quedaría. Es una prueba: no se guarda nada.</p>
-            {% else %}
             <p>Toma unos 10 minutos. Si algo no lo sabes todavía, déjalo vacío: se puede agregar después.</p>
-            {% endif %}
         </div>
     </section>
 
@@ -357,25 +353,21 @@
                     {% endfor %}
                 </div>
                 {% endif %}
-                {% if pedido.es_demo %}
-                <p class="subir"><strong>Aquí subes tus fotos</strong><span>En la prueba no se suben: tu invitación real las lleva en una galería con el estilo del diseño.</span></p>
-                {% else %}
                 <label class="subir">
                     <strong>Elegir fotos</strong>
                     <span>Hasta {{ max_fotos }} en total. Las mejores, sin filtros ni textos encima.</span>
                     <input type="file" name="fotos" accept="image/jpeg,image/png,image/webp" multiple>
                 </label>
-                {% endif %}
                 <div class="vista-fotos" aria-live="polite"></div>
             </div>
             {% endif %}
         </section>
         {% endfor %}
 
-        <p class="privacidad">{% if pedido.es_demo %}Prueba: lo que escribas no se guarda.{% else %}Usamos estos datos solo para armar tu invitación.{% endif %} <a href="{% url 'aviso_privacidad' %}" target="_blank" rel="noopener">Aviso de privacidad</a></p>
+        <p class="privacidad">Usamos estos datos solo para armar tu invitación. <a href="{% url 'aviso_privacidad' %}" target="_blank" rel="noopener">Aviso de privacidad</a></p>
 
         <div class="enviar">
-            <button type="submit" class="boton boton-vibra">{% if pedido.es_demo %}Ver cómo quedaría{% elif pedido.invitacion %}Guardar cambios{% else %}Enviar mis datos{% endif %}</button>
+            <button type="submit" class="boton boton-vibra">{% if pedido.invitacion %}Guardar cambios{% else %}Enviar mis datos{% endif %}</button>
         </div>
     </form>
 {% endif %}
@@ -440,16 +432,10 @@
     }
 
     // --- Enviar: evitar doble toque (las fotos pueden tardar en subir) ---
-    var botonEnviar = form.querySelector('button[type="submit"]');
-    var textoEnviar = botonEnviar.textContent;
     form.addEventListener('submit', function () {
-        botonEnviar.disabled = true;
-        botonEnviar.textContent = 'Enviando…';
-    });
-    // al regresar con "atrás" (p. ej. desde la vista del demo) el botón vuelve a servir
-    window.addEventListener('pageshow', function () {
-        botonEnviar.disabled = false;
-        botonEnviar.textContent = textoEnviar;
+        var boton = form.querySelector('button[type="submit"]');
+        boton.disabled = true;
+        boton.textContent = 'Enviando…';
     });
 
     // Con errores, llevar la vista al primero

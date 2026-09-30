@@ -72,16 +72,14 @@ class PedidoAdmin(admin.ModelAdmin):
     4) la revisas con "Vista previa" y la publicas con la acción de la lista.
     """
     list_display = ("cliente", "plantilla", "nivel", "estado", "creado_en")
-    list_filter = ("es_demo", "plantilla__tipo_evento", "nivel")
+    list_filter = ("plantilla__tipo_evento", "nivel")
     search_fields = ("cliente", "invitacion__anfitriones")
     readonly_fields = ("link_para_el_cliente", "invitacion_creada", "cancion", "notas", "enviado_en")
-    fields = ("cliente", "plantilla", "nivel", "es_demo", "link_para_el_cliente", "invitacion_creada", "cancion", "notas", "enviado_en")
+    fields = ("cliente", "plantilla", "nivel", "link_para_el_cliente", "invitacion_creada", "cancion", "notas", "enviado_en")
     actions = ["publicar"]
 
     @admin.display(description="Estado")
     def estado(self, obj):
-        if obj.es_demo:
-            return "🧪 Demo (no guarda nada)"
         if obj.invitacion is None:
             return "⏳ Esperando datos"
         return "✅ Publicada" if obj.invitacion.activa else "📝 Datos recibidos: revisar"

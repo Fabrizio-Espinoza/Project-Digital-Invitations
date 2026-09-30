@@ -150,9 +150,7 @@ Prueba: `https://tuusuario.pythonanywhere.com/` (el catálogo),
 python manage.py crear_todos_los_demos --host https://tuusuario.pythonanywhere.com
 ```
 
-Imprime los 15 links de las invitaciones y los 15 formularios de prueba
-(`/pedido/demo-…/`, no guardan nada: para mandárselos a prospectos). Sube las
-fotos de galería desde el admin.
+Imprime los 15 links. Sube las fotos de galería desde el admin.
 
 ## 6. Dominio propio + HTTPS
 

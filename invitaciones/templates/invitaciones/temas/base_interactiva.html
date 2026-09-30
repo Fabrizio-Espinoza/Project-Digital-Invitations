@@ -53,7 +53,10 @@
                               background: #1B1714; color: #F7F2EC; font: 600 13px/1.2 system-ui, sans-serif; white-space: nowrap;
                               box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.5); }
         .aviso-vista-previa a { padding: 0.35rem 0.7rem; border-radius: 999px; background: #E4475B; color: #fff; text-decoration: none; }
-        .aviso-vista-previa a.secundario { background: transparent; color: #F7F2EC; box-shadow: inset 0 0 0 1.5px rgba(247, 242, 236, 0.4); }
+        /* Marca de agua de la vista previa: cubre toda la pantalla (también en capturas e impresión),
+           gris con orilla blanca para que se lea sobre fondos claros y oscuros; no bloquea los toques */
+        .marca-agua { position: fixed; inset: 0; z-index: 9998; pointer-events: none;
+                      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='170'><text x='120' y='92' transform='rotate(-28 120 85)' text-anchor='middle' font-family='system-ui, sans-serif' font-size='21' font-weight='800' letter-spacing='3' fill='rgba(120,120,120,0.30)' stroke='rgba(255,255,255,0.35)' stroke-width='0.8'>VISTA PREVIA</text></svg>") 0 0 / 240px 170px repeat; }
     </style>
     {% if vista_previa %}<meta name="robots" content="noindex, nofollow">{% endif %}
     {% block estilos %}
@@ -62,11 +65,8 @@
 </head>
 <body>
 {% if vista_previa %}
-    {% if vista_previa.es_demo %}
-    <div class="aviso-vista-previa" role="status">Demo · así quedaría la tuya <a class="secundario" href="{% url 'pedido' vista_previa.token %}" onclick="history.back(); return false;">Volver</a> <a href="{{ demo_whatsapp }}" target="_blank" rel="noopener">La quiero</a></div>
-    {% else %}
     <div class="aviso-vista-previa" role="status">Vista previa · aún no se publica <a href="{% url 'pedido' vista_previa.token %}">Corregir datos</a></div>
-    {% endif %}
+    <div class="marca-agua" aria-hidden="true"></div>
 {% endif %}
 
     <section class="hero animar-entrada">
