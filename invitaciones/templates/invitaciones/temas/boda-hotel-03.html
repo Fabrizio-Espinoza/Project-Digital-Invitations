@@ -1,0 +1,1163 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  HOTEL AMOR — tercera plantilla de boda.
+
+  Concepto: la boda como un hotel boutique (la tendencia de "hotel branding"
+  en bodas: escudo con monograma, llaveros de habitacion, "no molestar").
+  Pensada para bodas en hacienda, hotel o destino, el cliente que mas invierte.
+
+    Portada ....... toldo de rayas, escudo del hotel con el monograma, cinco
+                    estrellas, "HOTEL" + nombres y el check-in.
+    Reservacion ... los datos como confirmacion de hotel; countdown en cuatro
+                    relojes de lobby.
+    Actividades ... itinerario en un letrero de fieltro con letras blancas y la
+                    nota de "solo adultos" como colgador de "No molestar".
+    Retratos ...... fotos en marcos de laton sobre pared verde.
+    Check-in ...... RSVP como tarjeta de registro; al confirmar, el invitado
+                    recibe su llave: "Habitacion N.º 024" (su lugar en la lista).
+    Musica ........ la campanita de recepcion.
+
+  Es distinta de Terracota Velada (floral, durazno) y de Cobalto Editorial
+  (revista, azul): paleta "old money" de hotel: verde botella · crema · vino · laton.
+  Tipografia: Gloock (serif de alto contraste, letrero de hotel) + Josefin Sans
+  (geometrica de los años 20, señaletica de lobby). Ambas OFL.
+  Todo el arte (toldo, escudo, relojes, letrero, llave) es CSS/SVG propio.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Hotel{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="h-laton" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#9C7536"/><stop offset=".45" stop-color="#E9CF93"/><stop offset="1" stop-color="#A57E3D"/>
+        </linearGradient>
+        <symbol id="h-estrella" viewBox="0 0 24 24"><path d="M12 1.8 L14.9 8.6 L22.3 9.2 L16.7 14.1 L18.4 21.4 L12 17.5 L5.6 21.4 L7.3 14.1 L1.7 9.2 L9.1 8.6 Z"/></symbol>
+        <symbol id="h-llave" viewBox="0 0 110 40"><circle cx="92" cy="20" r="12" fill="none" stroke="url(#h-laton)" stroke-width="6"/><rect x="10" y="17" width="72" height="6" rx="2" fill="url(#h-laton)"/><path d="M12 23 v10 h7 v-10 z M25 23 v7 h7 v-7 z" fill="url(#h-laton)"/></symbol>
+    </defs>
+</svg>
+
+<!-- toldo de rayas con orilla festoneada, como la entrada de un hotel -->
+<div class="toldo" aria-hidden="true"></div>
+
+<!-- el escudo del hotel: monograma de la pareja (el JS completa las dos iniciales) -->
+<div class="escudo-grupo" aria-hidden="true">
+    <div class="estrellas">
+        {% for estrella in "12345" %}<svg viewBox="0 0 24 24"><use href="#h-estrella"/></svg>{% endfor %}
+    </div>
+    <div class="escudo">
+        <span class="monograma">{{ invitacion.anfitriones|slice:":1" }}</span>
+        <span class="escudo-est">Est. {{ invitacion.fecha_evento|date:"Y" }}</span>
+    </div>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="nos-casamos">Nos casamos</p>
+<p class="checkin"><span>Check-in</span> {{ invitacion.fecha_evento|date:"l j \d\e F"|lower }} · {{ invitacion.fecha_evento|date:"g:i A" }}</p>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="reservacion-cabecera">
+    <p class="kicker">Confirmación de reservación</p>
+    <h2 class="titulo-hotel">Su reservación</h2>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gloock&family=Josefin+Sans:wght@300..700&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 crema · 30 verde · 10 vino + laton */
+        --crema: #F5EDE0;
+        --papel: #FFFBF3;
+        --verde: #1E4A3B;
+        --verde-hondo: #143328;
+        --vino: #7E1F2D;
+        --laton: #C29B55;
+        --laton-oscuro: #8C6A2E;
+        --laton-claro: #E3C88E;
+        --texto: #2B2A26;
+        --texto-suave: rgba(43, 42, 38, 0.7);
+
+        --hotel: 'Gloock', 'Didot', Georgia, serif;
+        --lobby: 'Josefin Sans', 'Futura', 'Century Gothic', sans-serif;
+
+        --margen: clamp(1.4rem, 6vw, 2.5rem);
+        --ancho: 26rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        --degradado-laton: linear-gradient(135deg, #9C7536, #E9CF93 45%, #A57E3D);
+        /* linea punteada de formato de hotel (como fondo: respeta el padding) */
+        --punteado: repeating-linear-gradient(90deg, rgba(194, 155, 85, 0.7) 0 4px, transparent 4px 8px);
+        /* marco doble de papeleria de hotel */
+        --marco-hoja: inset 0 0 0 0.7rem var(--crema), inset 0 0 0 calc(0.7rem + 1px) var(--laton), inset 0 0 0 calc(0.7rem + 4px) var(--crema), inset 0 0 0 calc(0.7rem + 5px) var(--laton);
+        /* campanita de recepcion, para el boton de musica */
+        --campana: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='5.2' r='1.7'/%3E%3Cpath d='M3.8 16.8 A8.2 8.2 0 0 1 20.2 16.8 Z'/%3E%3Crect x='2.2' y='18' width='19.6' height='2.4' rx='1.2'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--crema);
+        color: var(--texto);
+        font-family: var(--lobby);
+        font-size: 1.02rem;
+        line-height: 1.5;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(194, 155, 85, 0.25);
+    }
+    ::selection {
+        background: var(--laton-claro);
+        color: var(--verde-hondo);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 600 0.7rem/1.4 var(--lobby);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+    }
+    .titulo-hotel {
+        margin: 0.2rem 0 0;
+        font: 400 clamp(2rem, 9.5vw, 2.7rem)/1.05 var(--hotel);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (la campanita de recepcion)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.1rem;
+        height: 3.1rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--degradado-laton);
+        cursor: pointer;
+        box-shadow: 0 0 0 2px var(--verde-hondo), 0 8px 16px -6px rgba(20, 51, 40, 0.6);
+    }
+    .boton-musica svg {
+        display: none;   /* la campanita reemplaza los iconos de nota/pausa del motor */
+    }
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0.72rem;
+        background: var(--verde-hondo);
+        -webkit-mask: var(--campana) center / contain no-repeat;
+        mask: var(--campana) center / contain no-repeat;
+    }
+    .boton-musica.sonando {
+        animation: timbre 1.8s ease-in-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--vino);
+        outline-offset: 4px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.escudo-grupo, .eyebrow, .nombres, .mensaje, .nos-casamos, .checkin, .reservacion-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    .visible .toldo {
+        animation: desplegar 0.9s var(--curva) both;
+    }
+    .visible .estrellas svg {
+        animation: brillar 0.5s var(--curva) calc(0.5s + var(--n, 0) * 0.08s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.8rem; }
+    }
+    @keyframes desplegar {
+        from { scale: 1 0.2; }
+    }
+    @keyframes brillar {
+        from { opacity: 0; scale: 0.3; }
+    }
+    @keyframes timbre {
+        0%, 60%, 100% { rotate: 0deg; }
+        10% { rotate: -14deg; }
+        20% { rotate: 12deg; }
+        30% { rotate: -8deg; }
+        40% { rotate: 5deg; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.3; }
+    }
+    @keyframes columpio {
+        0% { opacity: 0; translate: 0 -2.5rem; rotate: 18deg; }
+        30% { opacity: 1; translate: 0 0; rotate: -12deg; }
+        55% { rotate: 7deg; }
+        75% { rotate: -4deg; }
+        100% { rotate: 0deg; }
+    }
+
+    /* ============================================
+       PORTADA: la fachada del hotel
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 var(--margen) 4.8rem;   /* abajo: aire para la campanita */
+        background: var(--crema);
+        box-shadow: var(--marco-hoja);
+        overflow: hidden;
+    }
+    .marco-decorativo {
+        display: contents;
+    }
+    /* rayas verde/crema; la mascara recorta un festón por cada raya y un
+       degradado le da volumen de lona */
+    .toldo {
+        position: relative;
+        flex: none;
+        align-self: stretch;
+        height: 5.2rem;
+        margin-inline: calc(-1 * var(--margen));
+        background:
+            linear-gradient(180deg, rgba(0, 0, 0, 0.28), transparent 40%, rgba(255, 255, 255, 0.08) 70%, rgba(0, 0, 0, 0.12)),
+            repeating-linear-gradient(90deg, var(--verde) 0 2.2rem, var(--papel) 2.2rem 4.4rem);
+        -webkit-mask:
+            linear-gradient(#000 0 0) top / 100% calc(100% - 1.1rem) no-repeat,
+            radial-gradient(circle at 50% 0, #000 1.1rem, transparent 1.13rem) 0 100% / 2.2rem 1.1rem repeat-x;
+        mask:
+            linear-gradient(#000 0 0) top / 100% calc(100% - 1.1rem) no-repeat,
+            radial-gradient(circle at 50% 0, #000 1.1rem, transparent 1.13rem) 0 100% / 2.2rem 1.1rem repeat-x;
+        transform-origin: top center;
+        filter: drop-shadow(0 6px 6px rgba(20, 51, 40, 0.25));
+    }
+    .escudo-grupo {
+        --retraso: 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.45rem;
+        /* escudo + textos se centran juntos en lo que queda bajo el toldo */
+        margin-top: auto;
+        padding-top: clamp(1rem, 3.5vh, 2rem);
+    }
+    .estrellas {
+        display: flex;
+        gap: 0.3rem;
+    }
+    .estrellas svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        fill: var(--laton);
+    }
+    .estrellas svg:nth-child(2) { --n: 1; }
+    .estrellas svg:nth-child(3) { --n: 2; }
+    .estrellas svg:nth-child(4) { --n: 3; }
+    .estrellas svg:nth-child(5) { --n: 4; }
+    /* ovalo verde con doble filete de laton */
+    .escudo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: clamp(6.4rem, 29vw, 8rem);
+        aspect-ratio: 5 / 6;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 30%, #285E4B, var(--verde) 60%, var(--verde-hondo));
+        border: 2px solid var(--laton);
+        outline: 1px solid var(--laton);
+        outline-offset: 4px;
+        box-shadow: 0 12px 22px -12px rgba(20, 51, 40, 0.8);
+    }
+    .monograma {
+        font: 400 clamp(2rem, 9vw, 2.5rem)/1 var(--hotel);
+        color: var(--crema);
+        letter-spacing: -0.02em;
+    }
+    .monograma i {
+        font-style: normal;
+        color: var(--laton-claro);
+    }
+    .escudo-est {
+        margin-top: 0.35rem;
+        font: 600 0.58rem/1 var(--lobby);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--laton-claro);
+    }
+    .hero-contenido {
+        display: flex;
+        margin-bottom: auto;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+        padding-top: 0.6rem;
+    }
+    /* "HOTEL" con filetes a los lados, como el letrero de la fachada */
+    .eyebrow {
+        --retraso: 0.35s;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 0;
+        font: 600 0.8rem/1 var(--lobby);
+        letter-spacing: 0.55em;
+        text-transform: uppercase;
+        color: var(--laton-oscuro);
+    }
+    .eyebrow::before,
+    .eyebrow::after {
+        content: "";
+        width: 2.2rem;
+        height: 1px;
+        background: var(--laton);
+    }
+    .nombres {
+        --retraso: 0.45s;
+        max-width: 100%;   /* sin esto el titulo crece con el nombre y el JS no detecta que no cabe */
+        min-width: 0;
+        margin: 0.5rem 0 0;
+        font: 400 clamp(2.5rem, 12.5vw, 4rem)/1.02 var(--hotel);
+        color: var(--verde);
+        text-wrap: balance;
+    }
+    .nombres .amp {
+        color: var(--vino);
+    }
+    .mensaje {
+        --retraso: 0.6s;
+        max-width: 30ch;
+        margin: 0.8rem 0 0;
+        font-size: 0.98rem;
+        color: var(--texto-suave);
+        text-wrap: pretty;
+    }
+    .nos-casamos {
+        --retraso: 0.7s;
+        margin: 1rem 0 0;
+        font: 400 1.35rem/1 var(--hotel);
+        color: var(--vino);
+    }
+    .checkin {
+        --retraso: 0.8s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin: 0.7rem 0 0;
+        padding: 0.45rem 0.9rem 0.35rem;
+        border: 1px solid var(--laton);
+        font: 600 0.8rem/1 var(--lobby);
+        letter-spacing: 0.06em;
+        color: var(--verde);
+    }
+    .checkin span {
+        padding: 0.2rem 0.4rem 0.1rem;
+        background: var(--verde);
+        color: var(--laton-claro);
+        font-size: 0.62rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       PANTALLA 2: SU RESERVACION (el lobby verde)
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem var(--margen) 4.8rem;
+        background: radial-gradient(ellipse at 50% 0%, #285E4B, var(--verde) 55%, var(--verde-hondo));
+        color: var(--crema);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 0.9rem;
+    }
+    .reservacion-cabecera {
+        --retraso: 0.05s;
+    }
+    .reservacion-cabecera .kicker {
+        color: var(--laton-claro);
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* detalles + lugares + vestimenta forman una sola tarjeta de papel */
+    .detalles,
+    .lugares,
+    .vestimenta {
+        background: var(--papel);
+        color: var(--texto);
+        padding: 0 1.1rem;
+        border-inline: 1px solid var(--laton);
+    }
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: auto auto auto;
+        justify-content: center;
+        align-items: center;
+        gap: 0 1.3rem;
+        padding-top: 0.9rem;
+        padding-bottom: 0.8rem;
+        border-top: 1px solid var(--laton);
+        /* segundo filete del borde doble (fondo, para no chocar con el box-shadow del cierre) */
+        background: linear-gradient(var(--laton), var(--laton)) 0 3px / 100% 1px no-repeat, var(--papel);
+    }
+    .lugares {
+        --retraso: 0.25s;
+    }
+    /* la ultima pieza de la tarjeta (sea cual sea) cierra con el filete doble */
+    .pantalla-contenido > :is(.detalles, .lugares, .vestimenta):not(:has(+ :is(.lugares, .vestimenta))) {
+        border-bottom: 1px solid var(--laton);
+        box-shadow: inset 0 -3px 0 var(--papel), inset 0 -4px 0 var(--laton);
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.15rem;
+    }
+    .lugar-item {
+        padding-block: 0.7rem;
+        background: var(--punteado) top / 100% 1px no-repeat;
+    }
+    .detalle-divisor {
+        width: 1px;
+        height: 2.4rem;
+        background: var(--laton);
+    }
+    .detalle-label {
+        font: 600 0.62rem/1.3 var(--lobby);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--laton-oscuro);
+    }
+    .detalle-valor {
+        font: 400 1.12rem/1.25 var(--hotel);
+        color: var(--verde);
+        text-wrap: balance;
+    }
+    /* Django escribe "08 de Mayo"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        font-size: 0.85rem;
+        color: var(--texto-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        padding-block: 0.7rem;
+        background: var(--punteado) top / calc(100% - 2.2rem) 1px no-repeat, var(--papel);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 1px var(--laton), inset 0 -2px 3px rgba(0, 0, 0, 0.12);
+    }
+
+    /* ============================================
+       COUNTDOWN: cuatro relojes de lobby
+       ============================================ */
+    .countdown {
+        --retraso: 0.45s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        margin-top: 0.95rem;
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    /* caratula: marcas de las horas con un conic-gradient, tapadas al centro */
+    .countdown span {
+        display: grid;
+        place-items: center;
+        width: clamp(3.4rem, 16vw, 4.2rem);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle, var(--papel) 60%, transparent 61%),
+            repeating-conic-gradient(var(--verde) 0 2deg, transparent 2deg 30deg),
+            var(--papel);
+        border: 3px solid var(--laton);
+        box-shadow: 0 0 0 2px var(--verde-hondo), 0 8px 14px -6px rgba(0, 0, 0, 0.55);
+        font: 400 1.35rem/1 var(--hotel);
+        color: var(--verde);
+    }
+    /* plaquita de laton bajo cada reloj, como las ciudades del lobby */
+    .countdown label {
+        padding: 0.2rem 0.45rem 0.1rem;
+        background: var(--degradado-laton);
+        color: var(--verde-hondo);
+        font: 700 0.55rem/1.2 var(--lobby);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.55s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-top: 0.95rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.75rem;
+        padding: 0.15rem 0.7rem 0;
+        border: 1px solid var(--laton);
+        color: var(--crema);
+        text-decoration: none;
+        font: 600 0.72rem/1 var(--lobby);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .accion-icono:hover {
+        background: rgba(194, 155, 85, 0.18);
+    }
+    .accion-icono[href="#rsvp"] {
+        border-color: var(--vino);
+        background: var(--vino);
+    }
+    .accion-icono[href="#rsvp"]:hover {
+        background: #6A1826;
+    }
+    .accion-icono:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--laton-claro);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+        margin-top: -0.15rem;
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: actividades del dia
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.1rem;
+        padding: 2.4rem var(--margen) 4.8rem;
+        /* papel tapiz de rayas finas, como un pasillo de hotel */
+        background: repeating-linear-gradient(90deg, transparent 0 1.1rem, rgba(30, 74, 59, 0.07) 1.1rem 1.2rem), var(--crema);
+        box-shadow: var(--marco-hoja);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.6rem 1rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: 600 0.64rem/1.4 var(--lobby);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--laton-oscuro);
+    }
+    .familia-nombres {
+        font: 400 1.08rem/1.2 var(--hotel);
+        color: var(--verde);
+        text-wrap: balance;
+    }
+    /* letrero de fieltro con ranuras y letras blancas, en marco de madera */
+    .itinerario {
+        --retraso: 0.1s;
+        padding: 0.9rem 0.9rem 1rem;
+        background: repeating-linear-gradient(180deg, #1C1C1C 0 3px, #2A2A2A 3px 6px);
+        border: 0.6rem solid #8A5A32;
+        border-image: linear-gradient(135deg, #A06C3D, #6E4323 50%, #9A6638) 1;
+        box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.7), 0 14px 24px -12px rgba(0, 0, 0, 0.6);
+        color: #F4F1EA;
+    }
+    .itinerario::before {
+        content: "Actividades del día";
+        display: block;
+        margin-bottom: 0.2rem;
+        font: 700 0.72rem/1.3 var(--lobby);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--laton-claro);
+    }
+    .itinerario h3 {
+        margin: 0 0 0.4rem;
+        font: 700 1.15rem/1.2 var(--lobby);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: 5rem 1fr;
+        gap: 0.5rem;
+        padding: 0.22rem 0;
+        text-align: left;
+        font: 600 0.82rem/1.25 var(--lobby);
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+    }
+    .itinerario-hora {
+        color: var(--laton-claro);
+        white-space: nowrap;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        min-height: 3rem;
+        border: 1px solid var(--laton);
+        color: var(--verde);
+        text-decoration: none;
+        font: 600 0.78rem/1 var(--lobby);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+    .boton-mesa-regalos::before {
+        content: "Concierge ·";
+        color: var(--laton-oscuro);
+    }
+    .boton-mesa-regalos:hover {
+        background: rgba(194, 155, 85, 0.15);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--vino);
+        outline-offset: 3px;
+    }
+    /* colgador de puerta: la nota de niños con humor (el JS decide el titulo) */
+    .nota-ninos {
+        --retraso: 0.3s;
+        position: relative;
+        width: 9rem;
+        max-width: none;
+        margin: 0;
+        padding: 3.1rem 0.8rem 1rem;
+        border-radius: 0.8rem 0.8rem 0.5rem 0.5rem;
+        background: var(--vino);
+        color: var(--crema);
+        font: 600 0.66rem/1.4 var(--lobby);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        rotate: -3deg;
+        -webkit-mask: radial-gradient(circle 0.95rem at 50% 1.55rem, transparent 97%, #000);
+        mask: radial-gradient(circle 0.95rem at 50% 1.55rem, transparent 97%, #000);
+        box-shadow: inset 0 0 0 4px var(--vino), inset 0 0 0 5px var(--laton);
+    }
+    .nota-ninos::before {
+        content: var(--titulo-colgador, "Aviso");
+        display: block;
+        margin-bottom: 0.4rem;
+        font: 400 1.15rem/1.1 var(--hotel);
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--laton-claro);
+    }
+
+    /* ============================================
+       GALERIA: salon de retratos
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 0.9rem;
+        align-content: center;
+        padding: 2.4rem max(var(--margen), (100% - 30rem) / 2) 4.8rem;
+        background: radial-gradient(ellipse at 50% 0%, #285E4B, var(--verde) 55%, var(--verde-hondo));
+    }
+    /* kicker + titulo con los dos pseudo-elementos; order los sube antes de las fotos */
+    .galeria::before {
+        content: "Galería del hotel";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -0.8rem;
+        font: 600 0.7rem/1.4 var(--lobby);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--laton-claro);
+    }
+    .galeria::after {
+        content: "Salón de retratos";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 400 clamp(2rem, 9.5vw, 2.6rem)/1.1 var(--hotel);
+        color: var(--crema);
+    }
+    /* marialuisa crema + marco delgado de laton */
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        padding: 0.55rem;
+        background: var(--papel);
+        border: 0.35rem solid var(--laton);
+        border-image: var(--degradado-laton) 1;
+        box-shadow: 0 12px 20px -10px rgba(0, 0, 0, 0.7);
+    }
+    /* como en un salon de museo: la columna derecha cuelga un poco mas abajo */
+    .galeria img:nth-of-type(even) {
+        translate: 0 1.4rem;
+    }
+
+    /* ============================================
+       RSVP: check-in (tarjeta de registro)
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.6rem var(--margen) 5rem;
+        background: var(--crema);
+        box-shadow: var(--marco-hoja);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Registro de huéspedes";
+        font: 600 0.7rem/1.4 var(--lobby);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--laton-oscuro);
+    }
+    .rsvp h2 {
+        margin: 0.25rem auto 0.4rem;
+        font: 400 clamp(2.1rem, 10vw, 2.7rem)/1.05 var(--hotel);
+        color: var(--verde);
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: var(--texto-suave);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 400 1.4rem/1 var(--hotel);
+        color: var(--vino);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.6s var(--curva);
+    }
+    /* Django escribe "10 de Abril": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-size: 0.9rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.95rem;
+        margin: 1.3rem auto 0;
+        padding: 0 1.1rem 1.2rem;
+        background: var(--papel);
+        border: 1px solid var(--laton);
+        text-align: left;
+        box-shadow: 0 16px 26px -16px rgba(20, 51, 40, 0.5);
+    }
+    #form-rsvp::before {
+        content: "Tarjeta de registro";
+        margin: 0 -1.1rem 0.2rem;
+        padding: 0.55rem 1rem 0.45rem;
+        background: var(--verde);
+        color: var(--laton-claro);
+        font: 700 0.66rem/1.2 var(--lobby);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        text-align: center;
+    }
+    /* renglones de formato de hotel (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.5rem 0.1rem;
+        border: 0;
+        border-bottom: 1px solid var(--verde);
+        border-radius: 0;
+        background: transparent;
+        color: var(--texto);
+        font: 400 1.05rem/1.4 var(--lobby);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(43, 42, 38, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--laton);
+        box-shadow: 0 1px 0 var(--laton);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.8rem;
+        padding: 0.15rem 0.3rem 0;
+        border: 1px solid var(--laton);
+        font: 600 0.78rem/1.15 var(--lobby);
+        letter-spacing: 0.04em;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--verde);
+        background: var(--verde);
+        color: var(--crema);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--vino);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 600 0.66rem/1.3 var(--lobby);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--laton-oscuro);
+    }
+    .campo-con-label input {
+        max-width: 4rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.2rem;
+        padding-top: 0.2rem;
+        border: 0;
+        background: var(--vino);
+        color: var(--crema);
+        font: 700 0.8rem/1 var(--lobby);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: inset 0 0 0 3px var(--vino), inset 0 0 0 4px var(--laton);
+        transition: background 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        background: #6A1826;
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--laton);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 400 1.35rem/1.2 var(--hotel);
+        color: var(--verde);
+    }
+
+    /* --- La llave de la habitacion que recibe cada invitado al confirmar --- */
+    .llave-habitacion {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 0.8rem;
+        padding-right: 2rem;   /* compensa la llave para que el llavero quede al centro */
+        transform-origin: 50% 0;
+        animation: columpio 1.6s var(--curva) both;
+    }
+    /* la argolla de la llave pasa por el ojal del llavero */
+    .llave-habitacion svg {
+        position: relative;
+        z-index: 1;
+        width: 4.6rem;
+        height: 1.7rem;
+        margin-right: -2rem;
+    }
+    /* el llavero clasico: rombo alargado de plastico verde con ojal de laton */
+    .llavero {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 8.6rem;
+        height: 3.6rem;
+        padding-left: 1.3rem;
+        background: linear-gradient(160deg, #2C6A54, var(--verde) 50%, var(--verde-hondo));
+        clip-path: polygon(8% 0, 92% 0, 100% 50%, 92% 100%, 8% 100%, 0 50%);
+        color: var(--crema);
+    }
+    .llavero::before {
+        content: "";
+        position: absolute;
+        left: 0.9rem;
+        top: 50%;
+        width: 0.7rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: var(--crema);
+        box-shadow: 0 0 0 2px var(--laton);
+        translate: 0 -50%;
+    }
+    .llavero small {
+        font: 600 0.5rem/1.2 var(--lobby);
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: var(--laton-claro);
+    }
+    .llavero strong {
+        font: 400 1.3rem/1.1 var(--hotel);
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        // --- 1. Monograma del escudo y el "&" en color vino ---
+        // Se separa por el conector que escribio el cliente (&, y, e).
+        const titulo = document.querySelector('.nombres');
+        const texto = titulo ? titulo.textContent.trim() : '';
+        const partes = texto.split(/\s+(&|y|e)\s+/i);
+        let monograma = texto.charAt(0);
+        if (partes.length === 3) {
+            monograma = partes[0].charAt(0) + '&' + partes[2].charAt(0);
+            titulo.textContent = '';
+            const amp = document.createElement('span');
+            amp.className = 'amp';
+            amp.textContent = partes[1];
+            titulo.append(partes[0] + ' ', amp, ' ' + partes[2]);
+        }
+        const escudo = document.querySelector('.monograma');
+        if (escudo && monograma) {
+            escudo.textContent = '';
+            [...monograma].forEach(letra => {
+                if (letra === '&') {
+                    const i = document.createElement('i');
+                    i.textContent = '&';
+                    escudo.appendChild(i);
+                } else {
+                    escudo.append(letra.toUpperCase());
+                }
+            });
+        }
+
+        // --- 2. Cada dato con su nombre de hotel ("Día" -> "Check-in") ---
+        const etiquetas = {
+            'Día': 'Check-in', 'Lugar': 'Ubicación', 'Código de vestimenta': 'Etiqueta del hotel'
+        };
+        document.querySelectorAll('.pantalla-info .detalle-label').forEach(el => {
+            const original = el.textContent.trim();
+            if (etiquetas[original]) el.textContent = etiquetas[original];
+        });
+        const enviar = document.querySelector('#form-rsvp button');
+        if (enviar) enviar.textContent = 'Hacer check-in';
+
+        // --- 3. El colgador de puerta: "No molestar" o "Club de niños" ---
+        const nota = document.querySelector('.nota-ninos');
+        if (nota) {
+            const soloAdultos = nota.textContent.includes('adultos');
+            nota.style.setProperty('--titulo-colgador', soloAdultos ? '"No molestar"' : '"Club de niños"');
+        }
+
+        // --- 4. El nombre nunca se sale de la pantalla (ni pasa de 2 renglones) ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 1.02 * 2.3;   // 1.02 = line-height
+            let vueltas = 0;
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 5. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actual = total.textContent;
+                if (actual !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;   // reinicia la animacion
+                    total.classList.add('cambio');
+                }
+                anterior = actual;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 6. Al hacer check-in, el invitado recibe la llave de su habitacion ---
+        // El motor avisa con el evento "rsvp:enviado"; el numero de habitacion
+        // es su lugar en la lista de confirmados. Solo el "Sí" cuenta en esa
+        // lista, asi que "No podré" y "Tal vez" no reciben llave.
+        const status = document.getElementById('rsvp-status');
+        document.addEventListener('rsvp:enviado', e => {
+            const previa = document.querySelector('.llave-habitacion');
+            if (previa) previa.remove();
+            if (!status || e.detail.asistencia !== 'si') return;
+            const numero = String(parseInt(e.detail.total_confirmados, 10) || 1).padStart(3, '0');
+            const llave = document.createElement('div');
+            llave.className = 'llave-habitacion';
+            llave.setAttribute('role', 'img');
+            llave.setAttribute('aria-label', 'Tu llave: habitación número ' + numero);
+            llave.innerHTML = '<svg viewBox="0 0 110 40" aria-hidden="true"><use href="#h-llave"/></svg>' +
+                '<div class="llavero"><small>Hotel ' + (escudo ? escudo.textContent : '') + '</small>' +
+                '<strong>N.º ' + numero + '</strong></div>';
+            status.after(llave);
+        });
+    })();
+</script>
+{% endblock %}

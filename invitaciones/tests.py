@@ -476,3 +476,23 @@ class DemoEntregaEspecialTests(TestCase):
         guia = "Guía BB-" + invitacion.contenido_extra["fecha_probable_parto"].replace("-", "")
         self.assertContains(respuesta, guia)
         self.assertContains(respuesta, "/static/invitaciones/pwa/baby-shower-entrega-02-180.png")
+
+
+class DemoHotelAmorTests(TestCase):
+    def test_crear_demo_hotel_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        call_command("crear_demo_hotel", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="boda-hotel-03").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-hotel-amor")
+        self.assertEqual(invitacion.musica_url, "http://192.168.1.50:8000/static/invitaciones/musica/cancion-boda.mp3")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 18)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-hotel-03.html")
+        # toldo, escudo con el año, check-in con la fecha en minúsculas y la llave del RSVP
+        for fragmento in ('class="toldo"', "Est. 2027", "sábado 8 de mayo", "Su reservación",
+                          'id="h-llave"', "rsvp:enviado", 'class="nota-ninos"'):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/boda-hotel-03-180.png")
