@@ -17,6 +17,7 @@ Tres piezas:
 import uuid
 from datetime import datetime
 from io import BytesIO
+from urllib.parse import quote
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -51,13 +52,15 @@ TITULO_AUTOMATICO = {
     "baby_shower": "Baby shower de {}",
     "evento": "{}",
 }
-MENSAJE_EJEMPLO = {
-    "boda": "Ej. Con la alegría de nuestras familias, queremos compartir contigo el día en que unimos nuestras vidas.",
-    "xv": "Ej. Hay momentos que se viven una sola vez. Quiero que estés conmigo en esta noche tan especial.",
-    "graduacion": "Ej. Después de años de esfuerzo, llegó el momento de celebrar. Me encantaría que fueras parte.",
-    "fiesta": "Ej. Treinta vueltas al sol merecen una noche que no se olvide. ¡Ven a celebrar conmigo!",
-    "baby_shower": "Ej. Con el corazón lleno de ilusión te invitamos a celebrar la llegada de nuestro bebé.",
-    "evento": "Un mensaje corto para tus invitados.",
+# Si el cliente no escribe mensaje, va este (se le enseña como ejemplo en el campo):
+# una portada sin mensaje se ve vacía en casi todos los diseños.
+MENSAJE_POR_DEFECTO = {
+    "boda": "Con la alegría de nuestras familias, queremos compartir contigo el día en que unimos nuestras vidas. Tu presencia es nuestro mejor regalo.",
+    "xv": "Hay momentos que se viven una sola vez. Quiero que estés conmigo en esta noche tan especial.",
+    "graduacion": "Después de años de esfuerzo, llegó el momento de celebrar. Me encantaría que fueras parte de este día.",
+    "fiesta": "¡Estás invitado! Ven a celebrar conmigo, va a estar increíble.",
+    "baby_shower": "Con el corazón lleno de ilusión te invitamos a celebrar la llegada de nuestro bebé.",
+    "evento": "Nos encantaría contar con tu presencia.",
 }
 
 # Programa, familia y mesas de regalos: filas que el cliente agrega con un botón.
@@ -128,7 +131,7 @@ def _texto(etiqueta, ejemplo="", requerido=False, largo=200, ayuda="", area=Fals
     return forms.CharField(label=etiqueta, required=requerido, max_length=largo, help_text=ayuda, widget=widget)
 
 
-def _link(etiqueta, ayuda="Copia el link de Google Maps (botón Compartir)."):
+def _link(etiqueta, ayuda="Opcional: copia el link de Google Maps (botón Compartir). Si no, lo buscamos con el nombre del lugar."):
     return forms.URLField(label=etiqueta, required=False, max_length=500, help_text=ayuda, assume_scheme="https",
                           widget=forms.URLInput(attrs={"placeholder": "https://maps.app.goo.gl/…", "inputmode": "url"}))
 
@@ -161,7 +164,8 @@ class FormularioPedido(forms.Form):
                              ayuda="Opcional. Si lo dejas vacío lo armamos con los nombres.")
         f["fecha"] = _fecha("Fecha del evento", requerido=True)
         f["hora"] = forms.TimeField(label="Hora", widget=forms.TimeInput(attrs={"type": "time"}, format="%H:%M"))
-        f["mensaje"] = _texto("Mensaje para tus invitados", MENSAJE_EJEMPLO.get(tipo, ""), largo=600, area=True)
+        f["mensaje"] = _texto("Mensaje para tus invitados", MENSAJE_POR_DEFECTO.get(tipo, ""), largo=600, area=True,
+                              ayuda="Opcional. Si lo dejas vacío, usamos el que ves de ejemplo.")
         secciones.append(("Lo básico", "", ["anfitriones", "titulo", "fecha", "hora", "mensaje"], []))
 
         if tipo == "baby_shower":
@@ -180,7 +184,8 @@ class FormularioPedido(forms.Form):
         if tipo == "graduacion":
             f["carrera"] = _texto("Carrera o nivel", "Ej. Licenciatura en Arquitectura", largo=120)
             f["institucion"] = _texto("Escuela", "Ej. Universidad Autónoma de Nuevo León", largo=120)
-            f["generacion"] = _texto("Generación", "Ej. 2022 — 2026", largo=40)
+            f["generacion"] = _texto("Generación", "Ej. 2022 — 2026", largo=40,
+                                     ayuda="Opcional. Si lo dejas vacío, ponemos el año del evento.")
             secciones.append(("La graduación", "", ["carrera", "institucion", "generacion"], []))
 
         # --- Dónde ---
@@ -438,12 +443,43 @@ def datos_iniciales(pedido):
     return iniciales, filas
 
 
+def _buscar_en_mapa(*partes):
+    texto = ", ".join(p for p in partes if p)
+    return f"https://www.google.com/maps/search/?api=1&query={quote(texto)}" if texto else ""
+
+
+def completar_por_defecto(datos, tipo):
+    """
+    Lo que el cliente dejó vacío y se puede completar SIN inventar datos,
+    para que la invitación no se vea incompleta:
+    - Mensaje: uno cálido según el evento (la portada sin mensaje queda hueca).
+    - Ubicación: si hay nombre del lugar pero no link, un link que busca ese
+      lugar en Google Maps (así siempre sale el botón "Ubicación").
+    - Generación (graduación): el año del evento.
+    Lo que sí sería inventar (horarios, vestimenta, si van niños, regalos) se
+    queda vacío a propósito: la plantilla esconde esa parte en vez de mostrar
+    algo falso que un invitado podría creerse.
+    """
+    datos = dict(datos)
+    if not (datos.get("mensaje") or "").strip():
+        datos["mensaje"] = MENSAJE_POR_DEFECTO.get(tipo, MENSAJE_POR_DEFECTO["evento"])
+    for nombre, mapa in (("ceremonia_nombre", "ceremonia_mapa"), ("recepcion_nombre", "recepcion_mapa")):
+        if datos.get(nombre) and not datos.get(mapa):
+            datos[mapa] = _buscar_en_mapa(datos[nombre])
+    if datos.get("lugar_nombre") and not datos.get("lugar_mapa"):
+        datos["lugar_mapa"] = _buscar_en_mapa(datos["lugar_nombre"], datos.get("lugar_direccion"))
+    if tipo == "graduacion" and not datos.get("generacion") and datos.get("fecha"):
+        datos["generacion"] = str(datos["fecha"].year)
+    return datos
+
+
 def guardar_pedido(pedido, datos, filas, fotos, borrar_fotos=()):
     """
     Crea o actualiza la invitación del pedido con lo que mandó el cliente.
     Siempre queda como borrador (activa=False): tú la revisas y la publicas.
     """
     tipo = pedido.plantilla.tipo_evento
+    datos = completar_por_defecto(datos, tipo)
     inv = pedido.invitacion or Invitacion(plantilla=pedido.plantilla, nivel=pedido.nivel, activa=False)
     anfitriones = datos["anfitriones"].strip()
     inv.anfitriones = anfitriones

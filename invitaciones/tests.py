@@ -1129,3 +1129,64 @@ class PedidoTests(TestCase):
         self.pedido.refresh_from_db()
         self.assertTrue(self.pedido.invitacion.activa)
         self.assertEqual(self.client.get(reverse("invitaciones:detalle", args=[self.pedido.invitacion.slug])).status_code, 200)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class PedidoValoresPorDefectoTests(TestCase):
+    def pedido(self, slug_tema, tipo):
+        plantilla = Plantilla.objects.create(nombre=slug_tema, tipo_evento=tipo, slug_tema=slug_tema)
+        return Pedido.objects.create(cliente="Ana", plantilla=plantilla, nivel="premium")
+
+    def test_lo_minimo_se_completa_sin_inventar(self):
+        pedido = self.pedido("boda-hotel-03", "boda")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00",
+            "recepcion_nombre": "Jardín Los Arcos",
+        })
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertIn("unimos nuestras vidas", inv.mensaje_bienvenida)
+        self.assertEqual(inv.contenido_extra["lugar_recepcion_mapa_url"],
+                         "https://www.google.com/maps/search/?api=1&query=Jard%C3%ADn%20Los%20Arcos")
+        # lo que sería inventar se queda fuera: la plantilla esconde esa parte
+        for clave in ("dresscode", "itinerario", "admite_ninos", "mesa_regalos_url", "lugar_ceremonia_mapa_url"):
+            self.assertNotIn(clave, inv.contenido_extra)
+        # el mensaje que sí escriben se respeta
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00",
+            "recepcion_nombre": "Jardín Los Arcos", "mensaje": "¡Nos casamos!",
+        })
+        inv.refresh_from_db()
+        self.assertEqual(inv.mensaje_bienvenida, "¡Nos casamos!")
+
+    def test_graduacion_con_un_solo_lugar(self):
+        pedido = self.pedido("graduacion-salida-03", "graduacion")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Camila", "fecha": "2027-06-19", "hora": "17:00",
+            "lugar_nombre": "Salón Aurora", "lugar_direccion": "Monterrey, N.L.",
+        })
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(inv.contenido_extra["generacion"], "2027")
+        self.assertIn("query=Sal%C3%B3n%20Aurora%2C%20Monterrey%2C%20N.L.", inv.lugar_mapa_url)
+
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class VistaPreviaProtegidaTests(TestCase):
+    def test_la_vista_previa_lleva_marca_de_agua_y_desaparece_al_publicar(self):
+        plantilla = Plantilla.objects.create(nombre="Hotel Amor", tipo_evento="boda", slug_tema="boda-hotel-03")
+        pedido = Pedido.objects.create(cliente="Ana", plantilla=plantilla, nivel="premium")
+        self.client.post(reverse("pedido", args=[pedido.token]), {
+            "anfitriones": "Ana & Luis", "fecha": "2027-05-08", "hora": "18:00", "recepcion_nombre": "Jardín",
+        })
+        previa = reverse("pedido_vista_previa", args=[pedido.token])
+        respuesta = self.client.get(previa)
+        self.assertContains(respuesta, 'class="marca-agua"')
+        # el RSVP de un borrador no recibe confirmaciones
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(self.client.post(reverse("invitaciones:rsvp", args=[inv.slug]),
+                                          {"nombre": "X", "asistencia": "si"}).status_code, 404)
+
+        inv.activa = True
+        inv.save()
+        self.assertRedirects(self.client.get(previa), reverse("invitaciones:detalle", args=[inv.slug]))
+        self.assertNotContains(self.client.get(reverse("invitaciones:detalle", args=[inv.slug])), 'class="marca-agua"')

@@ -545,10 +545,18 @@ def pedido(request, token):
 
 
 def pedido_vista_previa(request, token):
-    """La invitación del pedido tal como va a quedar, aunque todavía no esté publicada."""
+    """
+    La invitación del pedido tal como va a quedar, aunque todavía no esté
+    publicada. Lleva marca de agua "VISTA PREVIA" y su RSVP no funciona
+    (la invitación está inactiva): sirve para revisar, no para mandarla a
+    los invitados. La versión limpia es la que tú publicas.
+    """
     pedido = get_object_or_404(Pedido.objects.select_related("invitacion"), token=token)
     if pedido.invitacion is None:
         return redirect("pedido", token=token)
+    if pedido.invitacion.activa:
+        # ya publicada: la vista previa (con marca de agua) deja de existir
+        return redirect("invitaciones:detalle", slug=pedido.invitacion.slug)
     invitacion = (Invitacion.objects.select_related("plantilla").prefetch_related("galeria")
                   .get(pk=pedido.invitacion.pk))
     return _respuesta_privada(_pintar_invitacion(request, invitacion, vista_previa=pedido))
