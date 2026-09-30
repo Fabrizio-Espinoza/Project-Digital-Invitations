@@ -1190,3 +1190,67 @@ class VistaPreviaProtegidaTests(TestCase):
         inv.save()
         self.assertRedirects(self.client.get(previa), reverse("invitaciones:detalle", args=[inv.slug]))
         self.assertNotContains(self.client.get(reverse("invitaciones:detalle", args=[inv.slug])), 'class="marca-agua"')
+
+
+# ---------------------------------------------------------------------------
+# Panel del anfitrión
+# ---------------------------------------------------------------------------
+class PanelAnfitrionTests(TestCase):
+    def setUp(self):
+        call_command("crear_demo_baby_shower", stdout=StringIO())
+        self.inv = Invitacion.objects.get(slug="demo-baby-mariana-diego")
+        for nombre, asistencia, acompanantes, mensaje in [
+            ("Lucía Pérez", "si", 2, "¡Muchas felicidades!"),
+            ("Tío Beto", "si", 0, ""),
+            ("Karla", "tal_vez", 1, ""),
+            ("Jorge", "no", 0, "Lo siento, estaré de viaje"),
+        ]:
+            Confirmacion.objects.create(invitacion=self.inv, nombre_invitado=nombre, asistencia=asistencia,
+                                        num_acompanantes=acompanantes, mensaje=mensaje)
+        Voto.objects.create(invitacion=self.inv, opcion="nina")
+        self.url = reverse("panel_anfitrion", args=[self.inv.token_panel])
+
+    def test_cada_invitacion_tiene_su_link_privado(self):
+        otra = Invitacion.objects.create(plantilla=self.inv.plantilla, titulo_evento="Otra", anfitriones="X",
+                                         fecha_evento=timezone.now())
+        self.assertGreaterEqual(len(self.inv.token_panel), 12)
+        self.assertNotEqual(self.inv.token_panel, otra.token_panel)
+        self.assertNotEqual(self.inv.token_panel, self.inv.slug)
+        self.assertEqual(self.client.get("/panel/no-existe/").status_code, 404)
+
+    def test_el_panel_cuenta_personas_y_muestra_respuestas(self):
+        respuesta = self.client.get(self.url)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertEqual(respuesta["X-Robots-Tag"], "noindex, nofollow")
+        # personas = los que dicen que sí + sus acompañantes (1+2 y 1+0)
+        self.assertEqual(respuesta.context["personas_si"], 4)
+        self.assertEqual((respuesta.context["total_tal_vez"], respuesta.context["total_no"]), (1, 1))
+        for texto in ("Lucía Pérez", "+2 acompañantes", "Estaré de viaje".lower()[1:], "Descargar lista"):
+            self.assertContains(respuesta, texto)
+        self.assertContains(respuesta, "Revelar: ¡Es niña!")
+        self.assertIn("https://wa.me/?text=", respuesta.context["compartir_whatsapp"])
+
+    def test_la_lista_se_descarga_para_excel(self):
+        respuesta = self.client.get(reverse("panel_lista_csv", args=[self.inv.token_panel]))
+        contenido = respuesta.content.decode("utf-8")
+        self.assertTrue(contenido.startswith("﻿"))     # BOM: Excel respeta los acentos
+        self.assertIn("attachment", respuesta["Content-Disposition"])
+        filas = contenido.lstrip("﻿").splitlines()
+        self.assertEqual(filas[0], "Nombre,Respuesta,Acompañantes,Personas en total,Mensaje,Fecha de respuesta")
+        self.assertEqual(len(filas), 5)
+        self.assertIn("Lucía Pérez,Sí asistiré,2,3,¡Muchas felicidades!", contenido)
+        self.assertIn("Jorge,No podré asistir,0,0", contenido)
+
+    def test_revelar_el_resultado_desde_el_panel(self):
+        revelar = reverse("panel_revelar", args=[self.inv.token_panel])
+        self.assertEqual(self.client.get(revelar).status_code, 405)
+        self.assertEqual(self.client.post(revelar, {"opcion": "inventada"}).status_code, 400)
+        self.assertRedirects(self.client.post(revelar, {"opcion": "nino"}), self.url)
+        self.inv.refresh_from_db()
+        self.assertEqual(self.inv.contenido_extra["votacion"]["resultado"], "nino")
+        # los invitados lo ven en el siguiente sondeo
+        conteo = self.client.get(reverse("invitaciones:conteo_votos", args=[self.inv.slug])).json()
+        self.assertEqual(conteo["resultado"], "nino")
+        panel = self.client.get(self.url)
+        self.assertNotContains(panel, 'name="opcion"')      # ya no hay botones de revelar
+        self.assertContains(panel, "¡Es niño!")

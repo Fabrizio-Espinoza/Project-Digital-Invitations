@@ -42,6 +42,15 @@ class Plantilla(models.Model):
         return f"{self.nombre} ({self.get_tipo_evento_display()})"
 
 
+def _token_privado():
+    # 12 caracteres al azar (~72 bits): imposible de adivinar, corto para WhatsApp
+    return secrets.token_urlsafe(9)
+
+
+# nombre viejo: lo usa la migración 0004
+_token_pedido = _token_privado
+
+
 class Invitacion(models.Model):
     """
     Una invitación comprada por un cliente. Aquí vive TODO lo que varía
@@ -82,6 +91,9 @@ class Invitacion(models.Model):
 
     activa = models.BooleanField(default=True)
     creada_en = models.DateTimeField(auto_now_add=True)
+    # Link privado del panel del anfitrión (/panel/<token>/): ahí ve quién
+    # confirmó y descarga la lista. Distinto del slug público a propósito.
+    token_panel = models.CharField(max_length=24, unique=True, default=_token_privado, editable=False)
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -163,11 +175,6 @@ class Voto(models.Model):
 
 
 
-def _token_pedido():
-    # 12 caracteres al azar (~72 bits): imposible de adivinar, corto para WhatsApp
-    return secrets.token_urlsafe(9)
-
-
 class Pedido(models.Model):
     """
     Un cliente que ya pagó y tiene que mandar sus datos. Tú lo creas en el
@@ -176,7 +183,7 @@ class Pedido(models.Model):
     su Invitacion como borrador (activa=False) para que la revises y la
     publiques. Mientras no la publiques, el cliente puede corregir sus datos.
     """
-    token = models.CharField(max_length=24, unique=True, default=_token_pedido, editable=False)
+    token = models.CharField(max_length=24, unique=True, default=_token_privado, editable=False)
     cliente = models.CharField(max_length=120, help_text="Para ti: cómo identificas a este cliente (no se publica).")
     plantilla = models.ForeignKey(Plantilla, on_delete=models.PROTECT, related_name="pedidos")
     nivel = models.CharField(max_length=20, choices=Invitacion.NIVEL, default="interactiva")

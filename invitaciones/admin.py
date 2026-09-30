@@ -43,8 +43,18 @@ class InvitacionAdmin(admin.ModelAdmin):
     list_display = ("titulo_evento", "plantilla", "nivel", "fecha_evento", "activa", "total_confirmados")
     list_filter = ("nivel", "plantilla__tipo_evento", "activa")
     search_fields = ("titulo_evento", "anfitriones", "slug")
-    readonly_fields = ("id", "slug", "creada_en", "resumen_votacion")
+    readonly_fields = ("id", "slug", "creada_en", "panel_del_anfitrion", "resumen_votacion")
     inlines = [ImagenGaleriaInline, ConfirmacionInline]
+
+    @admin.display(description="Panel del anfitrión")
+    def panel_del_anfitrion(self, obj):
+        if obj is None or obj._state.adding:
+            return "Guarda la invitación y aquí aparece el link."
+        return _botones_link(
+            reverse("panel_anfitrion", args=[obj.token_panel]),
+            "¡Tu invitación ya está lista! En este link privado ves quién confirma, cuántas personas van "
+            "y los mensajes que te dejan (no lo compartas): ",
+        )
 
     @admin.display(description="Confirmados")
     def total_confirmados(self, obj):
@@ -61,6 +71,17 @@ class InvitacionAdmin(admin.ModelAdmin):
             return "Sin votos todavía"
         return " · ".join(f"{opcion}: {total}" for opcion, total in conteos)
 
+
+
+def _botones_link(ruta, mensaje):
+    """Ruta + botones Copiar link / Copiar mensaje para WhatsApp / Abrir. El dominio lo pone el navegador."""
+    return format_html(
+        '<code>{}</code><br>'
+        '<button type="button" class="button" onclick="navigator.clipboard.writeText(location.origin + \'{}\'); this.textContent = \'¡Copiado!\'">Copiar link</button> '
+        '<button type="button" class="button" onclick="navigator.clipboard.writeText(\'{}\' + location.origin + \'{}\'); this.textContent = \'¡Copiado!\'">Copiar mensaje para WhatsApp</button> '
+        '<a class="button" href="{}" target="_blank" rel="noopener">Abrir</a>',
+        ruta, ruta, mensaje, ruta, ruta,
+    )
 
 
 @admin.register(Pedido)
@@ -88,16 +109,10 @@ class PedidoAdmin(admin.ModelAdmin):
     def link_para_el_cliente(self, obj):
         if not obj.pk:
             return "Guarda el pedido y aquí aparece el link."
-        ruta = reverse("pedido", args=[obj.token])
-        # el dominio lo pone el navegador (location.origin): sirve igual en la compu, el túnel o el servidor
-        mensaje = ("¡Hola! Aquí puedes llenar los datos de tu invitación. Toma unos 10 minutos "
-                   "y al terminar ves cómo va quedando: ")
-        return format_html(
-            '<code>{}</code><br>'
-            '<button type="button" class="button" onclick="navigator.clipboard.writeText(location.origin + \'{}\'); this.textContent = \'¡Copiado!\'">Copiar link</button> '
-            '<button type="button" class="button" onclick="navigator.clipboard.writeText(\'{}\' + location.origin + \'{}\'); this.textContent = \'¡Copiado!\'">Copiar mensaje para WhatsApp</button> '
-            '<a class="button" href="{}" target="_blank" rel="noopener">Abrir</a>',
-            ruta, ruta, mensaje, ruta, ruta,
+        return _botones_link(
+            reverse("pedido", args=[obj.token]),
+            "¡Hola! Aquí puedes llenar los datos de tu invitación. Toma unos 10 minutos "
+            "y al terminar ves cómo va quedando: ",
         )
 
     @admin.display(description="Invitación")
@@ -112,6 +127,8 @@ class PedidoAdmin(admin.ModelAdmin):
         if obj.invitacion.activa:
             publica = reverse("invitaciones:detalle", args=[obj.invitacion.slug])
             enlaces += format_html(' · Link para sus invitados: <a href="{}" target="_blank" rel="noopener">{}</a>', publica, publica)
+        panel = reverse("panel_anfitrion", args=[obj.invitacion.token_panel])
+        enlaces += format_html(' · <a href="{}" target="_blank" rel="noopener">Panel del anfitrión</a> (el link para copiárselo está en la invitación)', panel)
         return enlaces
 
     @admin.action(description="Publicar la invitación (el cliente ya no podrá editar sus datos)")
@@ -123,6 +140,7 @@ class PedidoAdmin(admin.ModelAdmin):
                 pedido.invitacion.save(update_fields=["activa"])
                 publicadas += 1
         if publicadas:
-            self.message_user(request, f"Publicadas: {publicadas}. Ya puedes mandar el link a tu cliente.")
+            self.message_user(request, f"Publicadas: {publicadas}. Mándale a tu cliente el link de su invitación "
+                                       "y el de su panel (en la invitación → «Panel del anfitrión»).")
         else:
             self.message_user(request, "No había invitaciones por publicar (sin datos o ya publicadas).", messages.WARNING)

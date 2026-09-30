@@ -183,6 +183,9 @@ en cualquier celular.
    *Vista previa*. Sube su canción y ajusta lo que haga falta en *Editar invitación*.
 4. En la lista de pedidos, márcalo → acción **Publicar la invitación** → manda
    al cliente el link para sus invitados (aparece en el pedido).
+5. Mándale también su **panel del anfitrión**: en la invitación → «Panel del
+   anfitrión» → *Copiar mensaje para WhatsApp*. Ahí ve quién confirma, descarga
+   su lista y (en baby shower) revela el resultado de la votación.
 
 ## 7. Respaldos y limpieza diarios (tarea programada)
 
