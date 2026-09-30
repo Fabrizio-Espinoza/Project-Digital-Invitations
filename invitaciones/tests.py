@@ -4,7 +4,7 @@ from io import StringIO
 from zoneinfo import ZoneInfo
 
 from django.core.management import call_command
-from django.test import TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -582,3 +582,38 @@ class DemoPancitoEnElHornoTests(TestCase):
                           'id="c-concha"', "¿De qué sabor viene?", "Una tarde dulce", "rsvp:enviado"):
             self.assertContains(respuesta, fragmento)
         self.assertContains(respuesta, "/static/invitaciones/pwa/baby-shower-panaderia-03-180.png")
+
+
+class MusicaYPruebaEnCelularTests(TestCase):
+    def test_musica_de_static_no_depende_de_la_ip(self):
+        invitacion = Invitacion(musica_url="http://192.168.100.18:8000/static/invitaciones/musica/cancion-boda.mp3")
+        self.assertEqual(invitacion.musica_src, "/static/invitaciones/musica/cancion-boda.mp3")
+        externa = Invitacion(musica_url="https://ejemplo.com/cancion.mp3")
+        self.assertEqual(externa.musica_src, "https://ejemplo.com/cancion.mp3")
+        self.assertEqual(Invitacion(musica_url="").musica_src, "")
+
+    def test_el_audio_usa_la_ruta_relativa(self):
+        call_command("crear_demo_hotel", "--host", "192.168.100.18:8000", stdout=StringIO())
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=["demo-hotel-amor"]))
+        self.assertContains(respuesta, 'src="/static/invitaciones/musica/cancion-boda.mp3"')
+
+    @override_settings(DEBUG=True, CSRF_TRUSTED_ORIGINS=["https://*.trycloudflare.com"])
+    def test_rsvp_por_tunel_https_no_da_403(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        cliente = Client(enforce_csrf_checks=True)
+        dominio = "prueba-abc.trycloudflare.com"
+        cliente.get(reverse("invitaciones:detalle", args=["demo-hotel-amor"]), HTTP_HOST=dominio)
+        token = cliente.cookies["csrftoken"].value
+        respuesta = cliente.post(
+            reverse("invitaciones:rsvp", args=["demo-hotel-amor"]),
+            data=json.dumps({"nombre_invitado": "Ana", "asistencia": "si", "num_acompanantes": 0}),
+            content_type="application/json",
+            HTTP_HOST=dominio, HTTP_ORIGIN=f"https://{dominio}", HTTP_X_CSRFTOKEN=token,
+        )
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_crear_todos_los_demos(self):
+        salida = StringIO()
+        call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
+        self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count() + Invitacion.objects.filter(slug="baby-shower-demo").count(), 14)

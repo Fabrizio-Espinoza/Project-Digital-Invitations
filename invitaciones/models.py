@@ -1,3 +1,6 @@
+from urllib.parse import urlsplit
+
+from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
 import uuid
@@ -87,6 +90,22 @@ class Invitacion(models.Model):
 
     def __str__(self):
         return f"{self.titulo_evento} ({self.slug})"
+
+    @property
+    def musica_src(self):
+        """
+        La URL que usa el <audio>. Si la canción vive en nuestro propio
+        /static/ (ej. http://192.168.1.50:8000/static/.../cancion.mp3), se
+        devuelve solo la ruta: así suena igual abierta por la IP de la compu,
+        por localhost, por un túnel HTTPS o en el servidor final, sin tener
+        que volver a capturar la URL cuando cambia la IP o el dominio.
+        Una canción de otro sitio (https://...) se deja tal cual.
+        """
+        partes = urlsplit(self.musica_url or "")
+        ruta_static = "/" + settings.STATIC_URL.lstrip("/")
+        if partes.path.startswith(ruta_static):
+            return partes.path
+        return self.musica_url
 
 
 class ImagenGaleria(models.Model):

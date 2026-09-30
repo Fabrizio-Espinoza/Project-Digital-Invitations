@@ -373,7 +373,7 @@
     {% endif %}
 
     {% if mostrar_musica and invitacion.musica_url %}
-<audio id="musica-fondo" loop src="{{ invitacion.musica_url }}"></audio>
+<audio id="musica-fondo" loop src="{{ invitacion.musica_src }}"></audio>
 <button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">
     <svg class="icono-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="17.5" cy="16" r="2.5"/></svg>
     <svg class="icono-pausa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>

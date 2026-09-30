@@ -27,6 +27,12 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
+# Para probar en el celular por HTTPS con un túnel (cloudflared / ngrok): el
+# navegador manda Origin https://<algo>.trycloudflare.com y Django rechazaría
+# el RSVP (403 CSRF) por no reconocer ese dominio. Solo en desarrollo.
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS = ['https://*.trycloudflare.com', 'https://*.ngrok-free.app']
+
 
 # Application definition
 
