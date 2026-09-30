@@ -51,7 +51,6 @@ En tu compu **no cambia nada**: `python manage.py runserver` sigue usando
    ```bash
    git clone https://github.com/fabrizio-espinoza/project-digital-invitations.git Project-Digital-Invitations
    cd Project-Digital-Invitations
-   git checkout claude/fervent-noether-w33dot   # o main, cuando fusiones la rama
    ```
 
 3. Crea el entorno virtual e instala las dependencias:
@@ -102,6 +101,10 @@ aviso de privacidad o si el admin sigue en `/admin/`.
 
 ## 4. Crear la web app
 
+`TUUSUARIO` va **exactamente** como tu usuario, con mayúsculas si las tiene
+(`/home/InvitaVibra/...` y `/home/invitavibra/...` son carpetas distintas en
+el servidor). Para verla: `cd ~/Project-Digital-Invitations && pwd`.
+
 Pestaña **Web** → *Add a new web app* → *Manual configuration* → **Python 3.13**.
 
 1. **Virtualenv**: `/home/TUUSUARIO/.virtualenvs/invitaciones`
@@ -144,7 +147,7 @@ Prueba: `https://tuusuario.pythonanywhere.com/privacidad/` y el admin en
 python manage.py crear_todos_los_demos --host https://tuusuario.pythonanywhere.com
 ```
 
-Imprime los 14 links. Sube las fotos de galería desde el admin.
+Imprime los 15 links. Sube las fotos de galería desde el admin.
 
 ## 6. Dominio propio + HTTPS
 

@@ -16,6 +16,7 @@ from django.core.management.base import BaseCommand
 
 # (comando, slug del demo, nombre de la plantilla) en el orden del catálogo
 DEMOS = [
+    ("crear_demo_terracota", "demo-boda-daniela-andres", "Boda · Terracota Velada"),
     ("crear_demo_cobalto", "demo-cobalto-editorial", "Boda · Cobalto Editorial"),
     ("crear_demo_hotel", "demo-hotel-amor", "Boda · Hotel Amor"),
     ("crear_demo_xv", "demo-xv-valentina", "XV · Medianoche Dorada"),
@@ -52,4 +53,3 @@ class Command(BaseCommand):
         for comando, slug, nombre in DEMOS:
             call_command(comando, stdout=StringIO())   # su propio mensaje no hace falta aquí
             self.stdout.write(f"  {nombre:<36} {host}/invitaciones/{slug}/")
-        self.stdout.write("  Terracota Velada (boda) no tiene demo por comando: se armó en el admin.")

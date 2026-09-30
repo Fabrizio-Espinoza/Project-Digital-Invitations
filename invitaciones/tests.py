@@ -392,6 +392,21 @@ class DemoCarnetDeBaileTests(TestCase):
         self.assertContains(respuesta, "/static/invitaciones/pwa/xv-carnet-02-180.png")
 
 
+class DemoTerracotaTests(TestCase):
+    def test_crear_demo_terracota_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_terracota", stdout=StringIO())
+        call_command("crear_demo_terracota", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="boda-minimal-01").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-boda-daniela-andres")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-minimal-01.html")
+        self.assertContains(respuesta, "Daniela &amp; Andrés")
+
+
 class DemoCobaltoTests(TestCase):
     def test_crear_demo_cobalto_es_idempotente_y_se_pinta(self):
         call_command("crear_demo_cobalto", stdout=StringIO())
@@ -616,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 14)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 15)
 
 
 # ---------------------------------------------------------------------------
