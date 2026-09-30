@@ -1,0 +1,1328 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  NIVEL DESBLOQUEADO — tercera plantilla de fiesta.
+
+  Concepto: la fiesta es un videojuego retro y el celular del invitado se
+  vuelve una consola portatil. Sirve para cumpleaños de cualquier edad
+  ("Nivel 30 desbloqueado"), fiestas de oficina o de amigos.
+
+    Portada ....... la consola: pantalla LCD verde con vidas, el nombre en
+                    letras de pixel y el mensaje escribiendose como dialogo de
+                    RPG. Los controles SI funcionan: A = musica, B = confirmar,
+                    START = empezar (baja a la mision), SELECT = agendar y la
+                    cruceta cambia de pantalla.
+    Mision ........ los datos en ventanas de RPG sobre la pantalla LCD;
+                    la cuenta regresiva como el "TIEMPO" del marcador.
+    Mapa .......... el itinerario como mapa de niveles (1-1, 1-2... META);
+                    mesa de regalos = "Tienda"; nota de niños = modo de juego.
+    Partidas ...... las fotos como cartuchos de juego ("partidas guardadas").
+    Insert coin ... RSVP; al confirmar sale "+1UP" y la tabla de puntajes con
+                    el invitado como nuevo jugador.
+
+  Opuesta a Noche Neon (antro, noche) y a La Loteria (tradicion mexicana):
+  plastico crema de consola, los cuatro verdes de una pantalla LCD y botones
+  guinda. Tipografia: Pixelify Sans (pixel, titulos y marcador; a diferencia de
+  Press Start 2P, dibuja bien las mayusculas con acento: MISIÓN, DÍA) + VT323
+  (pantalla de terminal, lectura). Ambas OFL. Los sprites (corazon, estrella,
+  bocina, bandera) son SVG propios dibujados pixel por pixel.
+
+  Clave propia opcional de contenido_extra:
+    nivel -> "30" (la edad: "Nivel 30 desbloqueado")
+{% endcomment %}
+
+{% block eyebrow %}<svg class="vida" viewBox="0 0 7 6" aria-hidden="true"><use href="#p-corazon"/></svg><svg class="vida" viewBox="0 0 7 6" aria-hidden="true"><use href="#p-corazon"/></svg><svg class="vida" viewBox="0 0 7 6" aria-hidden="true"><use href="#p-corazon"/></svg><span>{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% elif invitacion.contenido_extra.nivel %}Nivel {{ invitacion.contenido_extra.nivel }} desbloqueado{% else %}¡Hay fiesta!{% endif %}</span>{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <!-- sprites dibujados pixel por pixel (1 unidad = 1 pixel) -->
+        <symbol id="p-corazon" viewBox="0 0 7 6"><path d="M1 0h2v1h1V0h2v1h1v2H6v1H5v1H4v1H3V5H2V4H1V3H0V1h1z"/></symbol>
+        <symbol id="p-estrella" viewBox="0 0 7 7"><path d="M3 0h1v2h3v1h-1v1h-1v1h1v1h1v1h-2v-1h-1v-1h-1v1h-1v1h-2v-1h1v-1h1v-1h-1v-1h-1v-1h3z"/></symbol>
+        <symbol id="p-bandera" viewBox="0 0 6 8"><path d="M0 0h1v8H0z M1 0h4v1h1v1H5v1H1z"/></symbol>
+    </defs>
+</svg>
+
+<!-- luz de encendido de la consola -->
+<p class="encendido" aria-hidden="true"><i></i> Power</p>
+
+<!-- la marca impresa bajo la pantalla -->
+<p class="marca-consola" aria-hidden="true">Modo Fiesta</p>
+
+<!-- controles: funcionan de verdad (el JS les da vida; sin JS son adorno) -->
+<div class="controles">
+    <div class="cruceta" role="group" aria-label="Cambiar de pantalla">
+        <button type="button" class="cruz-arriba" data-ir="-1" aria-label="Pantalla anterior"></button>
+        <button type="button" class="cruz-izq" data-ir="-1" aria-label="Pantalla anterior"></button>
+        <span class="cruz-centro" aria-hidden="true"></span>
+        <button type="button" class="cruz-der" data-ir="1" aria-label="Pantalla siguiente"></button>
+        <button type="button" class="cruz-abajo" data-ir="1" aria-label="Pantalla siguiente"></button>
+    </div>
+    <div class="botones-ab">
+        <button type="button" class="boton-b" id="boton-b" aria-label="B: confirmar asistencia"><span>B</span></button>
+        <button type="button" class="boton-a" id="boton-a" aria-label="A: música"><span>A</span></button>
+    </div>
+    <div class="botones-menu">
+        <a class="boton-select" href="{% url 'invitaciones:calendario' invitacion.slug %}" aria-label="Select: agendar en tu calendario"><i></i>Select</a>
+        <button type="button" class="boton-start" id="boton-start" aria-label="Start: empezar"><i></i>Start</button>
+    </div>
+    <p class="controles-ayuda">A música · B confirmar · Start jugar</p>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="presiona-start">▶ Presiona Start</p>
+<p class="fecha-partida">{{ invitacion.fecha_evento|date:"l"|slice:":3" }} {{ invitacion.fecha_evento|date:"j M" }} · {{ invitacion.fecha_evento|date:"g:i A" }}</p>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="mision-cabecera">
+    <p class="kicker">Misión 1</p>
+    <h2 class="titulo-pixel">Llega a la fiesta</h2>
+    <p class="mision-objetivo">Objetivo: celebrar a {{ invitacion.anfitriones }}. Recompensa: una noche épica.</p>
+</header>
+{% endblock %}
+
+{% block decoracion_inferior %}
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&family=VT323&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 plastico crema · 30 verdes de LCD · 10 guinda de botones */
+        --plastico: #E8E2D3;
+        --plastico-sombra: #CFC7B4;
+        --bisel: #56545F;
+        --carbon: #2E2D33;
+        --guinda: #A3223B;
+        --guinda-oscuro: #7A1629;
+        /* los cuatro tonos de una pantalla LCD */
+        --lcd-1: #0F380F;
+        --lcd-2: #306230;
+        --lcd-3: #8BAC0F;
+        --lcd-4: #9BBC0F;
+
+        --pixel: 'Pixelify Sans', 'Courier New', monospace;
+        --terminal: 'VT323', 'Courier New', monospace;
+
+        --margen: clamp(1.1rem, 5vw, 2.5rem);
+        --ancho: 26rem;
+        --paso: steps(4, end);
+        /* la rejilla de puntos de la pantalla */
+        --matriz: repeating-linear-gradient(0deg, rgba(15, 56, 15, 0.07) 0 1px, transparent 1px 3px), repeating-linear-gradient(90deg, rgba(15, 56, 15, 0.07) 0 1px, transparent 1px 3px);
+        /* bocina en pixeles para el boton de musica */
+        --bocina: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7' shape-rendering='crispEdges'%3E%3Cpath d='M0 2h2V1h1V0h1v7H3V6H2V5H0z'/%3E%3C/svg%3E");
+        --ondas: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 7' shape-rendering='crispEdges'%3E%3Cpath d='M5 2h1v3H5z M7 1h1v5H7z'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--plastico);
+        color: var(--lcd-1);
+        font-family: var(--terminal);
+        font-size: 1.3rem;
+        line-height: 1.2;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: none;
+        -webkit-tap-highlight-color: transparent;
+    }
+    ::selection {
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+    }
+    svg {
+        shape-rendering: crispEdges;
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 600 0.88rem/1.6 var(--pixel);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .titulo-pixel {
+        margin: 0.5rem 0 0;
+        font: 700 clamp(1.7rem, 8.6vw, 2.2rem)/1.1 var(--pixel);
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (bocina de 8 bits)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+        border: 3px solid var(--carbon);
+        background: var(--lcd-4);
+        cursor: pointer;
+        box-shadow: 4px 4px 0 var(--carbon);
+    }
+    .boton-musica svg {
+        display: none;   /* la bocina de pixeles reemplaza los iconos del motor */
+    }
+    .boton-musica::before,
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        inset: 0.55rem;
+        background: var(--lcd-1);
+        -webkit-mask: var(--bocina) center / contain no-repeat;
+        mask: var(--bocina) center / contain no-repeat;
+    }
+    .boton-musica::after {
+        -webkit-mask-image: var(--ondas);
+        mask-image: var(--ondas);
+        opacity: 0;
+    }
+    .boton-musica.sonando::after {
+        animation: parpadeo 0.8s steps(1) infinite;
+    }
+    .boton-musica:active {
+        translate: 4px 4px;
+        box-shadow: 0 0 0 var(--carbon);
+    }
+    .boton-musica:focus-visible {
+        outline: 3px solid var(--guinda);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       ANIMACIONES (todas a pasos, como en 8 bits)
+       ============================================ */
+    .animar-entrada {
+        opacity: 0;
+        transition: opacity 0.4s var(--paso);
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.nombres, .mision-cabecera, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.5s var(--paso) var(--retraso, 0s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.8rem; }
+    }
+    @keyframes parpadeo {
+        0% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+    @keyframes latido {
+        50% { scale: 1.25; }
+    }
+    @keyframes subir-1up {
+        0% { opacity: 1; translate: 0 0; }
+        100% { opacity: 0; translate: 0 -3rem; }
+    }
+    @keyframes rebote {
+        40% { scale: 1.35; }
+    }
+
+    /* ============================================
+       PORTADA: la consola
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.8rem var(--margen) 4.6rem;
+        /* plastico con una veta muy suave */
+        background: linear-gradient(160deg, #F0EBDF, var(--plastico) 50%, #DED7C6);
+        overflow: hidden;
+    }
+    /* los hijos del marco se acomodan con order alrededor de la pantalla */
+    .marco-decorativo {
+        display: contents;
+    }
+    .encendido {
+        order: 0;
+        width: 100%;
+        max-width: 24rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin: 0 0 0.5rem;
+        font: 600 0.72rem/1 var(--pixel);
+        text-transform: uppercase;
+        color: var(--bisel);
+    }
+    .encendido i {
+        width: 0.45rem;
+        height: 0.45rem;
+        border-radius: 50%;
+        background: #E3302F;
+        box-shadow: 0 0 6px #FF4A3D;
+    }
+    /* la pantalla: bisel gris con la esquina inferior derecha redonda */
+    .hero-contenido {
+        order: 1;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: 24rem;
+        padding: 0.8rem 0.8rem 0.9rem;
+        border: 0.85rem solid var(--bisel);
+        border-radius: 0.5rem 0.5rem 2.2rem 0.5rem;
+        background: var(--matriz), var(--lcd-4);
+        box-shadow: inset 0 0 18px rgba(15, 56, 15, 0.35), 0 3px 0 #413F49;
+    }
+    .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        width: 100%;
+        margin: 0;
+        font: 600 0.8rem/1.4 var(--pixel);
+        text-transform: uppercase;
+    }
+    .eyebrow span {
+        margin-left: auto;
+    }
+    .vida {
+        width: 0.9rem;
+        height: 0.8rem;
+        fill: var(--lcd-1);
+    }
+    .vida:first-child {
+        animation: latido 1s var(--paso) infinite;
+    }
+    .nombres {
+        --retraso: 0.1s;
+        max-width: 100%;
+        min-width: 0;
+        margin: 1rem 0 0;
+        font: 700 clamp(2.4rem, 14vw, 3.6rem)/1.05 var(--pixel);
+        text-transform: uppercase;
+        text-shadow: 3px 3px 0 var(--lcd-3);
+        text-wrap: balance;
+    }
+    /* el mensaje como cuadro de dialogo que se escribe letra por letra */
+    .mensaje {
+        position: relative;
+        width: 100%;
+        margin: 0.9rem 0 0;
+        padding: 0.45rem 0.6rem 0.5rem;
+        border: 3px solid var(--lcd-1);
+        background: var(--lcd-4);
+        font-size: 1.2rem;
+        line-height: 1.1;
+        text-align: left;
+    }
+    .mensaje .escrito {
+        position: absolute;
+        inset: 0.45rem 0.6rem 0.5rem;
+    }
+    /* transparente (no invisible): reserva el alto y los lectores de pantalla lo leen completo */
+    .mensaje .fantasma {
+        color: transparent;
+    }
+    .mensaje::after {
+        content: "▼";
+        position: absolute;
+        right: 0.4rem;
+        bottom: 0.1rem;
+        font-size: 0.8rem;
+        animation: parpadeo 0.8s steps(1) infinite;
+    }
+    .presiona-start {
+        margin: 0.8rem 0 0;
+        font: 600 0.99rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        animation: parpadeo 1.1s steps(1) infinite;
+    }
+    .fecha-partida {
+        margin: 0.35rem 0 0;
+        font-size: 1.25rem;
+        text-transform: uppercase;
+        color: var(--lcd-2);
+    }
+    .marca-consola {
+        order: 2;
+        margin: 0.55rem 0 0;
+        font: italic 600 0.99rem/1 var(--pixel);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--guinda);
+    }
+    /* --- controles --- */
+    .controles {
+        order: 3;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas: "cruz ab" "menu menu" "ayuda ayuda";
+        align-items: center;
+        gap: 0.7rem 0;
+        width: 100%;
+        max-width: 22rem;
+        margin-top: 0.9rem;
+    }
+    .controles button,
+    .controles a {
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+    .controles :is(button, a):focus-visible {
+        outline: 3px solid var(--guinda);
+        outline-offset: 3px;
+    }
+    .cruceta {
+        grid-area: cruz;
+        display: grid;
+        grid-template-columns: repeat(3, 1.75rem);
+        grid-template-rows: repeat(3, 1.75rem);
+        justify-self: start;
+        margin-left: 0.3rem;
+        filter: drop-shadow(0 3px 0 #1B1A1F);
+    }
+    .cruceta button,
+    .cruz-centro {
+        padding: 0;
+        border: 0;
+        background: var(--carbon);
+    }
+    .cruz-arriba { grid-area: 1 / 2; border-radius: 0.2rem 0.2rem 0 0; }
+    .cruz-izq { grid-area: 2 / 1; border-radius: 0.2rem 0 0 0.2rem; }
+    .cruz-centro { grid-area: 2 / 2; background: radial-gradient(circle, #242329 35%, var(--carbon) 38%); }
+    .cruz-der { grid-area: 2 / 3; border-radius: 0 0.2rem 0.2rem 0; }
+    .cruz-abajo { grid-area: 3 / 2; border-radius: 0 0 0.2rem 0.2rem; }
+    .cruceta button:active {
+        background: #1B1A1F;
+    }
+    .botones-ab {
+        grid-area: ab;
+        display: flex;
+        gap: 0.9rem;
+        justify-self: end;
+        margin-right: 0.2rem;
+        rotate: -25deg;
+    }
+    .botones-ab button {
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #C23450, var(--guinda) 60%, var(--guinda-oscuro));
+        box-shadow: 0 4px 0 #5A0F1D;
+    }
+    .botones-ab button span {
+        rotate: 25deg;
+        font: 600 1.12rem/1 var(--pixel);
+        color: rgba(255, 255, 255, 0.85);
+    }
+    .boton-b {
+        translate: 0 0.9rem;
+    }
+    .botones-ab button:active {
+        box-shadow: 0 1px 0 #5A0F1D;
+        margin-top: 3px;
+    }
+    .botones-menu {
+        grid-area: menu;
+        display: flex;
+        justify-content: center;
+        gap: 1.4rem;
+    }
+    .botones-menu :is(a, button) {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--bisel);
+        text-decoration: none;
+        font: 600 0.72rem/1 var(--pixel);
+        text-transform: uppercase;
+    }
+    .botones-menu i {
+        width: 2.4rem;
+        height: 0.6rem;
+        border-radius: 99px;
+        background: #8E8898;
+        rotate: -25deg;
+        box-shadow: 0 2px 0 #625D6B;
+    }
+    .controles-ayuda {
+        grid-area: ayuda;
+        margin: 0;
+        font-size: 1.05rem;
+        color: var(--bisel);
+    }
+
+    /* ============================================
+       PANTALLA 2: MISION (pantalla LCD completa)
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.2rem var(--margen) 4.6rem;
+        background: var(--matriz), var(--lcd-4);
+    }
+    .marco-decorativo-info {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto 0.7rem;
+    }
+    .mision-cabecera {
+        --retraso: 0.05s;
+    }
+    .mision-objetivo {
+        margin: 0.3rem 0 0;
+        font-size: 1.15rem;
+        color: var(--lcd-2);
+        text-wrap: balance;
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 0 auto;
+    }
+    /* detalles + lugares + vestimenta = una ventana de RPG */
+    .detalles,
+    .lugares,
+    .vestimenta {
+        padding: 0 1rem;
+        border-inline: 4px solid var(--lcd-1);
+        background: var(--lcd-4);
+        text-align: left;
+    }
+    .detalles {
+        --retraso: 0.1s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 0 0.8rem;
+        padding-top: 0.8rem;
+        padding-bottom: 0.5rem;
+        border-top: 4px solid var(--lcd-1);
+    }
+    .lugares {
+        --retraso: 0.2s;
+    }
+    .pantalla-contenido > :is(.detalles, .lugares, .vestimenta):not(:has(+ :is(.lugares, .vestimenta))) {
+        padding-bottom: 0.8rem;
+        border-bottom: 4px solid var(--lcd-1);
+    }
+    .detalle-item,
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    .lugar-item {
+        padding-block: 0.5rem;
+        border-top: 2px dashed var(--lcd-2);
+    }
+    .detalle-divisor {
+        width: 3px;
+        background: var(--lcd-2);
+    }
+    /* la flechita de menu de RPG antes de cada etiqueta */
+    .detalle-label {
+        font: 600 0.8rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        color: var(--lcd-2);
+    }
+    .detalle-label::before {
+        content: "▸ ";
+    }
+    .detalle-valor {
+        font-size: 1.45rem;
+        line-height: 1;
+    }
+    /* Django escribe "14 de Noviembre"; en español el mes va en minuscula (RAE) */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        font-size: 1.1rem;
+        color: var(--lcd-2);
+    }
+    .vestimenta {
+        --retraso: 0.3s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        padding-block: 0.5rem;
+        border-top: 2px dashed var(--lcd-2);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-color {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid var(--lcd-1);
+    }
+
+    /* ============================================
+       COUNTDOWN: el TIEMPO del marcador
+       ============================================ */
+    .countdown {
+        --retraso: 0.4s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.3rem;
+        margin-top: 0.7rem;
+        padding: 0.45rem 0.5rem 0.5rem;
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+        font-variant-numeric: tabular-nums;
+    }
+    .countdown::before {
+        content: "Tiempo";
+        grid-column: 1 / -1;
+        margin-bottom: 0.2rem;
+        font: 600 0.8rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        color: var(--lcd-3);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    /* numeros en VT323: en la letra pixel el 5 se confunde con la S */
+    .countdown span {
+        font-size: 2.1rem;
+        line-height: 0.9;
+    }
+    .countdown label {
+        font-size: 1.05rem;
+        text-transform: uppercase;
+        color: var(--lcd-3);
+    }
+
+    /* ============================================
+       ACCIONES RAPIDAS: botones de pixel (2 x 2)
+       ============================================ */
+    .acciones-rapidas {
+        --retraso: 0.5s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.6rem;
+        margin-top: 0.75rem;
+    }
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        min-height: 2.8rem;
+        padding: 0 0.6rem;
+        border: 3px solid var(--lcd-1);
+        background: var(--lcd-4);
+        color: var(--lcd-1);
+        text-decoration: none;
+        font: 600 0.88rem/1.3 var(--pixel);
+        text-transform: uppercase;
+        box-shadow: 4px 4px 0 var(--lcd-1);
+    }
+    .accion-icono:active {
+        translate: 4px 4px;
+        box-shadow: 0 0 0 var(--lcd-1);
+    }
+    .accion-icono[href="#rsvp"] {
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+    }
+    /* el boton impar se queda a la izquierda: a la derecha vive el boton de musica */
+    .accion-icono:focus-visible {
+        outline: 3px solid var(--guinda);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: inline-flex;
+    }
+    .icono-svg {
+        width: 1rem;
+        height: 1rem;
+        stroke-width: 2.5;
+        stroke-linecap: square;
+        stroke-linejoin: miter;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: mapa de niveles
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.8rem var(--margen) 4.6rem;
+        background: linear-gradient(160deg, #F0EBDF, var(--plastico) 50%, #DED7C6);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .itinerario {
+        --retraso: 0.05s;
+        order: 1;
+        padding: 0.9rem 1rem 1rem;
+        border: 0.7rem solid var(--bisel);
+        border-radius: 0.4rem 0.4rem 1.6rem 0.4rem;
+        background: var(--matriz), var(--lcd-4);
+        text-align: left;
+        counter-reset: nivel;
+    }
+    .itinerario h3 {
+        margin: 0 0 0.7rem;
+        font: 600 1.52rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        text-align: center;
+    }
+    .itinerario h3::before {
+        content: "Mapa de niveles";
+        display: block;
+        margin-bottom: 0.2rem;
+        font-size: 0.85rem;
+        color: var(--lcd-2);
+    }
+    /* cada paso es un nivel conectado por un camino de cuadritos */
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 2.6rem 4.6rem 1fr;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.3rem 0;
+        counter-increment: nivel;
+        background: repeating-linear-gradient(180deg, var(--lcd-2) 0 4px, transparent 4px 8px) 1.05rem 0 / 4px 100% no-repeat;
+    }
+    .itinerario-item:first-of-type {
+        background-position: 1.05rem 100%;
+        background-size: 4px 50%;
+    }
+    .itinerario-item:last-of-type {
+        background-size: 4px 50%;
+    }
+    .itinerario-item::before {
+        content: "1-" counter(nivel);
+        display: grid;
+        place-items: center;
+        width: 2.4rem;
+        height: 1.6rem;
+        border: 3px solid var(--lcd-1);
+        background: var(--lcd-4);
+        font: 600 0.8rem/1 var(--pixel);
+    }
+    .itinerario-item:last-of-type::before {
+        content: "Meta";
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+    }
+    .itinerario-hora {
+        font: 600 0.88rem/1.4 var(--pixel);
+        white-space: nowrap;
+        color: var(--lcd-2);
+    }
+    .itinerario-evento {
+        font-size: 1.35rem;
+        line-height: 1;
+    }
+    .familia {
+        --retraso: 0.15s;
+        order: 2;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.5rem 1rem;
+    }
+    .familia::before {
+        content: "Jugadores";
+        grid-column: 1 / -1;
+        font: 600 0.88rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        color: var(--guinda);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font-size: 1.05rem;
+        text-transform: uppercase;
+        color: var(--bisel);
+    }
+    .familia-nombres {
+        font-size: 1.35rem;
+        color: var(--carbon);
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        order: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        border: 3px solid var(--carbon);
+        background: var(--guinda);
+        color: #FFF3F5;
+        text-decoration: none;
+        font: 600 0.93rem/1.3 var(--pixel);
+        text-transform: uppercase;
+        box-shadow: 4px 4px 0 var(--carbon);
+    }
+    .boton-mesa-regalos::before {
+        content: "Tienda ·";
+        color: #FFC7D1;
+    }
+    .boton-mesa-regalos:active {
+        translate: 4px 4px;
+        box-shadow: 0 0 0 var(--carbon);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 3px solid var(--lcd-2);
+        outline-offset: 3px;
+    }
+    /* el modo de juego (el JS pone "Multijugador" o "Modo +18") */
+    .nota-ninos {
+        --retraso: 0.35s;
+        order: 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+        margin: 0;
+        padding: 0.5rem 0.8rem;
+        border: 3px dashed var(--bisel);
+        font-size: 1.25rem;
+        color: var(--carbon);
+    }
+    .nota-ninos::before {
+        content: var(--modo-juego, "Modo");
+        flex: none;
+        padding: 0.35rem 0.45rem;
+        background: var(--carbon);
+        color: var(--lcd-4);
+        font: 600 0.8rem/1.2 var(--pixel);
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       GALERIA: partidas guardadas (cartuchos)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem 1rem;
+        align-content: center;
+        padding: 1.8rem max(var(--margen), (100% - 30rem) / 2) 4.6rem;
+        background:
+            repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 6px),
+            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 6px),
+            var(--carbon);
+        color: var(--plastico);
+    }
+    .galeria::before {
+        content: "Colección";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -0.8rem;
+        font: 600 0.88rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        color: var(--lcd-3);
+    }
+    .galeria::after {
+        content: "Partidas guardadas";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 700 clamp(1.6rem, 8vw, 2.1rem)/1.15 var(--pixel);
+        text-transform: uppercase;
+    }
+    /* sin JS: la foto con marco de plastico gris */
+    .galeria > img {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        border: 0.5rem solid #9C98A3;
+        image-rendering: auto;
+    }
+    /* con JS: cartucho con estrias arriba, muesca y la foto como etiqueta */
+    .cartucho {
+        position: relative;
+        margin: 0;
+        padding: 1.3rem 0.55rem 0.7rem;
+        background:
+            repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.18) 0 3px, transparent 3px 7px) 50% 0.35rem / 60% 0.55rem no-repeat,
+            linear-gradient(180deg, #B4B0BA, #9C98A3);
+        clip-path: polygon(0 0, 88% 0, 100% 7%, 100% 100%, 0 100%);
+        box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18);
+    }
+    .cartucho img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        object-fit: cover;
+        border: 3px solid #2B2A30;
+        border-bottom: 0;
+    }
+    .cartucho figcaption {
+        padding: 0.3rem 0.2rem 0.25rem;
+        background: #2B2A30;
+        color: var(--lcd-4);
+        font: 600 0.67rem/1.3 var(--pixel);
+        text-transform: uppercase;
+        text-align: left;
+    }
+
+    /* ============================================
+       RSVP: insert coin
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 1.8rem var(--margen) 4.8rem;
+        background: var(--matriz), var(--lcd-4);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Insert coin";
+        font: 600 0.99rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        animation: parpadeo 1.1s steps(1) infinite;
+    }
+    .rsvp h2 {
+        margin: 0.5rem auto 0.5rem;
+        font: 700 clamp(1.7rem, 8.6vw, 2.2rem)/1.1 var(--pixel);
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        font-size: 1.25rem;
+        color: var(--lcd-2);
+    }
+    #total-confirmados {
+        display: inline-block;
+        font: 600 1.6rem/1 var(--pixel);
+        color: var(--lcd-1);
+    }
+    #total-confirmados.cambio {
+        animation: rebote 0.5s var(--paso);
+    }
+    /* Django escribe "1 de Noviembre": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin: 1rem auto 0;
+        padding: 1rem 1rem 1.1rem;
+        border: 4px solid var(--lcd-1);
+        background: var(--lcd-4);
+        box-shadow: inset 0 0 0 3px var(--lcd-4), inset 0 0 0 5px var(--lcd-2), 6px 6px 0 var(--lcd-1);
+        text-align: left;
+    }
+    /* 16px o mas: el iPhone no hace zoom al escribir (VT323 va a 20px) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.35rem 0.5rem;
+        border: 3px solid var(--lcd-1);
+        border-radius: 0;
+        background: var(--lcd-3);
+        color: var(--lcd-1);
+        font: 400 1.3rem/1.2 var(--terminal);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(15, 56, 15, 0.6);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        background: #A8C82A;
+        box-shadow: 3px 3px 0 var(--lcd-1);
+    }
+    #form-rsvp textarea {
+        min-height: 3.6rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.6rem;
+        padding: 0 0.2rem;
+        border: 3px solid var(--lcd-1);
+        font-size: 1.2rem;
+        line-height: 1;
+        text-align: center;
+        cursor: pointer;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 3px solid var(--guinda);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font-size: 1.2rem;
+        color: var(--lcd-2);
+    }
+    .campo-con-label input {
+        max-width: 4.5rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3rem;
+        border: 3px solid var(--lcd-1);
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+        font: 600 1.12rem/1.3 var(--pixel);
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 4px 4px 0 var(--lcd-2);
+    }
+    #form-rsvp button:active {
+        translate: 4px 4px;
+        box-shadow: 0 0 0 var(--lcd-2);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 3px solid var(--guinda);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 0.9rem;
+        font: 600 1.28rem/1.5 var(--pixel);
+        text-transform: uppercase;
+        color: var(--lcd-1);
+    }
+
+    /* --- Nuevo jugador: +1UP y la tabla de puntajes --- */
+    .puntajes {
+        position: relative;
+        margin-top: 0.7rem;
+        padding: 0.7rem 0.8rem 0.8rem;
+        background: var(--lcd-1);
+        color: var(--lcd-4);
+    }
+    .puntajes::before {
+        content: "¡Nuevo jugador!";
+        display: block;
+        margin-bottom: 0.5rem;
+        font: 600 0.96rem/1.4 var(--pixel);
+        text-transform: uppercase;
+        color: var(--lcd-3);
+        animation: parpadeo 0.8s steps(1) 4;
+    }
+    .puntajes ol {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .puntajes li {
+        display: grid;
+        grid-template-columns: 3rem auto 1fr;   /* estrellas junto al nombre, lejos del boton de musica */
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.2rem 0;
+        font: 600 0.99rem/1.4 var(--pixel);
+        text-align: left;
+        text-transform: uppercase;
+    }
+    .puntajes li.tu {
+        color: #FFFFFF;
+    }
+    .puntajes li.tu span:last-child {
+        display: flex;
+        gap: 0.15rem;
+    }
+    .puntajes svg {
+        width: 0.8rem;
+        height: 0.8rem;
+        fill: #F2D64B;
+    }
+    .uno-up {
+        position: absolute;
+        right: 0.8rem;
+        top: -0.6rem;
+        font: 600 1.28rem/1 var(--pixel);
+        color: var(--guinda);
+        animation: subir-1up 1.4s var(--paso) both;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual; solo se pierden estos detalles.
+    (function () {
+        const reducido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const html = document.documentElement;
+
+        // Saltar a una pantalla apagando el scroll-snap un momento (mismo truco
+        // que usa el motor para los enlaces #, por el rebote de iOS Safari)
+        function irA(pantalla) {
+            if (!pantalla) return;
+            html.style.scrollSnapType = 'none';
+            pantalla.scrollIntoView({ behavior: reducido ? 'auto' : 'smooth', block: 'start' });
+            setTimeout(() => { html.style.scrollSnapType = ''; }, 1000);
+        }
+        const pantallas = () => [...document.querySelectorAll('.hero, .pantalla-bebe, .pantalla-info, .pantalla-extra, .pantalla-votacion, .pantalla-regalos, .pantalla-panales, .galeria, .rsvp')];
+        function actual() {
+            const lista = pantallas();
+            let mejor = 0;
+            lista.forEach((p, i) => { if (Math.abs(p.getBoundingClientRect().top) < Math.abs(lista[mejor].getBoundingClientRect().top)) mejor = i; });
+            return mejor;
+        }
+
+        // --- 1. Los controles de la consola ---
+        document.querySelectorAll('.cruceta button').forEach(b => b.addEventListener('click', () => {
+            const lista = pantallas();
+            const destino = Math.min(lista.length - 1, Math.max(0, actual() + Number(b.dataset.ir)));
+            irA(lista[destino]);
+        }));
+        const botonA = document.getElementById('boton-a');
+        const musica = document.getElementById('boton-musica');
+        if (botonA) {
+            if (musica) botonA.addEventListener('click', () => musica.click());   // el toque del invitado desbloquea el audio
+            else botonA.hidden = true;
+        }
+        const botonB = document.getElementById('boton-b');
+        if (botonB) botonB.addEventListener('click', () => irA(document.getElementById('rsvp') || document.querySelector('.pantalla-info')));
+        const botonStart = document.getElementById('boton-start');
+        if (botonStart) botonStart.addEventListener('click', () => irA(document.querySelector('.pantalla-info')));
+
+        // --- 2. El mensaje se escribe letra por letra, como dialogo de RPG ---
+        // Un "fantasma" invisible con el texto completo reserva el alto, asi la
+        // pantalla no brinca mientras se escribe.
+        const mensaje = document.querySelector('.hero .mensaje');
+        if (mensaje && !reducido) {
+            const texto = mensaje.textContent.trim();
+            mensaje.textContent = '';
+            const fantasma = document.createElement('span');
+            fantasma.className = 'fantasma';
+            fantasma.textContent = texto;
+            const escrito = document.createElement('span');
+            escrito.className = 'escrito';
+            escrito.setAttribute('aria-hidden', 'true');
+            mensaje.append(fantasma, escrito);
+            let i = 0;
+            setTimeout(function letra() {
+                escrito.textContent = texto.slice(0, ++i);
+                if (i < texto.length) setTimeout(letra, 28);
+            }, 700);
+        }
+
+        // --- 3. El nombre nunca se sale de la pantalla (ni pasa de 3 renglones) ---
+        const titulo = document.querySelector('.nombres');
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            const noCabe = () => titulo.scrollWidth > titulo.clientWidth + 1
+                || titulo.offsetHeight > tamano * 1.05 * 2.3;
+            let vueltas = 0;
+            while (noCabe() && vueltas < 20) {
+                tamano *= 0.92;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 4. Cada dato con su nombre de videojuego ---
+        const etiquetas = { 'Código de vestimenta': 'Atuendo', 'Lugar': 'Mundo' };
+        document.querySelectorAll('.pantalla-info .detalle-label').forEach(el => {
+            const original = el.textContent.trim();
+            if (etiquetas[original]) el.textContent = etiquetas[original];
+        });
+        const enviar = document.querySelector('#form-rsvp button');
+        if (enviar) enviar.textContent = '¡Me uno!';
+
+        // --- 5. Modo de juego: "Multijugador" (con niños) o "Modo +18" ---
+        const nota = document.querySelector('.nota-ninos');
+        if (nota) {
+            const soloAdultos = nota.textContent.includes('adultos');
+            nota.style.setProperty('--modo-juego', soloAdultos ? '"Modo +18"' : '"Multijugador"');
+        }
+
+        // --- 6. Fotos -> cartuchos ("partidas guardadas") ---
+        const fotos = [...document.querySelectorAll('.galeria > img')];
+        fotos.forEach((foto, i) => {
+            const cartucho = document.createElement('figure');
+            cartucho.className = 'cartucho';
+            const etiqueta = document.createElement('figcaption');
+            etiqueta.textContent = 'Partida ' + String(i + 1).padStart(2, '0');
+            foto.before(cartucho);
+            cartucho.append(foto, etiqueta);
+        });
+
+        // --- 7. El contador de confirmados "late" cuando alguien nuevo confirma ---
+        const total = document.getElementById('total-confirmados');
+        if (total) {
+            let anterior = total.textContent;
+            new MutationObserver(() => {
+                const actualTexto = total.textContent;
+                if (actualTexto !== anterior && anterior !== '…') {
+                    total.classList.remove('cambio');
+                    void total.offsetWidth;
+                    total.classList.add('cambio');
+                }
+                anterior = actualTexto;
+            }).observe(total, { childList: true, characterData: true, subtree: true });
+        }
+
+        // --- 8. Al confirmar: "+1UP" y la tabla de puntajes con el nuevo jugador ---
+        // Su lugar es el total de confirmados; arriba y abajo van los jugadores
+        // "anteriores" como en las maquinitas (sin nombres: solo su numero).
+        // El motor borra el formulario antes de avisar: el nombre se guarda al enviar.
+        const form = document.getElementById('form-rsvp');
+        const status = document.getElementById('rsvp-status');
+        let jugador = '';
+        if (form) form.addEventListener('submit', () => {
+            jugador = (form.elements.nombre_invitado.value || '').trim();
+        });
+        document.addEventListener('rsvp:enviado', e => {
+            const previa = document.querySelector('.puntajes');
+            if (previa) previa.remove();
+            if (!status || e.detail.asistencia !== 'si') return;
+            const n = Math.max(1, parseInt(e.detail.total_confirmados, 10) || 1);
+            const nombre = ([...(jugador.split(/\s+/)[0] || 'Jugador')].slice(0, 10).join('')).toUpperCase();
+            const caja = document.createElement('div');
+            caja.className = 'puntajes';
+            caja.setAttribute('role', 'status');
+            const lista = document.createElement('ol');
+            const fila = (lugar, quien, esTu) => {
+                const li = document.createElement('li');
+                if (esTu) li.className = 'tu';
+                const a = document.createElement('span');
+                a.textContent = String(lugar).padStart(3, '0');
+                const b = document.createElement('span');
+                b.textContent = quien;
+                const c = document.createElement('span');
+                if (esTu) c.innerHTML = '<svg viewBox="0 0 7 7" aria-hidden="true"><use href="#p-estrella"/></svg><svg viewBox="0 0 7 7" aria-hidden="true"><use href="#p-estrella"/></svg><svg viewBox="0 0 7 7" aria-hidden="true"><use href="#p-estrella"/></svg>';
+                else c.textContent = 'Listo';
+                li.append(a, b, c);
+                return li;
+            };
+            if (n > 1) lista.appendChild(fila(n - 1, 'Jugador ' + (n - 1), false));
+            lista.appendChild(fila(n, nombre, true));
+            caja.appendChild(lista);
+            const up = document.createElement('span');
+            up.className = 'uno-up';
+            up.setAttribute('aria-hidden', 'true');
+            up.textContent = '+1UP';
+            caja.appendChild(up);
+            status.after(caja);
+        });
+    })();
+</script>
+{% endblock %}

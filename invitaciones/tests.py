@@ -541,3 +541,24 @@ class DemoProximaSalidaTests(TestCase):
                           "<strong>FUT</strong>", "rsvp:enviado", 'id="estatus-vuelo"'):
             self.assertContains(respuesta, fragmento)
         self.assertContains(respuesta, "/static/invitaciones/pwa/graduacion-salida-03-180.png")
+
+
+class DemoNivelDesbloqueadoTests(TestCase):
+    def test_crear_demo_fiesta_consola_es_idempotente_y_se_pinta(self):
+        call_command("crear_demo_fiesta_consola", stdout=StringIO())
+        call_command("crear_demo_fiesta_consola", "--host", "192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="fiesta-consola-03").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-fiesta-rodrigo")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "fiesta")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 20)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/fiesta-consola-03.html")
+        # "Nivel 30" sale de la clave nivel; controles de la consola; SELECT = agendar (.ics)
+        for fragmento in ("Nivel 30 desbloqueado", 'id="boton-a"', 'id="boton-start"',
+                          "Sáb 14 Nov", "rsvp:enviado", "Llega a la fiesta"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, 'class="boton-select" href="' + reverse("invitaciones:calendario", args=[invitacion.slug]))
+        self.assertContains(respuesta, "/static/invitaciones/pwa/fiesta-consola-03-180.png")
