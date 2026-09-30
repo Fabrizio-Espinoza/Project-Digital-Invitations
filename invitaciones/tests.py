@@ -332,12 +332,12 @@ class DemoFiestaTests(TestCase):
         call_command("crear_demo_fiesta", "--host", "192.168.1.50:8000", stdout=StringIO())
 
         self.assertEqual(Plantilla.objects.filter(slug_tema="fiesta-neon-01").count(), 1)
-        invitacion = Invitacion.objects.get(slug="demo-fiesta")
+        invitacion = Invitacion.objects.get(slug="demo-fiesta-sofia")
         self.assertEqual(invitacion.plantilla.color_tema, "#0E0A1A")
         self.assertTrue(invitacion.musica_url.startswith("http://192.168.1.50:8000/"))
         self.assertNotIn("itinerario", invitacion.contenido_extra)
 
-        respuesta = self.client.get("/invitaciones/demo-fiesta/")
+        respuesta = self.client.get("/invitaciones/demo-fiesta-sofia/")
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Cumpleaños #30")
         self.assertContains(respuesta, "/static/invitaciones/pwa/fiesta-neon-01-180.png")
@@ -354,9 +354,9 @@ class DemoBabyShowerTests(TestCase):
     def test_crear_demo_baby_shower_es_idempotente_y_se_pinta(self):
         call_command("crear_demo_baby_shower", stdout=StringIO())
         call_command("crear_demo_baby_shower", stdout=StringIO())
-        self.assertEqual(Invitacion.objects.filter(slug="baby-shower-demo").count(), 1)
+        self.assertEqual(Invitacion.objects.filter(slug="demo-baby-mariana-diego").count(), 1)
 
-        invitacion = Invitacion.objects.get(slug="baby-shower-demo")
+        invitacion = Invitacion.objects.get(slug="demo-baby-mariana-diego")
         self.assertTrue(invitacion.plantilla.soporta_votacion)
         # la hora del demo es 5:00 PM en hora de México
         self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
@@ -616,7 +616,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count() + Invitacion.objects.filter(slug="baby-shower-demo").count(), 14)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 14)
 
 
 # ---------------------------------------------------------------------------
@@ -849,3 +849,23 @@ class SettingsProduccionTests(TestCase):
                                 DJANGO_ALLOWED_HOSTS="www.ejemplo.mx")
         self.assertNotEqual(resultado.returncode, 0)
         self.assertIn("Falta la variable DJANGO_SECRET_KEY", resultado.stderr)
+
+
+class RenombreDemosViejosTests(TestCase):
+    def test_los_demos_viejos_se_renombran_sin_duplicarse(self):
+        viejos = {"crear_demo_fiesta": ("demo-fiesta", "demo-fiesta-sofia"),
+                  "crear_demo_graduacion": ("demo-graduacion", "demo-graduacion-valeria-montes"),
+                  "crear_demo_baby_shower": ("baby-shower-demo", "demo-baby-mariana-diego")}
+        for comando, (viejo, nuevo) in viejos.items():
+            with self.subTest(comando=comando):
+                call_command(comando, stdout=StringIO())
+                invitacion = Invitacion.objects.get(slug=nuevo)
+                invitacion.slug = viejo          # como quedó en las bases de antes
+                invitacion.save()
+                Confirmacion.objects.create(invitacion=invitacion, nombre_invitado="Ana", asistencia="si")
+
+                call_command(comando, stdout=StringIO())
+                self.assertFalse(Invitacion.objects.filter(slug=viejo).exists())
+                renombrada = Invitacion.objects.get(slug=nuevo)
+                self.assertEqual(renombrada.pk, invitacion.pk)       # la misma, no una nueva
+                self.assertEqual(renombrada.confirmaciones.count(), 1)
