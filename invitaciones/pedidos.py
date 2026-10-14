@@ -4,8 +4,9 @@ Formulario que llena el CLIENTE para armar su invitación (/pedido/<token>/).
 La idea: que nadie escriba JSON a mano. El formulario pregunta según el tipo
 de evento (una boda pide ceremonia y recepción; un baby shower, la fecha de
 parto) y según el diseño (La Gira pide la ciudad, Frente al Mar el destino,
-La Lotería el número de la carta), y al final lo convierte en una Invitacion
-con su contenido_extra armado con las mismas claves que ya usan las plantillas.
+La Lotería el número de la carta, Mención Honorífica el título de la tesis), y
+al final lo convierte en una Invitacion con su contenido_extra armado con las
+mismas claves que ya usan las plantillas.
 
 Tres piezas:
 - FormularioPedido: campos sueltos (nombres, fecha, lugares…) con la
@@ -91,6 +92,7 @@ REPETIBLES = {
 EXTRAS_DEL_DISENO = {
     "xv-gira-03": ["ciudad"],
     "boda-mar-05": ["ciudad"],
+    "graduacion-tesis-04": ["titulo_tesis"],
     "fiesta-consola-03": ["nivel"],
     "fiesta-loteria-02": ["carta_numero", "carta_titulo", "carta_dibujo"],
     "baby-shower-lunas-01": ["paleta"],
@@ -279,6 +281,10 @@ class FormularioPedido(forms.Form):
         if "ciudad" in extras:
             etiqueta, ejemplo, ayuda = CIUDAD_DEL_DISENO.get(plantilla.slug_tema, CIUDAD_DEL_DISENO["xv-gira-03"])
             f["ciudad"] = _texto(etiqueta, ejemplo, largo=60, ayuda=ayuda)
+        if "titulo_tesis" in extras:
+            f["titulo_tesis"] = _texto("Título de tu «tesis»", "Ej. De las aulas al foro", largo=90,
+                                       ayuda="Opcional. Sale en la tapa como el título de la tesis; "
+                                             "si lo dejas vacío dice «Memoria de un sueño cumplido».")
         if "nivel" in extras:
             f["nivel"] = _texto("¿Cuántos años cumple?", "Ej. 30", largo=3, ayuda="Sale como «Nivel 30 desbloqueado».")
         if "carta_numero" in extras:
@@ -403,7 +409,7 @@ CLAVES_DEL_FORMULARIO = [
     "dresscode", "dresscode_color", "admite_ninos", "padres", "padrinos", "itinerario",
     "mesa_regalos_url", "mesas_regalos", "lluvia_sobres", "lluvia_panales",
     "fecha_probable_parto", "bebe_nombre", "carrera", "institucion", "generacion",
-    "ciudad", "nivel", "carta_numero", "carta_titulo", "carta_dibujo", "paleta",
+    "ciudad", "nivel", "carta_numero", "carta_titulo", "carta_dibujo", "paleta", "titulo_tesis",
 ]
 
 
@@ -439,7 +445,7 @@ def datos_iniciales(pedido):
     }
     for clave in ("lugar_direccion", "dresscode", "padres", "mesa_regalos_url", "lluvia_sobres", "bebe_nombre",
                   "fecha_probable_parto", "carrera", "institucion", "generacion", "ciudad", "nivel",
-                  "carta_numero", "carta_titulo", "carta_dibujo", "paleta"):
+                  "carta_numero", "carta_titulo", "carta_dibujo", "paleta", "titulo_tesis"):
         if extra.get(clave):
             iniciales[clave] = extra[clave]
     filas = {grupo: extra.get(grupo) or [] for grupo in REPETIBLES}
@@ -519,6 +525,7 @@ def guardar_pedido(pedido, datos, filas, fotos, borrar_fotos=(), portada=None):
         "carta_titulo": datos.get("carta_titulo"),
         "carta_dibujo": datos.get("carta_dibujo"),
         "paleta": datos.get("paleta"),
+        "titulo_tesis": datos.get("titulo_tesis"),
         **filas,
     }
     extra.update({k: v for k, v in nuevo.items() if v})    # vacío = la plantilla no muestra esa parte

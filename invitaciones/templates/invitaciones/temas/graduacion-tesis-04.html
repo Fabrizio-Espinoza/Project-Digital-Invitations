@@ -1,0 +1,1651 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  MENCIÓN HONORÍFICA — cuarta plantilla de graduación. Formal y sin foto.
+
+  Concepto: en México "titularse" tiene un objeto: la tesis empastada en piel con letras
+  doradas, y un momento: el examen profesional, donde los sinodales firman su voto y, si
+  fue brillante, otorgan MENCIÓN HONORÍFICA. La invitación es esa tesis: llega cerrada,
+  el invitado la abre y cada pantalla es una página, con su cornisa arriba y su folio abajo.
+
+    Tapa .......... piel vino con grano, lomo y bisagra, marco doble en oro con esquineros,
+                    sello de la generación y el texto de tesis mexicana en oro de hot
+                    stamping que destella (TESIS · que para concluir sus estudios de ·
+                    PRESENTA). "Abrir la tesis" la gira en 3D sobre el lomo, enseña la
+                    guarda de papel marmoleado y arranca la música (ese toque es la
+                    interacción que pide el navegador). La tapa nace con hidden: sin JS se
+                    ve directo la portadilla.
+    Portadilla .... la página de título en tinta sobre papel, con el sello en seco (en
+                    relieve, sin tinta), el título de la "tesis", la carrera y el nombre.
+    Capítulo I .... "La ceremonia": el mensaje con capitular en tinta roja, los datos como
+                    tabla académica (Tabla 1, filetes arriba y abajo), la cuenta regresiva
+                    como ecuación numerada (1) y los botones como pestañas sobrias.
+    Capítulo II ... "Agradecimientos" (papás y padrinos, en cursiva a la derecha, como
+                    dedicatoria), el programa como ÍNDICE con números romanos y puntitos
+                    hasta la hora, la mesa de regalos como Referencia [1] y la nota de
+                    niños como nota al pie.
+    Anexos ........ la galería como figuras numeradas (Figura 1, Figura 2…).
+    Acta .......... el RSVP como hoja de confirmación con casillas; al confirmar con "Sí",
+                    el invitado firma un VOTO APROBATORIO como sinodal: su firma se escribe
+                    sola y cae el sello rojo de "Aprobado · Mención honorífica".
+    Música ........ la borla del birrete con el dije del año; se columpia mientras suena.
+
+  Distinta de Laurel de Oro (azul medianoche, laurel, diploma), Tarea Cumplida (cuaderno,
+  humor) y Próxima Salida (aeropuerto): aquí todo es tipografía de libro. Paleta papel
+  marfil · tinta · vino (60-30-10), con oro solo en la tapa y la borla. EB Garamond (la
+  letra de los libros, con sus números antiguos) + Herr Von Muellerhoff (las firmas).
+  Ambas OFL; todo el arte (sello, piel, mármol, borla, sello de goma) es CSS/SVG propio.
+  Clave propia opcional: titulo_tesis (si no hay, "Memoria de un sueño cumplido").
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Tesis{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<!-- La tapa de la tesis: nace oculta (sin JS se ve la portadilla); el JS la muestra y la abre al tocarla -->
+<div class="tapa" id="tapa" hidden>
+    <div class="tapa-giro">
+        <div class="tapa-frente">
+            <svg width="0" height="0" class="defs-oro" aria-hidden="true">
+                <linearGradient id="oro-tapa" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0" stop-color="#8A672C"/><stop offset=".42" stop-color="#EDD593"/>
+                    <stop offset=".62" stop-color="#C29E55"/><stop offset="1" stop-color="#7C5C26"/>
+                </linearGradient>
+            </svg>
+            <div class="tapa-marco">
+                {% if invitacion.contenido_extra.institucion %}<p class="tapa-institucion oro">{{ invitacion.contenido_extra.institucion }}</p>{% endif %}
+                <svg class="sello sello-oro" viewBox="0 0 120 120" aria-hidden="true">
+                    <path id="arco-tapa" d="M16 60a44 44 0 1 1 88 0a44 44 0 1 1-88 0" fill="none" stroke="none"/>
+                    <circle cx="60" cy="60" r="57" fill="none" stroke-width="1.6"/>
+                    <circle cx="60" cy="60" r="53" fill="none" stroke-width=".6"/>
+                    <circle cx="60" cy="60" r="35" fill="none" stroke-width=".8"/>
+                    <text font-size="7.4" stroke="none"><textPath href="#arco-tapa" textLength="272" lengthAdjust="spacing">{% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} · {% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} ·</textPath></text>
+                    <text class="sello-iniciales" x="60" y="66" text-anchor="middle" font-size="20" stroke="none" data-iniciales>{{ invitacion.anfitriones|slice:":1" }}</text>
+                    <path d="M47 75q6.5-3 13 0q6.5-3 13 0v7q-6.5-3-13 0q-6.5-3-13 0zM60 75v7" fill="none" stroke-width=".9"/>
+                </svg>
+                <p class="tapa-titulo oro">{{ invitacion.contenido_extra.titulo_tesis|default:"Memoria de un sueño cumplido" }}</p>
+                <p class="tapa-tesis oro">Tesis</p>
+                {% if invitacion.contenido_extra.carrera %}
+                <p class="tapa-que oro">que para concluir sus estudios de</p>
+                <p class="tapa-carrera oro">{{ invitacion.contenido_extra.carrera }}</p>
+                {% endif %}
+                <p class="tapa-presenta oro">presenta</p>
+                <p class="tapa-nombre oro">{{ invitacion.anfitriones }}</p>
+                <p class="tapa-pie oro">{{ invitacion.fecha_evento|date:"Y" }}</p>
+            </div>
+            <button type="button" class="tapa-boton">Abrir la tesis</button>
+        </div>
+        <!-- el reverso de la tapa: la guarda de papel marmoleado -->
+        <div class="tapa-guarda" aria-hidden="true"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+{% if invitacion.contenido_extra.institucion %}<p class="portadilla-institucion">{{ invitacion.contenido_extra.institucion }}</p>{% endif %}
+<!-- el sello en seco: en relieve sobre el papel, sin tinta -->
+<svg class="sello sello-seco" viewBox="0 0 120 120" aria-hidden="true">
+    <path id="arco-portadilla" d="M16 60a44 44 0 1 1 88 0a44 44 0 1 1-88 0" fill="none" stroke="none"/>
+    <circle cx="60" cy="60" r="57" fill="none" stroke-width="1.6"/>
+    <circle cx="60" cy="60" r="53" fill="none" stroke-width=".6"/>
+    <circle cx="60" cy="60" r="35" fill="none" stroke-width=".8"/>
+    <text font-size="7.4" stroke="none"><textPath href="#arco-portadilla" textLength="272" lengthAdjust="spacing">{% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} · {% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} ·</textPath></text>
+    <text class="sello-iniciales" x="60" y="66" text-anchor="middle" font-size="20" stroke="none" data-iniciales>{{ invitacion.anfitriones|slice:":1" }}</text>
+    <path d="M47 75q6.5-3 13 0q6.5-3 13 0v7q-6.5-3-13 0q-6.5-3-13 0zM60 75v7" fill="none" stroke-width=".9"/>
+</svg>
+<p class="portadilla-titulo">{{ invitacion.contenido_extra.titulo_tesis|default:"Memoria de un sueño cumplido" }}</p>
+{% if invitacion.contenido_extra.carrera %}
+<p class="portadilla-que">que para concluir sus estudios de</p>
+<p class="portadilla-carrera">{{ invitacion.contenido_extra.carrera }}</p>
+{% endif %}
+<p class="portadilla-presenta">presenta</p>
+<p class="portadilla-pie">{% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}{{ invitacion.fecha_evento|date:"F \d\e Y" }}{% endif %}</p>
+<span class="pasa-pagina" aria-hidden="true">Pasa la página</span>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="capitulo">
+    <p class="capitulo-numero">Capítulo I</p>
+    <h2 class="capitulo-titulo">La ceremonia</h2>
+</header>
+{% if invitacion.mensaje_bienvenida %}
+<!-- el mensaje se lee aquí, con capitular (en la portadilla se esconde) -->
+<p class="parrafo-inicial">{{ invitacion.mensaje_bienvenida }}</p>
+{% endif %}
+<p class="tabla-pie"><span>Tabla 1.</span> Datos de la ceremonia.</p>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- el voto aprobatorio que firma quien confirma con "Sí" (el JS lo copia y le pone el nombre) -->
+<template id="plantilla-voto">
+    <div class="voto">
+        <p class="voto-titulo">Voto aprobatorio</p>
+        <p class="voto-texto">Quien firma, en calidad de <em>sinodal invitado</em>, emite su voto aprobatorio y confirma su asistencia a la graduación de {{ invitacion.anfitriones }}.</p>
+        <div class="voto-firma">
+            <span class="voto-nombre"></span>
+            <span class="voto-linea">Firma del sinodal</span>
+        </div>
+        <svg class="sello sello-seco voto-sello" viewBox="0 0 120 120" aria-hidden="true">
+            <path id="arco-voto" d="M16 60a44 44 0 1 1 88 0a44 44 0 1 1-88 0" fill="none" stroke="none"/>
+            <circle cx="60" cy="60" r="57" fill="none" stroke-width="1.6"/>
+            <circle cx="60" cy="60" r="53" fill="none" stroke-width=".6"/>
+            <circle cx="60" cy="60" r="35" fill="none" stroke-width=".8"/>
+            <text font-size="7.4" stroke="none"><textPath href="#arco-voto" textLength="272" lengthAdjust="spacing">{% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} · {% if invitacion.contenido_extra.generacion %}Generación {{ invitacion.contenido_extra.generacion }}{% else %}Generación {{ invitacion.fecha_evento|date:"Y" }}{% endif %} ·</textPath></text>
+            <text class="sello-iniciales" x="60" y="66" text-anchor="middle" font-size="20" stroke="none" data-iniciales>{{ invitacion.anfitriones|slice:":1" }}</text>
+            <path d="M47 75q6.5-3 13 0q6.5-3 13 0v7q-6.5-3-13 0q-6.5-3-13 0zM60 75v7" fill="none" stroke-width=".9"/>
+        </svg>
+        <span class="voto-estampa" aria-hidden="true"><strong>Aprobado</strong>Mención honorífica</span>
+    </div>
+    <p class="voto-nota" aria-live="polite">Firmando tu voto…</p>
+</template>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400..600;1,400..600&family=Herr+Von+Muellerhoff&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 papel marfil · 30 tinta · 10 vino (el oro, solo en la tapa y la borla) */
+        --papel: #F4EEE2;
+        --papel-claro: #FAF6EE;
+        --tinta: #24201B;
+        --tinta-suave: rgba(36, 32, 27, 0.7);
+        --linea: rgba(36, 32, 27, 0.2);
+        --vino: #7A2431;
+        --vino-oscuro: #4E1720;
+        --piel: #5E1C25;
+        --oro: #C6A35A;
+        --oro-foil: linear-gradient(100deg, #8A672C 0%, #D9BC74 22%, #F4E1A6 34%, #C29E55 50%, #8F6D2F 70%, #E3C980 88%, #9B7836 100%);
+
+        --serif: 'EB Garamond', 'Garamond', 'Iowan Old Style', Georgia, serif;
+        --firma: 'Herr Von Muellerhoff', 'Snell Roundhand', cursive;
+
+        --margen: clamp(1.5rem, 7vw, 2.6rem);
+        --ancho: 30rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        --anio: "";
+
+        /* fibras del papel */
+        --fibras: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .22 0 0 0 .08 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+        /* grano de la piel de la tapa */
+        --grano-piel: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -1.4 .9'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23p)' opacity='.5'/%3E%3C/svg%3E");
+        /* guarda de papel marmoleado: franjas de colores torcidas por turbulencia */
+        --marmol: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='900' viewBox='0 0 600 900' preserveAspectRatio='none'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.004 .012' numOctaves='3' seed='4'/%3E%3CfeDisplacementMap in='SourceGraphic' scale='170' xChannelSelector='R' yChannelSelector='G'/%3E%3C/filter%3E%3Cg filter='url(%23m)'%3E%3Crect x='-100' y='-100' width='800' height='1100' fill='%23E8DCC2'/%3E%3Cg%3E%3Crect x='-60' y='-100' width='70' height='1100' fill='%237A2431'/%3E%3Crect x='30' y='-100' width='26' height='1100' fill='%231F2A44'/%3E%3Crect x='70' y='-100' width='12' height='1100' fill='%23C6A35A'/%3E%3Crect x='120' y='-100' width='80' height='1100' fill='%237A2431'/%3E%3Crect x='215' y='-100' width='34' height='1100' fill='%23324A5E'/%3E%3Crect x='262' y='-100' width='10' height='1100' fill='%23C6A35A'/%3E%3Crect x='300' y='-100' width='66' height='1100' fill='%235E1C25'/%3E%3Crect x='380' y='-100' width='30' height='1100' fill='%231F2A44'/%3E%3Crect x='430' y='-100' width='14' height='1100' fill='%23C6A35A'/%3E%3Crect x='470' y='-100' width='90' height='1100' fill='%237A2431'/%3E%3Crect x='575' y='-100' width='40' height='1100' fill='%23324A5E'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    /* afuera de las páginas, la mesa: piel oscura (en compu se ve a los lados del libro) */
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--fibras), #3B1218;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        color: var(--tinta);
+        font: 400 1.08rem/1.55 var(--serif);
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(122, 36, 49, 0.18);
+    }
+    ::selection {
+        background: rgba(122, 36, 49, 0.2);
+        color: var(--tinta);
+    }
+    /* "versalitas" hechas a mano (la versión de Google no trae las verdaderas):
+       mayúsculas más chicas y espaciadas */
+    .versalitas,
+    .capitulo-numero,
+    .tabla-pie span,
+    .detalle-label,
+    .familia-rol,
+    .portadilla-presenta,
+    .portadilla-carrera,
+    .portadilla-pie {
+        font-size: 0.78em;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+    }
+
+    /* ============================================
+       PAGINAS: cada pantalla es una hoja de la tesis
+       (en celular, a todo lo ancho; en compu, una hoja al centro sobre la mesa)
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-regalos,
+    .galeria,
+    .rsvp {
+        position: relative;
+        width: min(100%, 40rem);
+        margin-inline: auto;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 4.4rem var(--margen) 4rem;
+        /* papel + sombra del lomo a la izquierda + cantos de las hojas a la derecha */
+        background:
+            linear-gradient(90deg, rgba(70, 48, 24, 0.16), rgba(70, 48, 24, 0.04) 1.3rem, transparent 2.6rem),
+            repeating-linear-gradient(90deg, transparent 0 2px, rgba(70, 48, 24, 0.12) 2px 3px) right / 6px 100% no-repeat,
+            var(--fibras),
+            radial-gradient(130% 90% at 50% 40%, var(--papel-claro), var(--papel) 60%, #ECE3D2);
+        box-shadow: 0 0 0 1px rgba(70, 48, 24, 0.08), 0 30px 60px -20px rgba(0, 0, 0, 0.55);
+    }
+    /* cornisa (arriba) y folio (abajo): los pone el JS en cada página */
+    .cornisa {
+        position: absolute;
+        top: max(1.3rem, env(safe-area-inset-top));
+        left: var(--margen);
+        right: var(--margen);
+        padding: 0 2.4rem 0.35rem;
+        border-bottom: 1px solid var(--linea);
+        font-size: 0.68rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .folio {
+        position: absolute;
+        bottom: max(1.2rem, env(safe-area-inset-bottom));
+        left: 0;
+        right: 0;
+        font-size: 0.9rem;
+        font-style: italic;
+        color: var(--tinta-suave);
+    }
+    .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA: la borla del birrete con el dije del año
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        top: 0;
+        right: max(0.7rem, env(safe-area-inset-right));
+        z-index: 40;
+        width: 2.6rem;
+        height: calc(6.6rem + env(safe-area-inset-top));
+        padding: 0;
+        border: 0;
+        /* el cordón dorado que baja desde arriba */
+        background: linear-gradient(90deg, #8A672C, #F0D995 50%, #8A672C) 50% 0 / 3px calc(2.2rem + env(safe-area-inset-top)) no-repeat;
+        cursor: pointer;
+        transform-origin: 50% 0;
+        animation: llamar 6s ease-in-out 4s infinite;
+    }
+    /* el nudo: un botón de terciopelo vino con el ícono del motor (nota o pausa) */
+    .boton-musica svg {
+        position: absolute;
+        left: 50%;
+        top: calc(2rem + env(safe-area-inset-top));
+        width: 1.9rem;
+        height: 1.9rem;
+        margin-left: -0.95rem;
+        padding: 0.42rem;
+        border: 1.5px solid #D9BC74;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #9A3442, var(--vino-oscuro));
+        color: #F0D995;
+        box-shadow: 0 3px 6px -2px rgba(0, 0, 0, 0.5);
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    /* el fleco de hilos de oro */
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: calc(3.75rem + env(safe-area-inset-top));
+        width: 1.7rem;
+        height: 2.7rem;
+        margin-left: -0.85rem;
+        background:
+            linear-gradient(#B48E45, #B48E45) 50% 0 / 62% 4px no-repeat,
+            repeating-linear-gradient(90deg, #F0D995 0 1.3px, #A8833D 1.3px 2.6px);
+        clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+        mask-image: linear-gradient(#000 80%, transparent);
+        -webkit-mask-image: linear-gradient(#000 80%, transparent);
+    }
+    /* el dije con el año, colgado junto al nudo */
+    .boton-musica::after {
+        content: var(--anio);
+        position: absolute;
+        right: 1.95rem;
+        top: calc(2.35rem + env(safe-area-inset-top));
+        padding: 0.12rem 0.32rem 0.08rem;
+        border-radius: 0.25rem;
+        background: var(--oro-foil);
+        color: var(--vino-oscuro);
+        font: 600 0.62rem/1 var(--serif);
+        letter-spacing: 0.05em;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.45);
+        rotate: -8deg;
+    }
+    .boton-musica.sonando {
+        animation: columpio 2.8s ease-in-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--vino);
+        outline-offset: 2px;
+    }
+
+    /* ============================================
+       LA TAPA (piel vino, oro y lomo) que se abre sobre el lomo
+       ============================================ */
+    .hero.con-tapa {
+        overflow: hidden;
+    }
+    .tapa {
+        position: absolute;
+        inset: 0;
+        z-index: 10;
+        perspective: 2200px;
+        perspective-origin: 0 50%;
+    }
+    .tapa[hidden] {
+        display: none;
+    }
+    .tapa-giro {
+        position: absolute;
+        inset: 0;
+        transform-style: preserve-3d;
+        transform-origin: 0 50%;
+    }
+    .tapa-frente,
+    .tapa-guarda {
+        position: absolute;
+        inset: 0;
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+    .tapa-frente {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.4rem 2rem 2.6rem;
+        background:
+            radial-gradient(120% 70% at 35% 18%, rgba(255, 220, 210, 0.1), transparent 60%),
+            radial-gradient(140% 110% at 55% 50%, transparent 55%, rgba(0, 0, 0, 0.42)),
+            var(--grano-piel),
+            linear-gradient(#66202A, #561A23 60%, #4C161F);
+        cursor: pointer;
+    }
+    /* el lomo y la bisagra (la ranura donde dobla la tapa) */
+    .tapa-frente::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 1.55rem;
+        background: linear-gradient(90deg, rgba(0, 0, 0, 0.45), rgba(255, 255, 255, 0.07) 55%, rgba(0, 0, 0, 0.2));
+    }
+    .tapa-frente::after {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 1.7rem;
+        width: 4px;
+        background: linear-gradient(90deg, rgba(0, 0, 0, 0.45), rgba(255, 230, 220, 0.12));
+    }
+    .defs-oro {
+        position: absolute;
+    }
+    /* marco doble de oro con esquineros */
+    .tapa-marco {
+        position: absolute;
+        inset: max(1.1rem, env(safe-area-inset-top)) 1.1rem max(1.1rem, env(safe-area-inset-bottom)) 2.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(0.5rem, 1.6vh, 1rem);
+        padding: 2.4rem 1.2rem 4.6rem;
+        border: 1px solid rgba(214, 182, 112, 0.85);
+        outline: 1px solid rgba(214, 182, 112, 0.6);
+        outline-offset: -6px;
+        background:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='none' stroke='%23D6B670' stroke-width='1.1'%3E%3Cpath d='M2 16C2 8 8 2 16 2M2 22C6 22 6 18 10 18S14 22 18 18 18 10 14 10 10 14 10 10M2 2l6 6'/%3E%3Ccircle cx='9' cy='9' r='1.3' fill='%23D6B670'/%3E%3C/svg%3E") 3px 3px / 1.9rem no-repeat,
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='none' stroke='%23D6B670' stroke-width='1.1' transform='scale(-1 1)'%3E%3Cpath d='M2 16C2 8 8 2 16 2M2 22C6 22 6 18 10 18S14 22 18 18 18 10 14 10 10 14 10 10M2 2l6 6'/%3E%3Ccircle cx='9' cy='9' r='1.3' fill='%23D6B670'/%3E%3C/svg%3E") calc(100% - 3px) 3px / 1.9rem no-repeat,
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='none' stroke='%23D6B670' stroke-width='1.1' transform='scale(1 -1)'%3E%3Cpath d='M2 16C2 8 8 2 16 2M2 22C6 22 6 18 10 18S14 22 18 18 18 10 14 10 10 14 10 10M2 2l6 6'/%3E%3Ccircle cx='9' cy='9' r='1.3' fill='%23D6B670'/%3E%3C/svg%3E") 3px calc(100% - 3px) / 1.9rem no-repeat,
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30' fill='none' stroke='%23D6B670' stroke-width='1.1' transform='scale(-1 -1)'%3E%3Cpath d='M2 16C2 8 8 2 16 2M2 22C6 22 6 18 10 18S14 22 18 18 18 10 14 10 10 14 10 10M2 2l6 6'/%3E%3Ccircle cx='9' cy='9' r='1.3' fill='%23D6B670'/%3E%3C/svg%3E") calc(100% - 3px) calc(100% - 3px) / 1.9rem no-repeat;
+    }
+    /* :where() no suma especificidad: así cada texto puede poner su propio margen */
+    :where(.tapa-marco) p {
+        margin: 0;
+    }
+    /* oro de hot stamping: degradado metálico recortado a la letra, hundido en la piel,
+       con un destello que la cruza de vez en cuando */
+    .oro {
+        background: var(--oro-foil) 0 0 / 220% 100%;
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.55)) drop-shadow(0 -0.5px 0 rgba(255, 220, 200, 0.12));
+        animation: destello 7s ease-in-out 1.5s infinite;
+    }
+    .tapa-institucion {
+        max-width: 17rem;
+        font-size: 0.84rem;
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .sello {
+        display: block;
+        width: clamp(5rem, 13vh, 6.8rem);
+        height: auto;
+        overflow: visible;
+        font-family: var(--serif);
+        letter-spacing: 0.08em;
+    }
+    .sello text {
+        text-transform: uppercase;
+    }
+    .sello .sello-iniciales {
+        letter-spacing: 0.04em;
+    }
+    .sello-oro {
+        fill: url(#oro-tapa);
+        stroke: url(#oro-tapa);
+        filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.5));
+    }
+    .tapa-titulo {
+        max-width: 17rem;
+        font-size: clamp(1.15rem, 5.4vw, 1.45rem);
+        font-weight: 500;
+        line-height: 1.25;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .tapa-tesis {
+        padding-left: 0.6em;
+        font-size: 1.05rem;
+        font-weight: 600;
+        letter-spacing: 0.6em;
+        text-transform: uppercase;
+    }
+    .tapa-que,
+    .tapa-presenta {
+        font-size: 0.68rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+    }
+    .tapa-carrera {
+        max-width: 17rem;
+        margin-top: -0.5rem;
+        font-size: 0.86rem;
+        font-weight: 500;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .tapa-nombre {
+        max-width: 17rem;
+        font-size: clamp(1.25rem, 6vw, 1.6rem);
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    .tapa-pie {
+        font-size: 0.9rem;
+        letter-spacing: 0.3em;
+    }
+    /* el botón: una cinta separadora de seda que asoma del libro */
+    .tapa-boton {
+        position: absolute;
+        left: 50%;
+        bottom: max(1.9rem, calc(env(safe-area-inset-bottom) + 0.8rem));
+        translate: calc(-50% + 0.7rem) 0;
+        padding: 0.75rem 1.4rem 0.7rem;
+        border: 1px solid rgba(214, 182, 112, 0.9);
+        border-radius: 0;
+        background: rgba(40, 10, 14, 0.35);
+        color: #EBD18C;
+        font: 500 0.74rem/1 var(--serif);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        cursor: pointer;
+        animation: invitar 2.6s ease-in-out 2s infinite;
+    }
+    .tapa-boton:focus-visible {
+        outline: 2px solid #EBD18C;
+        outline-offset: 3px;
+    }
+    /* el reverso de la tapa: guarda de papel marmoleado */
+    .tapa-guarda {
+        transform: rotateY(180deg);
+        background: radial-gradient(130% 100% at 0 50%, rgba(0, 0, 0, 0.25), transparent 60%), var(--marmol) center / cover;
+    }
+    /* se abre: gira sobre el lomo hacia el invitado y se va */
+    .tapa.abriendo .tapa-giro {
+        animation: abrir-tapa 1.6s cubic-bezier(0.55, 0, 0.25, 1) forwards;
+    }
+    /* la sombra que la tapa le echa a la página mientras se abre */
+    .tapa.abriendo::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        background: linear-gradient(90deg, rgba(40, 20, 10, 0.4), transparent 70%);
+        animation: sombra-tapa 1.6s ease forwards;
+    }
+
+    /* ============================================
+       PORTADILLA (la página del título, en tinta)
+       ============================================ */
+    .hero-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: clamp(0.45rem, 1.5vh, 0.9rem);
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    :where(.hero-contenido) p {
+        margin: 0;
+    }
+    .portadilla-institucion {
+        order: 1;
+        max-width: 19rem;
+        font-size: 0.82rem;
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        text-wrap: balance;
+    }
+    /* el sello en seco: color del papel con luz arriba y sombra abajo = relieve */
+    .sello-seco {
+        order: 2;
+        fill: var(--papel);
+        stroke: var(--papel);
+        filter: drop-shadow(-0.6px -0.6px 0 rgba(255, 255, 255, 0.95)) drop-shadow(0.8px 1px 0.5px rgba(70, 48, 24, 0.42));
+    }
+    .portadilla-titulo {
+        order: 3;
+        max-width: 20rem;
+        margin-top: 0.3rem;
+        font-size: clamp(1.7rem, 7.6vw, 2.2rem);
+        font-style: italic;
+        line-height: 1.15;
+        text-wrap: balance;
+    }
+    .hero .eyebrow {
+        order: 4;
+        padding-left: 0.55em;
+        font-size: 0.95rem;
+        font-weight: 600;
+        letter-spacing: 0.55em;
+        text-transform: uppercase;
+    }
+    .portadilla-que {
+        order: 5;
+        font-size: 0.98rem;
+        font-style: italic;
+        color: var(--tinta-suave);
+    }
+    .portadilla-carrera {
+        order: 5;
+        max-width: 19rem;
+        margin-top: -0.35rem;
+        font-weight: 500;
+        text-wrap: balance;
+    }
+    .portadilla-presenta {
+        order: 6;
+        margin-top: 0.4rem;
+        padding-left: 0.4em;
+        letter-spacing: 0.4em;
+        color: var(--tinta-suave);
+    }
+    .nombres {
+        order: 7;
+        max-width: 21rem;
+        margin: 0;
+        font-size: clamp(1.6rem, 7.4vw, 2.3rem);
+        font-weight: 500;
+        line-height: 1.15;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-wrap: balance;
+        overflow-wrap: anywhere;
+    }
+    /* el mensaje se lee en el Capítulo I */
+    .hero .mensaje {
+        display: none;
+    }
+    .portadilla-pie {
+        order: 8;
+        margin-top: 0.6rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid var(--linea);
+        color: var(--tinta-suave);
+    }
+    .pasa-pagina {
+        order: 9;
+        margin-top: 0.6rem;
+        font-size: 0.85rem;
+        font-style: italic;
+        color: var(--tinta-suave);
+        animation: hojear 2.8s ease-in-out infinite;
+    }
+    .pasa-pagina::after {
+        content: " ↓";
+        font-style: normal;
+    }
+
+    /* ============================================
+       CAPITULOS (encabezado común)
+       ============================================ */
+    .capitulo {
+        margin-bottom: 1.1rem;
+    }
+    .capitulo-numero {
+        margin: 0;
+        color: var(--vino);
+    }
+    .capitulo-titulo {
+        margin: 0.1rem 0 0;
+        font-size: clamp(2rem, 9vw, 2.5rem);
+        font-weight: 400;
+        font-style: italic;
+        line-height: 1.1;
+    }
+    /* adorno bajo el título: filete con rombo */
+    .capitulo-titulo::after {
+        content: "";
+        display: block;
+        width: 6rem;
+        height: 0.6rem;
+        margin: 0.55rem auto 0;
+        background:
+            linear-gradient(var(--linea), var(--linea)) 0 50% / 40% 1px no-repeat,
+            linear-gradient(var(--linea), var(--linea)) 100% 50% / 40% 1px no-repeat,
+            linear-gradient(45deg, transparent 35%, var(--vino) 36% 64%, transparent 65%) 50% 50% / 0.6rem 0.6rem no-repeat;
+    }
+
+    /* ============================================
+       CAPITULO I: LA CEREMONIA
+       ============================================ */
+    .pantalla-info > .marco-decorativo-info,
+    .pantalla-info > .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    /* el mensaje como primer párrafo del capítulo, con capitular en tinta roja */
+    .parrafo-inicial {
+        margin: 0 0 1.2rem;
+        text-align: left;
+        hyphens: auto;
+        text-wrap: pretty;
+    }
+    .parrafo-inicial::first-letter {
+        float: left;
+        margin: 0.08em 0.1em 0 0;
+        font-size: 3.35em;
+        line-height: 0.82;
+        color: var(--vino);
+    }
+    /* la tabla académica: pie arriba, filete grueso arriba y abajo, renglones sin rayas */
+    .tabla-pie {
+        margin: 0 0 0.35rem;
+        font-size: 0.88rem;
+        font-style: italic;
+        text-align: left;
+        color: var(--tinta-suave);
+    }
+    .tabla-pie span {
+        font-style: normal;
+        color: var(--tinta);
+    }
+    .detalles,
+    .lugares {
+        display: contents;
+    }
+    .detalle-divisor {
+        display: none;
+    }
+    .detalle-item,
+    .lugar-item,
+    .vestimenta {
+        display: grid;
+        grid-template-columns: 6.6rem 1fr;
+        align-items: baseline;
+        column-gap: 0.8rem;
+        padding: 0.32rem 0.1rem;
+        text-align: left;
+    }
+    .detalles .detalle-item:first-child {
+        padding-top: 0.6rem;
+        border-top: 1.5px solid var(--tinta);
+    }
+    .detalle-label {
+        color: var(--tinta-suave);
+    }
+    .detalle-valor {
+        font-size: 1.05rem;
+        line-height: 1.3;
+    }
+    /* "26 de junio, 2027": los meses van con minúscula en español */
+    .detalles .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+    }
+    .lugar-direccion {
+        grid-column: 2;
+        font-size: 0.88rem;
+        font-style: italic;
+        color: var(--tinta-suave);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    /* los colores, como cuadritos de leyenda de una gráfica */
+    .vestimenta-color {
+        width: 0.8rem;
+        height: 0.8rem;
+        border: 1px solid var(--tinta);
+    }
+    .vestimenta-valor .detalle-valor {
+        margin-left: 0.2rem;
+    }
+    /* la cuenta regresiva como ecuación numerada; el filete de arriba cierra la tabla */
+    .countdown {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        gap: 0.65rem;
+        margin-top: 0.6rem;
+        padding: 1.1rem 2rem 0.2rem;
+        border-top: 1.5px solid var(--tinta);
+        font-style: italic;
+    }
+    .countdown::after {
+        content: "(1)";
+        position: absolute;
+        right: 0;
+        bottom: 0.3rem;
+        font-size: 0.95rem;
+        font-style: normal;
+        color: var(--tinta-suave);
+    }
+    .countdown div {
+        display: flex;
+        align-items: baseline;
+        gap: 0.12rem;
+    }
+    .countdown span {
+        font-size: clamp(1.7rem, 7.5vw, 2.1rem);
+        font-style: normal;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    /* "Días, Horas…" se leen igual (lectores de pantalla); se ven como unidades: d, h, min, s */
+    .countdown label {
+        font-size: 0;
+    }
+    .countdown label::after {
+        font-size: 1.05rem;
+        color: var(--tinta-suave);
+    }
+    .countdown div:nth-child(1) label::after { content: "d"; }
+    .countdown div:nth-child(2) label::after { content: "h"; }
+    .countdown div:nth-child(3) label::after { content: "min"; }
+    .countdown div:nth-child(4) label::after { content: "s"; }
+    .acciones-rapidas {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        margin-top: 1.4rem;
+    }
+    /* los botones: pestañas sobrias de esquinas rectas */
+    .accion-icono {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        padding: 0.45rem 0.6rem 0.4rem;
+        border: 1px solid rgba(36, 32, 27, 0.4);
+        font-size: 0.72rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--tinta);
+        text-decoration: none;
+        line-height: 1.2;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .icono-circulo {
+        display: grid;
+        flex: none;
+        color: var(--vino);
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+    .accion-icono:first-child {
+        border-color: var(--vino);
+        background: var(--vino);
+        color: var(--papel-claro);
+    }
+    .accion-icono:first-child .icono-circulo {
+        color: inherit;
+    }
+    .accion-icono:hover,
+    .accion-icono:focus-visible {
+        background: var(--tinta);
+        color: var(--papel-claro);
+        outline: none;
+    }
+    .accion-icono:hover .icono-circulo,
+    .accion-icono:focus-visible .icono-circulo {
+        color: inherit;
+    }
+
+    /* ============================================
+       CAPITULO II: AGRADECIMIENTOS, INDICE, REFERENCIAS
+       ============================================ */
+    /* (la cornisa y el folio no: van absolutos de orilla a orilla) */
+    .pantalla-extra > :not(.cornisa, .folio) {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    /* agradecimientos como dedicatoria: cursiva, recargada a la derecha */
+    .familia {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        padding-left: 18%;
+        text-align: right;
+    }
+    .familia::before {
+        content: "Agradecimientos";
+        align-self: center;
+        margin: 0 0 0.3rem -18%;
+        font-size: 0.78rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--vino);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        color: var(--tinta-suave);
+    }
+    .familia-nombres {
+        font-size: 1.12rem;
+        font-style: italic;
+        line-height: 1.3;
+        text-wrap: balance;
+    }
+    /* el programa como índice: capítulos en romanos y puntitos hasta la hora */
+    .itinerario {
+        counter-reset: capitulo;
+        text-align: left;
+    }
+    .itinerario h3 {
+        margin: 0 0 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--vino);
+    }
+    .itinerario-item {
+        display: flex;
+        align-items: baseline;
+        padding: 0.28rem 0;
+        counter-increment: capitulo;
+    }
+    .itinerario-item::before {
+        content: counter(capitulo, upper-roman) ".";
+        flex: none;
+        width: 2.3rem;
+        font-size: 0.9rem;
+        color: var(--vino);
+    }
+    .itinerario-evento {
+        order: 1;
+        flex: 1 1 auto;
+        display: flex;
+        align-items: baseline;
+        min-width: 0;
+        font-size: 1.04rem;
+        line-height: 1.3;
+    }
+    .itinerario-evento::after {
+        content: "";
+        flex: 1 1 1.2rem;
+        min-width: 1.2rem;
+        margin: 0 0.4rem 0.28em;
+        border-bottom: 1.6px dotted rgba(36, 32, 27, 0.45);
+    }
+    .itinerario-hora {
+        order: 2;
+        flex: none;
+        font-size: 1.02rem;
+        font-style: italic;
+        white-space: nowrap;
+    }
+    /* la mesa de regalos como referencia bibliográfica */
+    .referencias {
+        margin: 1.4rem 0 0.35rem;
+        font-size: 0.78rem;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--vino);
+    }
+    .boton-mesa-regalos {
+        display: block;
+        padding-left: 2rem;
+        text-indent: -2rem;
+        text-align: left;
+        font-size: 1.02rem;
+        color: var(--tinta);
+        text-decoration: none;
+    }
+    .boton-mesa-regalos::before {
+        content: "[1]";
+        display: inline-block;
+        width: 2rem;
+        text-indent: 0;
+        color: var(--vino);
+    }
+    .boton-mesa-regalos::after {
+        content: " — consultar en línea ↗";
+        font-style: italic;
+        color: var(--vino);
+        text-decoration: underline;
+        text-underline-offset: 0.18em;
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--vino);
+        outline-offset: 3px;
+    }
+    /* la nota de niños como nota al pie, con su filetito */
+    .nota-ninos {
+        margin: 1.6rem 0 0;
+        padding-top: 0.45rem;
+        background: linear-gradient(var(--tinta), var(--tinta)) 0 0 / 32% 1px no-repeat;
+        font-size: 0.86rem;
+        text-align: left;
+        color: var(--tinta-suave);
+    }
+    .nota-ninos::before {
+        content: "* ";
+        color: var(--vino);
+    }
+
+    /* --- Regalos con lista y lluvia de sobres (si el cliente las pide) --- */
+    .regalos-titulo {
+        margin: 0;
+        font-size: clamp(2rem, 9vw, 2.5rem);
+        font-weight: 400;
+        font-style: italic;
+    }
+    .regalos-intro {
+        margin: 0.4rem 0 1rem;
+        color: var(--tinta-suave);
+    }
+    .regalo-tarjeta {
+        padding: 0.9rem 0;
+        border-top: 1px solid var(--linea);
+    }
+    .regalo-icono {
+        display: none;
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 400;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--vino);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+    }
+    .mesas-lista {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.4rem 0;
+    }
+    .mesa-nombre {
+        font-size: 1.15rem;
+        font-style: italic;
+    }
+    .mesa-codigo {
+        font-size: 0.9rem;
+        color: var(--tinta-suave);
+    }
+    .mesa-botones {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 0.5rem 0.9rem 0.45rem;
+        border: 1px solid rgba(36, 32, 27, 0.4);
+        background: transparent;
+        font: 400 0.7rem/1 var(--serif);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--tinta);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .boton-copiar.copiado {
+        border-color: var(--vino);
+        background: var(--vino);
+        color: var(--papel-claro);
+    }
+
+    /* ============================================
+       ANEXOS: la galería como figuras numeradas
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-content: center;
+        gap: 1rem;
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: cover;
+        padding: 4px;
+        border: 1px solid rgba(36, 32, 27, 0.5);
+        background: var(--papel-claro);
+    }
+    .galeria.con-anexos {
+        display: flex;
+    }
+    .anexos {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.1rem 0.9rem;
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .anexo {
+        margin: 0;
+    }
+    .anexo figcaption {
+        margin-top: 0.3rem;
+        font-size: 0.85rem;
+        text-align: left;
+        color: var(--tinta-suave);
+    }
+    .anexo figcaption span {
+        font-size: 0.78em;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta);
+    }
+    .anexos-fuente {
+        width: 100%;
+        max-width: var(--ancho);
+        margin: 1.1rem auto 0;
+        font-size: 0.85rem;
+        font-style: italic;
+        text-align: left;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       ACTA: el RSVP como hoja de confirmación
+       ============================================ */
+    .rsvp > :not(.cornisa, .folio) {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp h2 {
+        margin: 0 auto 0.4rem;
+        font-size: clamp(2.1rem, 9.5vw, 2.6rem);
+        font-weight: 400;
+        font-style: italic;
+        line-height: 1.1;
+    }
+    .rsvp h2::before {
+        content: "Hoja de confirmación";
+        display: block;
+        margin-bottom: 0.2rem;
+        font-size: 0.78rem;
+        font-style: normal;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--vino);
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: var(--tinta-suave);
+    }
+    #total-confirmados {
+        font-size: 1.25rem;
+        font-style: italic;
+        color: var(--tinta);
+    }
+    /* Django escribe "10 de Junio": todo a minúscula y solo la primera en mayúscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.15rem;
+        font-size: 0.95rem;
+        font-style: italic;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin: 1.2rem auto 0;
+        padding: 1.2rem 1.1rem 1.1rem;
+        border: 1.5px solid var(--tinta);
+        outline: 1px solid var(--tinta);
+        outline-offset: -5px;
+        text-align: left;
+    }
+    /* renglones finos (16px o más: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.45rem 0.1rem;
+        border: 0;
+        border-bottom: 1px solid rgba(36, 32, 27, 0.45);
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 400 1.08rem/1.4 var(--serif);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(36, 32, 27, 0.45);
+        font-style: italic;
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--vino);
+        box-shadow: 0 1px 0 var(--vino);
+    }
+    /* el mensaje en renglones de hoja rayada */
+    #form-rsvp textarea {
+        min-height: 4.2rem;
+        border-bottom: 0;
+        background: repeating-linear-gradient(transparent 0 calc(1.4em + 0.45rem - 1px), rgba(36, 32, 27, 0.3) calc(1.4em + 0.45rem - 1px) calc(1.4em + 0.45rem));
+        line-height: calc(1.4em + 0.45rem);
+        padding-top: 0;
+        resize: vertical;
+    }
+    /* asistencia: casillas de formulario impreso que se marcan con una equis de pluma */
+    .opciones-asistencia {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem 1.1rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        min-height: 2.4rem;
+        font-size: 1.04rem;
+        cursor: pointer;
+    }
+    .opciones-asistencia label::before {
+        content: "";
+        flex: none;
+        width: 1.05rem;
+        height: 1.05rem;
+        border: 1.5px solid var(--tinta);
+    }
+    .opciones-asistencia input[type="radio"]:checked + label::before {
+        background:
+            linear-gradient(45deg, transparent 44%, var(--vino) 45% 57%, transparent 58%),
+            linear-gradient(-45deg, transparent 44%, var(--vino) 45% 57%, transparent 58%);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--vino);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font-size: 0.74rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .campo-con-label input {
+        max-width: 4rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.2rem;
+        padding-top: 0.1rem;
+        border: 0;
+        border-radius: 0;
+        background: var(--vino);
+        color: var(--papel-claro);
+        font: 500 0.78rem/1 var(--serif);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        background: var(--vino-oscuro);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--tinta);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 0.9rem;
+        font-size: 1.3rem;
+        font-style: italic;
+        color: var(--tinta);
+    }
+
+    /* --- El voto aprobatorio: firma del invitado + sello rojo de "Mención honorífica" --- */
+    .voto {
+        position: relative;
+        margin-top: 0.7rem;
+        padding: 1.1rem 1.1rem 1rem;
+        border: 1px solid rgba(36, 32, 27, 0.5);
+        background: var(--fibras), var(--papel-claro);
+        box-shadow: 0 14px 24px -16px rgba(40, 24, 10, 0.6);
+        text-align: left;
+        animation: llegar-voto 0.9s var(--curva) both;
+    }
+    .rsvp .voto p {
+        margin: 0;
+    }
+    .rsvp .voto-titulo {
+        font-size: 0.78rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        text-align: center;
+        color: var(--vino);
+    }
+    .rsvp .voto-texto {
+        margin-top: 0.5rem;
+        padding-right: 3.6rem;
+        font-size: 0.95rem;
+        line-height: 1.45;
+        color: var(--tinta);
+    }
+    .voto-firma {
+        display: flex;
+        flex-direction: column;
+        width: 70%;
+        margin-top: 0.4rem;
+    }
+    /* la firma se escribe sola, de izquierda a derecha */
+    .voto-nombre {
+        min-height: 2.6rem;
+        padding: 0 0.3rem;
+        font: 400 2.5rem/1.1 var(--firma);
+        color: #1F2A57;
+        white-space: nowrap;
+        animation: firmar 1.8s steps(28, end) 0.7s both;
+    }
+    .voto-linea {
+        padding-top: 0.2rem;
+        border-top: 1px solid var(--tinta);
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .voto-sello {
+        position: absolute;
+        top: 2.3rem;
+        right: 0.9rem;
+        width: 3.6rem;
+        filter: drop-shadow(-0.5px -0.5px 0 rgba(255, 255, 255, 0.95)) drop-shadow(0.7px 0.8px 0.4px rgba(70, 48, 24, 0.45));
+        fill: var(--papel-claro);
+        stroke: var(--papel-claro);
+    }
+    /* el sello de goma rojo: tinta dispareja (máscara de ruido) y cae con un golpe */
+    .voto-estampa {
+        position: absolute;
+        right: 0.7rem;
+        bottom: 0.9rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.3rem 0.55rem 0.25rem;
+        border: 2.5px double rgba(170, 30, 40, 0.85);
+        border-radius: 0.3rem;
+        color: rgba(170, 30, 40, 0.85);
+        font-size: 0.56rem;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        rotate: -12deg;
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='120' height='60' filter='url(%23r)'/%3E%3C/svg%3E");
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.2 1.9'/%3E%3C/filter%3E%3Crect width='120' height='60' filter='url(%23r)'/%3E%3C/svg%3E");
+        animation: estampar 0.45s cubic-bezier(0.3, 1.5, 0.6, 1) 2.7s both;
+    }
+    .voto-estampa strong {
+        font-size: 1.15rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        line-height: 1.1;
+    }
+    .rsvp .voto-nota {
+        margin-top: 0.6rem;
+        font-size: 0.92rem;
+        font-style: italic;
+    }
+    .rsvp .aviso-privacidad {
+        margin-top: 1rem;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada:not(.hero) {
+        opacity: 0;
+        transition: opacity 0.9s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.capitulo, .parrafo-inicial, .tabla-pie, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .referencias, .boton-mesa-regalos, .nota-ninos, .anexos) {
+        animation: aparecer 0.9s var(--curva) both;
+    }
+    /* la portadilla aparece al cargar o, si había tapa, al abrirla */
+    .hero.visible:not(.con-tapa) .hero-contenido > *,
+    .hero.abierta .hero-contenido > * {
+        animation: aparecer 1s var(--curva) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.7rem; }
+    }
+    @keyframes abrir-tapa {
+        75% { opacity: 1; }
+        to { transform: rotateY(-118deg); opacity: 0; }
+    }
+    @keyframes sombra-tapa {
+        to { opacity: 0; }
+    }
+    @keyframes destello {
+        0%, 70% { background-position: 0 0; }
+        100% { background-position: -120% 0; }
+    }
+    @keyframes invitar {
+        50% { box-shadow: 0 0 0 6px rgba(214, 182, 112, 0.12); }
+    }
+    @keyframes hojear {
+        50% { translate: 0 0.25rem; }
+    }
+    @keyframes llamar {
+        0%, 88%, 100% { rotate: 0deg; }
+        92% { rotate: 9deg; }
+        96% { rotate: -6deg; }
+    }
+    @keyframes columpio {
+        0%, 100% { rotate: 6deg; }
+        50% { rotate: -6deg; }
+    }
+    @keyframes llegar-voto {
+        from { opacity: 0; translate: 0 1.2rem; rotate: 2deg; }
+    }
+    @keyframes firmar {
+        from { clip-path: inset(0 100% 0 0); }
+        to { clip-path: inset(0 0 0 0); }
+    }
+    @keyframes estampar {
+        from { opacity: 0; scale: 2.2; }
+        to { opacity: 1; scale: 1; }
+    }
+
+    /* ============================================
+       PANTALLAS ANCHAS (compu y tablet)
+       ============================================ */
+    @media (min-width: 640px) {
+        .anexos {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            animation-delay: 0s !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+<style>
+    /* el año del dije de la borla */
+    :root { --anio: "{{ invitacion.fecha_evento|date:'Y' }}"; }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoración progresiva del tema: si este script falla, la invitación se ve y
+    // funciona igual (sin tapa, sin cornisas ni folios, fotos en cuadrícula).
+    (function () {
+        const hero = document.querySelector('.hero');
+        const nombre = (document.querySelector('.hero .nombres') || {}).textContent || '';
+
+        // --- 1. Iniciales del sello: nombre y primer apellido (sin "de", "la"…) ---
+        const palabras = nombre.trim().split(/\s+/).filter(p => !/^(de|del|la|las|los|y|e)$/i.test(p));
+        const iniciales = palabras.slice(0, 2).map(p => p.charAt(0).toUpperCase()).join('');
+        if (iniciales) document.querySelectorAll('[data-iniciales]').forEach(el => { el.textContent = iniciales; });
+
+        // --- 2. Cada pantalla es una página: cornisa arriba y folio abajo ---
+        // Como en los libros: en las pares va el nombre y en las nones el título de la tesis.
+        const tituloTesis = (document.querySelector('.portadilla-titulo') || {}).textContent || '';
+        const paginas = document.querySelectorAll('.pantalla-info, .pantalla-extra, .pantalla-regalos, .galeria, .rsvp');
+        paginas.forEach((pagina, i) => {
+            const numero = i + 1;
+            const cornisa = document.createElement('span');
+            cornisa.className = 'cornisa';
+            cornisa.setAttribute('aria-hidden', 'true');
+            cornisa.textContent = numero % 2 ? tituloTesis.trim() : nombre.trim();
+            const folio = document.createElement('span');
+            folio.className = 'folio';
+            folio.setAttribute('aria-hidden', 'true');
+            folio.textContent = `— ${numero} —`;
+            pagina.prepend(cornisa);
+            pagina.append(folio);
+        });
+
+        // --- 3. Capítulo II: encabezado, el programa como índice y la mesa como referencia ---
+        const extra = document.querySelector('.pantalla-extra');
+        if (extra) {
+            const capitulo = document.createElement('header');
+            capitulo.className = 'capitulo';
+            capitulo.innerHTML = '<p class="capitulo-numero">Capítulo II</p><h2 class="capitulo-titulo">El programa</h2>';
+            extra.querySelector('.cornisa').after(capitulo);
+            const indice = extra.querySelector('.itinerario h3');
+            if (indice) indice.textContent = 'Índice';
+            const mesa = extra.querySelector('.boton-mesa-regalos');
+            if (mesa) {
+                const titulo = document.createElement('p');
+                titulo.className = 'referencias';
+                titulo.textContent = 'Referencias';
+                mesa.before(titulo);
+            }
+        }
+
+        // --- 4. Anexos: cada foto como figura numerada ---
+        const galeria = document.querySelector('.galeria');
+        const fotos = galeria ? galeria.querySelectorAll(':scope > img') : [];
+        if (fotos.length) {
+            const capitulo = document.createElement('header');
+            capitulo.className = 'capitulo';
+            capitulo.innerHTML = '<p class="capitulo-numero">Anexo A</p><h2 class="capitulo-titulo">Galería</h2>';
+            const anexos = document.createElement('div');
+            anexos.className = 'anexos';
+            fotos.forEach((img, i) => {
+                const figura = document.createElement('figure');
+                figura.className = 'anexo';
+                const pie = document.createElement('figcaption');
+                pie.innerHTML = `<span>Figura ${i + 1}.</span>`;
+                figura.append(img, pie);
+                anexos.appendChild(figura);
+            });
+            const fuente = document.createElement('p');
+            fuente.className = 'anexos-fuente';
+            fuente.textContent = 'Fuente: archivo personal.';
+            galeria.querySelector('.cornisa').after(capitulo, anexos, fuente);
+            galeria.classList.add('con-anexos');
+        }
+
+        // --- 5. La tapa: al tocarla se abre sobre el lomo y suena la música ---
+        // Si abren un link directo a una sección (#rsvp) no se pone la tapa.
+        const tapa = document.getElementById('tapa');
+        if (tapa && hero && !location.hash) {
+            tapa.hidden = false;
+            hero.classList.add('con-tapa');
+            let abierta = false;
+            const abrir = (animado) => {
+                if (abierta) return;
+                abierta = true;
+                hero.classList.add('abierta');
+                hero.classList.remove('con-tapa');
+                if (!animado || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    tapa.hidden = true;
+                    return;
+                }
+                tapa.classList.add('abriendo');
+                tapa.addEventListener('animationend', e => {
+                    if (e.animationName === 'abrir-tapa') tapa.hidden = true;
+                });
+                setTimeout(() => { tapa.hidden = true; }, 2200);   // respaldo si no hay animación
+            };
+            tapa.addEventListener('click', () => {
+                // este toque cuenta como la interacción que exige el navegador para el audio
+                const botonMusica = document.getElementById('boton-musica');
+                const musica = document.getElementById('musica-fondo');
+                if (botonMusica && musica && musica.paused) botonMusica.click();
+                abrir(true);
+            });
+            // si bajan sin abrirla, al volver la portadilla ya está abierta
+            const vigia = new IntersectionObserver(entradas => {
+                if (!entradas[0].isIntersecting) {
+                    abrir(false);
+                    vigia.disconnect();
+                }
+            });
+            vigia.observe(hero);
+        }
+
+        // --- 6. El acta: RSVP con voz de examen profesional ---
+        const encabezado = document.querySelector('.rsvp h2');
+        if (encabezado) encabezado.textContent = '¿Me acompañas?';
+        const form = document.getElementById('form-rsvp');
+        const campoNombre = form && form.querySelector('[name="nombre_invitado"]');
+        if (campoNombre) campoNombre.placeholder = 'Nombre completo';
+        const enviar = form && form.querySelector('button[type="submit"]');
+        if (enviar) enviar.textContent = 'Firmar y enviar';
+
+        // --- 7. Quien confirma con "Sí" firma su voto aprobatorio como sinodal ---
+        // El motor borra el formulario antes de avisar, así que el nombre se guarda al enviar.
+        let nombreInvitado = '';
+        if (form) {
+            form.addEventListener('submit', () => {
+                nombreInvitado = campoNombre ? campoNombre.value.trim().split(/\s+/).slice(0, 2).join(' ') : '';
+            });
+        }
+        const status = document.getElementById('rsvp-status');
+        const plantillaVoto = document.getElementById('plantilla-voto');
+        document.addEventListener('rsvp:enviado', e => {
+            document.querySelectorAll('.rsvp .voto, .rsvp .voto-nota').forEach(el => el.remove());
+            if (!status || !plantillaVoto || e.detail.asistencia !== 'si') return;
+            const copia = plantillaVoto.content.cloneNode(true);
+            // textContent (no innerHTML): el nombre lo escribe el invitado
+            copia.querySelector('.voto-nombre').textContent = nombreInvitado || 'Sinodal';
+            if (iniciales) copia.querySelectorAll('[data-iniciales]').forEach(el => { el.textContent = iniciales; });
+            const nota = copia.querySelector('.voto-nota');
+            status.after(copia);
+            setTimeout(() => {
+                if (nota.isConnected) nota.textContent = '¡Aprobado! Guárdalo con una captura de pantalla.';
+            }, 3300);
+        });
+    })();
+</script>
+{% endblock %}
