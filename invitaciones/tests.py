@@ -1230,6 +1230,11 @@ class PanelAnfitrionTests(TestCase):
             self.assertContains(respuesta, texto)
         self.assertContains(respuesta, "Revelar: ¡Es niña!")
         self.assertIn("https://wa.me/?text=", respuesta.context["compartir_whatsapp"])
+        self.assertContains(respuesta, "<span>personas confirmadas</span>", html=True)
+
+    def test_con_una_sola_persona_el_panel_habla_en_singular(self):
+        Confirmacion.objects.filter(invitacion=self.inv).exclude(nombre_invitado="Tío Beto").delete()
+        self.assertContains(self.client.get(self.url), "<span>persona confirmada</span>", html=True)
 
     def test_la_lista_se_descarga_para_excel(self):
         respuesta = self.client.get(reverse("panel_lista_csv", args=[self.inv.token_panel]))
@@ -1710,3 +1715,25 @@ class DemoMencionHonorificaTests(TestCase):
         laurel = Pedido.objects.create(cliente="Valeria", nivel="interactiva", plantilla=Plantilla.objects.create(
             nombre="Laurel de Oro", tipo_evento="graduacion", slug_tema="graduacion-editorial-01"))
         self.assertNotContains(self.client.get(reverse("pedido", args=[laurel.token])), "Título de tu «tesis»")
+
+
+# ---------------------------------------------------------------------------
+# Catálogo: panel en vivo, diseños a la medida y el contador en singular
+# ---------------------------------------------------------------------------
+class CatalogoVentaTests(TestCase):
+    def test_el_catalogo_presume_el_panel_y_ofrece_disenos_a_la_medida(self):
+        respuesta = self.client.get("/")
+        for texto in ('id="panel"', "Tu panel <em>en vivo</em>", "Tu lista en Excel",
+                      'id="a-tu-medida"', "Ajustamos uno del catálogo", "Un diseño totalmente nuevo",
+                      "¿Pueden hacer un diseño que no está en el catálogo?", "¿Puedo corregir mis datos"):
+            self.assertContains(respuesta, texto)
+        self.assertNotContains(respuesta, "Te compartimos la lista")     # el texto viejo, antes del panel
+        # cada opción abre WhatsApp con su mensaje ya escrito
+        self.assertIn("dise%C3%B1o%20totalmente%20nuevo", respuesta.context["whatsapp_nueva"])
+        self.assertIn("cambiarle%20algunas%20cosas", respuesta.context["whatsapp_ajustar"])
+
+    def test_el_contador_del_rsvp_cambia_a_singular_con_una_persona(self):
+        call_command("crear_demo_baby_shower", stdout=StringIO())
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=["demo-baby-mariana-diego"]))
+        self.assertContains(respuesta, '<span id="texto-confirmados">personas ya confirmaron</span>')
+        self.assertContains(respuesta, "'persona ya confirmó'")

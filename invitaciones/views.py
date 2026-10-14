@@ -466,6 +466,9 @@ def catalogo(request):
         # los tres celulares de la portada: XV, boda y baby shower (tres públicos distintos)
         "portada": [por_nombre[n] for n in ("La Gira", "Hotel Amor", "Pancito en el Horno")],
         "whatsapp_general": enlace_whatsapp("¡Hola! Quiero cotizar una invitación digital."),
+        # "A tu medida": cambiarle cosas a uno del catálogo o un diseño desde cero
+        "whatsapp_ajustar": enlace_whatsapp("¡Hola! Me gustó un diseño del catálogo y quiero cambiarle algunas cosas."),
+        "whatsapp_nueva": enlace_whatsapp("¡Hola! Quiero una invitación con un diseño totalmente nuevo. Mi idea es: "),
         "imagen_compartir": _url_absoluta(request, static("invitaciones/catalogo/compartir.jpg")),
     })
 
