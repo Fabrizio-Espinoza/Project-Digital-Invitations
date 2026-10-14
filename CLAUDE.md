@@ -134,6 +134,7 @@ Flujo de trabajo con el usuario
 • En cada avance de código: explicar qué cambió, por qué, para qué sirve y el principio general detrás (acordado explícitamente como preferencia).
 • Priorizar diseño antes que funcionalidades técnicas nuevas cuando ambas compiten por tiempo — la tesis del negocio es que en este nicho el diseño vende antes que la tecnología.
 • Assets de diseño (imágenes, iconos) deben tener licencia de uso comercial clara, dado que el producto se vende a clientes y se promociona en Meta Ads.
+• Commits: el autor es Fabrizio (git config --local user.name "Fabrizio Espinoza", user.email "318164914+Fabrizio-Espinoza@users.noreply.github.com", el correo privado de GitHub para no publicar el personal) y Claude va como coautor con el trailer Co-Authored-By. Configurarlo así en cada clon nuevo antes del primer commit. No reescribir el historial viejo (los PR fusionados guardan los commits originales y el README explica en "Cómo lo construí" cómo se hizo el proyecto con Claude Code).
 6. Estado actual y pendientes
 Terminado:
 • Motor Django completo (modelos, admin, vistas, urls) funcionando de punta a punta.
