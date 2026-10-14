@@ -1,0 +1,1752 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  PRIMER LATIDO — cuarta plantilla de baby shower. La primera con foto: el ultrasonido.
+
+  Concepto: el eco es "su primera foto" y el latido es lo primero que los papás
+  oyeron de su bebé. La invitación abre en el monitor del consultorio: el
+  ultrasonido aparece con el barrido del transductor, la línea del corazón
+  corre abajo y, con un toque, el invitado ESCUCHA SU CORAZÓN: un latido
+  fetal (golpe grave + soplido del doppler) hecho con el sintetizador del
+  navegador (Web Audio, sin archivos ni licencias). Al terminar arranca la
+  canción de la invitación.
+
+    Portada ....... monitor con el eco en abanico (la máscara tapa las esquinas,
+                    donde las impresiones del eco traen el nombre de la mamá y
+                    los datos de la clínica), barrido, línea del corazón, lpm
+                    que varían, semana del embarazo y reloj.
+    Dulce espera .. la segunda pantalla del monitor: la semana en grande y el
+                    embarazo como una línea de latidos de la semana 1 a la 40
+                    con el corazón marcando la semana de hoy (las 10 lunas del
+                    motor se esconden).
+    La cita ....... los datos como tarjeta de cita con encabezado de latido.
+    Votación ...... "¿Niña o niño?" en el monitor; la revelación sale impresa
+                    como el papelito del eco y caen corazones.
+    Regalos ....... tarjetas con su línea de latido; pañales en tabla.
+    Galería ....... cada foto impresa como las tiras del ultrasonido.
+    RSVP .......... al confirmar con "Sí", el invitado recibe su pulsera de
+                    visita (como la del hospital) con su nombre.
+    Música ........ un corazón que late mientras suena.
+
+  Distinta de Diez Lunas (noche lavanda, poética), de Entrega Especial (kraft,
+  paquetería) y de Pancito en el Horno (panadería): la protagonista es la foto
+  del bebé. Paleta crema · azul noche · menta + coral (60-30-10).
+  Tipografía: Fredoka (redonda, cálida) + DM Mono (la letra del monitor). OFL.
+  Todo el arte es CSS/SVG propio. Sin foto, el monitor muestra un corazón latiendo.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Baby Shower{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="l-corazon" viewBox="0 0 24 22"><path d="M12 21C5.6 16.3 1 12.4 1 7.2 1 3.8 3.6 1.2 6.9 1.2c2.2 0 4 1.1 5.1 2.9 1.1-1.8 2.9-2.9 5.1-2.9 3.3 0 5.9 2.6 5.9 6 0 5.2-4.6 9.1-11 13.8z"/></symbol>
+    </defs>
+</svg>
+
+<!-- el monitor del ultrasonido: el eco nunca se oculta; el botón de abajo solo agrega el sonido -->
+<div class="monitor" id="monitor" data-fecha-parto="{{ invitacion.contenido_extra.fecha_probable_parto|default:'' }}">
+    <div class="monitor-pantalla">
+        <div class="monitor-barra">
+            <span class="monitor-titulo">♥ Primer latido</span>
+            <span><span id="monitor-semana"></span> <span id="monitor-hora">--:--</span></span>
+        </div>
+        <div class="eco">
+            {% if foto_portada %}
+            <img src="{{ foto_portada }}" alt="Ultrasonido del bebé" fetchpriority="high" decoding="async">
+            {% else %}
+            <svg class="eco-corazon" viewBox="0 0 24 22" aria-hidden="true"><use href="#l-corazon"/></svg>
+            {% endif %}
+            <span class="eco-barrido" aria-hidden="true"></span>
+        </div>
+        <div class="monitor-latido" aria-hidden="true">
+            <svg class="ecg" viewBox="0 0 300 40" preserveAspectRatio="none">
+                <path d="M0 20l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0l30 0q4 -4 8 0l6 0l4 -14l4 26l4 -12l8 0q6 -7 12 0l24 0"/>
+            </svg>
+            <span class="lpm"><svg viewBox="0 0 24 22"><use href="#l-corazon"/></svg><b id="lpm">146</b> lpm</span>
+        </div>
+    </div>
+</div>
+<button type="button" class="escuchar" id="escuchar" hidden>
+    <svg viewBox="0 0 24 22" aria-hidden="true"><use href="#l-corazon"/></svg>
+    Escuchar su corazón
+</button>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="en-camino">{% if invitacion.contenido_extra.bebe_nombre %}{{ invitacion.contenido_extra.bebe_nombre }} viene en camino{% else %}Nuestro bebé viene en camino{% endif %}</p>
+{% endblock %}
+
+{% block decoracion_bebe %}
+<!-- el embarazo como una línea de latidos de la semana 1 a la 40; el JS pone el avance -->
+<div class="trayecto" aria-hidden="true">
+    <svg class="trayecto-futuro" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 30l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0"/></svg>
+    <div class="trayecto-pasado"><svg viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 30l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0l12 0q1.6 -3 3.2 0l2.4 0l1.6 -14l1.6 26l1.6 -12l3.2 0q2.4 -6 4.8 0l9.6 0"/></svg></div>
+    <svg class="trayecto-corazon" viewBox="0 0 24 22"><use href="#l-corazon"/></svg>
+    <span class="trayecto-inicio">Sem 1</span>
+    <span class="trayecto-fin">Sem 40</span>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="info-cabecera">
+    <p class="kicker">Tu cita</p>
+    <h2 class="titulo">Te esperamos</h2>
+</header>
+<!-- aquí el JS acomoda el mensaje de bienvenida (sin JS se queda en la portada) -->
+<blockquote class="cita" hidden></blockquote>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- la pulsera de visita que recibe quien confirma con "Sí" (el JS le pone el nombre) -->
+<template id="plantilla-pulsera">
+    <div class="pulsera-regalo">
+        <div class="pulsera" aria-hidden="true">
+            <span class="pulsera-broche"></span>
+            <span class="pulsera-etiqueta">
+                <small>♥ Visita · {% if invitacion.contenido_extra.bebe_nombre %}bebé {{ invitacion.contenido_extra.bebe_nombre }}{% else %}bebé en camino{% endif %}</small>
+                <strong class="pulsera-nombre"></strong>
+            </span>
+            <span class="pulsera-broche"></span>
+        </div>
+        <p class="pulsera-texto">Tu pulsera de visita ya está lista</p>
+    </div>
+</template>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fredoka:wght@400..600&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 crema · 30 azul noche · 10 menta + coral */
+        --crema: #FBF6EE;
+        --papel: #FFFFFF;
+        --noche: #0F1C2E;
+        --noche-clara: #1B2C44;
+        --tinta: #1D2B44;
+        --tinta-suave: rgba(29, 43, 68, 0.68);
+        --linea: rgba(29, 43, 68, 0.14);
+        --menta: #6FD8C3;
+        --menta-oscura: #23907B;
+        --coral: #F0857A;
+        --durazno: #F9D3C2;
+
+        --redonda: 'Fredoka', 'Nunito', system-ui, sans-serif;
+        --mono: 'DM Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+        --margen: clamp(1.3rem, 6vw, 2.4rem);
+        --ancho: 27rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        /* el latido: 146 por minuto, como el de un bebé */
+        --periodo: 0.41s;
+        --corazon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 22'%3E%3Cpath d='M12 21C5.6 16.3 1 12.4 1 7.2 1 3.8 3.6 1.2 6.9 1.2c2.2 0 4 1.1 5.1 2.9 1.1-1.8 2.9-2.9 5.1-2.9 3.3 0 5.9 2.6 5.9 6 0 5.2-4.6 9.1-11 13.8z'/%3E%3C/svg%3E");
+        /* abanico del ultrasonido (tapa las esquinas de la impresión, donde van los datos de la clínica) */
+        --abanico: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300' preserveAspectRatio='none'%3E%3Cpath d='M184 6 Q200 0 216 6 L388 224 A296 296 0 0 1 12 224 Z'/%3E%3C/svg%3E");
+        /* pantalla del monitor: líneas de barrido muy finas */
+        --barrido: repeating-linear-gradient(rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 3px);
+        /* fondo crema con manchitas suaves de menta y durazno */
+        --cuarto: radial-gradient(ellipse 60% 40% at 12% 8%, rgba(111, 216, 195, 0.18), transparent 70%),
+                  radial-gradient(ellipse 55% 40% at 92% 96%, rgba(249, 211, 194, 0.5), transparent 70%), var(--crema);
+        /* encabezado de latido para tarjetas */
+        --latido-linea: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20' preserveAspectRatio='none'%3E%3Cpath d='M0 10h38l4-7 4 14 4-12 3 5h47' fill='none' stroke='%23F0857A' stroke-width='1.6' stroke-linejoin='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--crema);
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--crema);
+        color: var(--tinta);
+        font: 400 1.04rem/1.5 var(--redonda);
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(111, 216, 195, 0.3);
+    }
+    ::selection {
+        background: var(--menta);
+        color: var(--noche);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 500 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .titulo {
+        margin: 0.1rem 0 0;
+        font: 600 clamp(2.1rem, 9.5vw, 2.7rem)/1.1 var(--redonda);
+        color: var(--tinta);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-bebe,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-votacion,
+    .pantalla-regalos,
+    .pantalla-panales,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (un corazón que late)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.1rem;
+        height: 3.1rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--noche);
+        cursor: pointer;
+        box-shadow: 0 0 0 3px var(--crema), 0 0 0 4px rgba(111, 216, 195, 0.6), 0 10px 18px -8px rgba(15, 28, 46, 0.6);
+    }
+    .boton-musica svg {
+        display: none;   /* el corazón reemplaza los iconos de nota/pausa del motor */
+    }
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0.85rem 0.8rem 0.75rem;
+        background: var(--coral);
+        -webkit-mask: var(--corazon) center / contain no-repeat;
+        mask: var(--corazon) center / contain no-repeat;
+    }
+    .boton-musica.sonando::before {
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 5px;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada:not(.hero) {
+        opacity: 0;
+        transition: opacity 0.8s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.info-cabecera, .cita, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos, .votacion-opciones, .regalo-tarjeta, .bebe-semanas, .trayecto) {
+        animation: aparecer 0.8s var(--curva) var(--retraso, 0s) both;
+    }
+    .hero.visible .hero-contenido > * {
+        animation: aparecer 0.9s var(--curva) var(--retraso, 0s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.8rem; }
+    }
+    /* golpe del corazón: crece rápido y regresa */
+    @keyframes latir {
+        0% { scale: 1; }
+        14% { scale: 1.22; }
+        28% { scale: 1; }
+        42% { scale: 1.12; }
+        70%, 100% { scale: 1; }
+    }
+    /* al escuchar, un golpe más fuerte; el nombre distinto reinicia la animación
+       en el mismo instante en que empieza el sonido (así laten juntos) */
+    @keyframes latir-fuerte {
+        0% { scale: 1; }
+        14% { scale: 1.4; }
+        28% { scale: 1; }
+        42% { scale: 1.2; }
+        70%, 100% { scale: 1; }
+    }
+    /* la línea del corazón corre de derecha a izquierda (100 unidades por latido) */
+    @keyframes correr-ecg {
+        to { transform: translateX(-300px); }
+    }
+    @keyframes correr-ecg-vivo {
+        to { transform: translateX(-300px); }
+    }
+    /* el barrido del transductor: revela el eco y luego sigue "en vivo" */
+    @keyframes revelar-eco {
+        from { --barrido-eco: 0deg; }
+        to { --barrido-eco: 100deg; }
+    }
+    @keyframes vaiven {
+        0%, 100% { rotate: -38deg; }
+        50% { rotate: 38deg; }
+    }
+    @keyframes caer {
+        to { transform: translate3d(var(--deriva, 0), 110vh, 0) rotate(var(--giro, 360deg)); }
+    }
+    @keyframes llegar-pulsera {
+        0% { opacity: 0; translate: 0 -1.4rem; rotate: 8deg; }
+        60% { opacity: 1; rotate: -4deg; }
+        100% { rotate: -2deg; }
+    }
+    @property --barrido-eco {
+        syntax: "<angle>";
+        inherits: false;
+        initial-value: 100deg;
+    }
+
+    /* ============================================
+       PORTADA: el monitor del ultrasonido
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.1rem;
+        padding: 2rem var(--margen) calc(4.4rem + env(safe-area-inset-bottom));
+        background: var(--cuarto);
+        overflow: hidden;
+    }
+    /* sus piezas se acomodan directo en la columna de la portada */
+    .hero .marco-decorativo {
+        display: contents;
+    }
+    .monitor {
+        order: 1;
+        width: min(92vw, 26rem);
+        padding: 0.6rem;
+        border-radius: 1.4rem;
+        background: linear-gradient(160deg, #FFFFFF, #EFE8DD);
+        box-shadow: 0 1px 0 #FFFFFF inset, 0 0 0 1px rgba(29, 43, 68, 0.08), 0 24px 40px -22px rgba(15, 28, 46, 0.55);
+    }
+    .monitor-pantalla {
+        overflow: hidden;
+        border-radius: 0.95rem;
+        background: var(--barrido), radial-gradient(ellipse at 50% 40%, var(--noche-clara), var(--noche) 70%);
+        color: var(--menta);
+        font: 400 0.68rem/1 var(--mono);
+        box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6);
+    }
+    .monitor-barra {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.65rem 0.8rem 0.3rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+    .monitor-titulo {
+        color: var(--coral);
+    }
+    /* el eco dentro del abanico; "screen" funde el negro del eco con la pantalla */
+    .eco {
+        position: relative;
+        display: grid;
+        place-items: center;
+        aspect-ratio: 4 / 3;
+        margin: 0 0.4rem;
+    }
+    .eco img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 40%;
+        mix-blend-mode: screen;
+        /* valor final: si el navegador no anima propiedades (@property), el abanico se ve completo */
+        --barrido-eco: 100deg;
+        -webkit-mask: var(--abanico) center / 100% 100% no-repeat, conic-gradient(from 130deg at 50% 1%, #000 var(--barrido-eco), transparent 0);
+        -webkit-mask-composite: source-in;
+        mask: var(--abanico) center / 100% 100% no-repeat, conic-gradient(from 130deg at 50% 1%, #000 var(--barrido-eco), transparent 0);
+        mask-composite: intersect;
+        animation: revelar-eco 1.8s cubic-bezier(0.4, 0, 0.3, 1) 0.4s both;
+    }
+    /* sin foto: un corazón que late en la pantalla */
+    .eco-corazon {
+        width: 34%;
+        fill: var(--coral);
+        filter: drop-shadow(0 0 14px rgba(240, 133, 122, 0.55));
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    /* la línea brillante del transductor, de lado a lado, como en vivo */
+    .eco-barrido {
+        position: absolute;
+        left: 50%;
+        top: 1%;
+        width: 2px;
+        height: 98%;
+        translate: -50% 0;
+        transform-origin: 50% 0;
+        background: linear-gradient(rgba(111, 216, 195, 0), rgba(111, 216, 195, 0.5) 40%, rgba(111, 216, 195, 0));
+        filter: blur(1px);
+        animation: vaiven 5.5s ease-in-out infinite;
+        pointer-events: none;
+    }
+    .monitor-latido {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        height: 2.6rem;
+        padding: 0 0.8rem 0.2rem;
+    }
+    .ecg {
+        flex: 1;
+        height: 100%;
+        overflow: hidden;
+        /* lo viejo de la línea se desvanece hacia la izquierda */
+        -webkit-mask: linear-gradient(90deg, transparent, #000 35%);
+        mask: linear-gradient(90deg, transparent, #000 35%);
+    }
+    .ecg path {
+        fill: none;
+        stroke: var(--menta);
+        stroke-width: 1.6;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+        filter: drop-shadow(0 0 3px rgba(111, 216, 195, 0.8));
+        animation: correr-ecg calc(var(--periodo) * 3) linear infinite;
+    }
+    .lpm {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font: 500 0.7rem/1 var(--mono);
+        color: var(--menta);
+    }
+    .lpm b {
+        font: 500 1.35rem/1 var(--mono);
+    }
+    .lpm svg {
+        width: 1rem;
+        fill: var(--coral);
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    /* mientras se escucha el latido, todo el monitor brilla un poco más */
+    .monitor.escuchando .ecg path {
+        stroke-width: 2.2;
+        animation-name: correr-ecg-vivo;
+    }
+    .monitor.escuchando .lpm svg,
+    .monitor.escuchando .eco-corazon {
+        filter: drop-shadow(0 0 6px var(--coral));
+        animation-name: latir-fuerte;
+    }
+
+    /* --- El nombre --- */
+    .hero-contenido {
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .hero .eyebrow {
+        margin: 0;
+        font: 500 0.74rem/1.4 var(--mono);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .nombres {
+        --retraso: 0.1s;
+        width: 100%;
+        margin: 0.1rem 0 0.2rem;
+        font: 600 clamp(2.3rem, 10.5vw, 3.1rem)/1.08 var(--redonda);
+        color: var(--tinta);
+        text-wrap: balance;
+    }
+    .nombres .amp {
+        color: var(--coral);
+    }
+    /* sin JS el mensaje se queda aquí (con JS se muda a la cita) */
+    .hero .mensaje {
+        --retraso: 0.2s;
+        max-width: 30ch;
+        margin: 0 0 0.6rem;
+        color: var(--tinta-suave);
+    }
+    .en-camino {
+        --retraso: 0.25s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0.35rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(240, 133, 122, 0.14);
+        color: #B9483D;
+        font: 500 0.98rem/1.2 var(--redonda);
+    }
+    .en-camino::before {
+        content: "";
+        width: 0.9rem;
+        height: 0.82rem;
+        background: var(--coral);
+        -webkit-mask: var(--corazon) center / contain no-repeat;
+        mask: var(--corazon) center / contain no-repeat;
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    .escuchar {
+        order: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.4rem 0.85rem 1.15rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--noche);
+        color: var(--crema);
+        font: 500 1rem/1 var(--redonda);
+        cursor: pointer;
+        box-shadow: 0 12px 22px -10px rgba(15, 28, 46, 0.7);
+        transition: background 0.2s ease, opacity 0.3s ease;
+    }
+    .escuchar svg {
+        width: 1.15rem;
+        fill: var(--coral);
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    .escuchar:hover {
+        background: var(--noche-clara);
+    }
+    .escuchar:focus-visible {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 4px;
+    }
+    .escuchar:disabled {
+        opacity: 0.7;
+        cursor: default;
+    }
+
+    /* ============================================
+       DULCE ESPERA: la segunda pantalla del monitor
+       ============================================ */
+    .pantalla-bebe {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 2.4rem var(--margen) 4.8rem;
+        background: var(--barrido), radial-gradient(ellipse at 50% 35%, var(--noche-clara), var(--noche) 75%);
+        color: var(--crema);
+    }
+    /* el contenido se acomoda directo en la columna para meter la línea de latidos en medio */
+    .pantalla-bebe .pantalla-contenido {
+        display: contents;
+    }
+    .bebe-eyebrow {
+        order: 1;
+        margin: 0;
+        font: 500 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--menta);
+    }
+    .bebe-semanas {
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+    }
+    .bebe-semana-numero {
+        font: 500 clamp(5rem, 26vw, 7rem)/1 var(--mono);
+        color: var(--menta);
+        text-shadow: 0 0 22px rgba(111, 216, 195, 0.5);
+    }
+    .bebe-semana-label {
+        font: 400 0.82rem/1.4 var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(251, 246, 238, 0.75);
+    }
+    .marco-decorativo-bebe {
+        order: 3;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    /* las 10 lunas del motor se esconden: aquí el avance es la línea de latidos */
+    .lunas,
+    .lunas-leyenda {
+        display: none;
+    }
+    .trayecto {
+        --avance: 0.5;
+        position: relative;
+        height: 4.6rem;
+        padding-bottom: 1.2rem;
+    }
+    .trayecto-futuro {
+        display: block;
+        width: 100%;
+        height: 3.4rem;
+    }
+    .trayecto path {
+        fill: none;
+        stroke-linejoin: round;
+        vector-effect: non-scaling-stroke;
+    }
+    .trayecto-futuro path {
+        stroke: rgba(251, 246, 238, 0.25);
+        stroke-width: 1.4;
+        stroke-dasharray: 3 4;
+    }
+    .trayecto-pasado {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: calc(var(--avance) * 100%);
+        overflow: hidden;
+    }
+    .trayecto-pasado svg {
+        display: block;
+        width: calc(100% / max(var(--avance), 0.02));
+        height: 3.4rem;
+    }
+    .trayecto-pasado path {
+        stroke: var(--menta);
+        stroke-width: 2;
+        filter: drop-shadow(0 0 3px rgba(111, 216, 195, 0.8));
+    }
+    /* el corazón va justo sobre la línea (su centro a la mitad de los 3.4rem) */
+    .trayecto-corazon {
+        position: absolute;
+        top: 1.17rem;
+        left: calc(var(--avance) * 100%);
+        width: 1.15rem;
+        translate: -50% 0;
+        fill: var(--coral);
+        filter: drop-shadow(0 0 8px rgba(240, 133, 122, 0.8));
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    .trayecto-inicio,
+    .trayecto-fin {
+        position: absolute;
+        bottom: 0;
+        font: 400 0.62rem/1 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: rgba(251, 246, 238, 0.55);
+    }
+    .trayecto-inicio { left: 0; }
+    .trayecto-fin { right: 0; }
+    .bebe-faltan {
+        order: 4;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+    .bebe-faltan strong {
+        font: 500 1.5rem/1 var(--mono);
+        color: var(--coral);
+    }
+    .bebe-tamano {
+        order: 5;
+        margin: 0;
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(111, 216, 195, 0.45);
+        border-radius: 0.6rem;
+        font: 400 0.82rem/1.4 var(--mono);
+        color: var(--menta);
+    }
+    .bebe-nota {
+        order: 6;
+        margin: 0;
+        font-size: 0.85rem;
+        color: rgba(251, 246, 238, 0.6);
+    }
+
+    /* ============================================
+       PANTALLA INFO: la cita
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.9rem;
+        padding: 2.2rem var(--margen) 4.6rem;
+        background: var(--cuarto);
+    }
+    .marco-decorativo-info {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .cita {
+        --retraso: 0.1s;
+        margin: 0;
+    }
+    .cita .mensaje {
+        margin: 0;
+        color: var(--tinta-suave);
+        text-wrap: pretty;
+    }
+    /* la tarjeta de cita: encabezado con latido y renglones de datos */
+    .pantalla-info .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        width: 100%;
+        max-width: var(--ancho);
+        padding: 2.1rem 1.1rem 1.1rem;
+        border-radius: 1.2rem;
+        background: var(--latido-linea) top 0.9rem center / 70% 1rem no-repeat, var(--papel);
+        box-shadow: 0 0 0 1px var(--linea), 0 18px 30px -20px rgba(15, 28, 46, 0.45);
+    }
+    .detalles {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+    }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    .detalle-divisor {
+        width: 1px;
+        height: 2.2rem;
+        background: var(--linea);
+    }
+    .detalle-label {
+        font: 500 0.62rem/1.4 var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .detalle-valor {
+        font: 500 1.08rem/1.25 var(--redonda);
+        text-wrap: balance;
+    }
+    .lugares {
+        --retraso: 0.2s;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+        gap: 0.7rem;
+        padding-top: 0.85rem;
+        border-top: 1px dashed var(--linea);
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+    }
+    .lugar-direccion {
+        font-size: 0.86rem;
+        color: var(--tinta-suave);
+    }
+    .vestimenta {
+        --retraso: 0.25s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        padding-top: 0.85rem;
+        border-top: 1px dashed var(--linea);
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    /* los colores sugeridos como corazoncitos */
+    .vestimenta-color {
+        width: 1.35rem;
+        height: 1.25rem;
+        -webkit-mask: var(--corazon) center / contain no-repeat;
+        mask: var(--corazon) center / contain no-repeat;
+    }
+    /* el countdown en los cuadritos digitales del monitor */
+    .countdown {
+        --retraso: 0.3s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.4rem;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .countdown::before {
+        content: "Faltan";
+        grid-column: 1 / -1;
+        font: 500 0.66rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.5rem 0 0.4rem;
+        border-radius: 0.7rem;
+        background: var(--barrido), var(--noche);
+    }
+    .countdown span {
+        font: 500 1.55rem/1.1 var(--mono);
+        color: var(--menta);
+    }
+    .countdown label {
+        font: 400 0.56rem/1.4 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: rgba(251, 246, 238, 0.7);
+    }
+    .acciones-rapidas {
+        --retraso: 0.4s;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .accion-icono {
+        flex: 0 1 calc(50% - 0.25rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.8rem;
+        padding: 0.35rem 0.8rem 0.35rem 0.4rem;
+        border-radius: 999px;
+        background: var(--papel);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 500 0.92rem/1.15 var(--redonda);
+        box-shadow: 0 0 0 1px var(--linea), 0 6px 12px -8px rgba(15, 28, 46, 0.4);
+    }
+    .accion-icono:hover {
+        box-shadow: 0 0 0 1.5px var(--menta-oscura);
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: rgba(111, 216, 195, 0.25);
+        color: var(--menta-oscura);
+    }
+    .icono-svg {
+        width: 1.1rem;
+        height: 1.1rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: programa y familia
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.2rem;
+        padding: 2.4rem var(--margen) 4.8rem;
+        background: var(--cuarto);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: 500 0.64rem/1.4 var(--mono);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .familia-nombres {
+        font: 500 1.15rem/1.3 var(--redonda);
+    }
+    .itinerario {
+        --retraso: 0.1s;
+        padding: 1.1rem 1rem 0.8rem;
+        border-radius: 1.2rem;
+        background: var(--papel);
+        box-shadow: 0 0 0 1px var(--linea), 0 18px 30px -22px rgba(15, 28, 46, 0.45);
+    }
+    .itinerario h3 {
+        margin: 0 0 0.4rem;
+        font: 600 1.5rem/1.2 var(--redonda);
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: 5.4rem 1fr;
+        gap: 0.6rem;
+        align-items: baseline;
+        padding: 0.45rem 0;
+        text-align: left;
+    }
+    .itinerario-item + .itinerario-item {
+        border-top: 1px dashed var(--linea);
+    }
+    .itinerario-hora {
+        font: 500 0.8rem/1.3 var(--mono);
+        color: var(--menta-oscura);
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        font-weight: 500;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        border-radius: 999px;
+        background: var(--noche);
+        color: var(--crema);
+        text-decoration: none;
+        font: 500 1rem/1 var(--redonda);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.25s;
+        margin: 0;
+        color: var(--tinta-suave);
+    }
+
+    /* ============================================
+       VOTACION: ¿niña o niño? (en el monitor)
+       ============================================ */
+    .pantalla-votacion {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.4rem var(--margen) 4.8rem;
+        background: var(--barrido), radial-gradient(ellipse at 50% 35%, var(--noche-clara), var(--noche) 75%);
+        color: var(--crema);
+    }
+    .pantalla-votacion .pantalla-contenido {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .votacion-eyebrow {
+        margin: 0;
+        font: 500 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--menta);
+    }
+    .votacion-pregunta {
+        margin: 0.2rem 0 0;
+        font: 600 clamp(2.2rem, 10vw, 2.8rem)/1.1 var(--redonda);
+    }
+    .votacion-subtitulo {
+        max-width: 30ch;
+        margin: 0.5rem auto 0;
+        color: rgba(251, 246, 238, 0.75);
+        text-wrap: pretty;
+    }
+    .votacion-opciones {
+        --retraso: 0.15s;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+        margin-top: 1.3rem;
+    }
+    /* cada opción: un corazón de su color (--color-opcion viene del motor) */
+    .votacion-opcion {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 1rem 0.6rem 1.2rem;
+        overflow: hidden;
+        border: 1px solid rgba(111, 216, 195, 0.4);
+        border-radius: 1rem;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--crema);
+        font: inherit;
+        cursor: pointer;
+    }
+    .votacion-opcion::before {
+        content: "";
+        width: 3.4rem;
+        height: 3.1rem;
+        background: var(--color-opcion);
+        -webkit-mask: var(--corazon) center / contain no-repeat;
+        mask: var(--corazon) center / contain no-repeat;
+        filter: drop-shadow(0 0 10px var(--color-opcion));
+    }
+    .votacion-opcion:not(:disabled):hover::before {
+        animation: latir var(--periodo) ease-out infinite;
+    }
+    .votacion-opcion:disabled {
+        cursor: default;
+    }
+    .votacion-opcion:focus-visible {
+        outline: 2px solid var(--menta);
+        outline-offset: 3px;
+    }
+    /* la barra de resultados como la línea del monitor */
+    .opcion-relleno {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        height: 0.4rem;
+        background: var(--color-opcion);
+        box-shadow: 0 0 8px var(--color-opcion);
+        transition: width 1s var(--curva);
+    }
+    .con-resultados .opcion-relleno {
+        width: var(--porcentaje, 0%);
+    }
+    .opcion-texto {
+        font: 600 1.2rem/1.2 var(--redonda);
+    }
+    .opcion-porcentaje {
+        min-height: 1.2em;
+        font: 500 1.1rem/1 var(--mono);
+        color: var(--menta);
+    }
+    .opcion-mi-voto {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        padding: 0.15rem 0.45rem;
+        border-radius: 99px;
+        background: var(--menta);
+        color: var(--noche);
+        font: 500 0.58rem/1.3 var(--mono);
+        text-transform: uppercase;
+        opacity: 0;
+    }
+    .es-mi-voto .opcion-mi-voto {
+        opacity: 1;
+    }
+    .es-ganadora {
+        border-color: var(--color-opcion);
+        box-shadow: 0 0 0 2px var(--color-opcion), 0 0 18px var(--color-opcion);
+    }
+    .votacion-ayuda,
+    .votacion-total,
+    .votacion-status {
+        margin: 0.7rem 0 0;
+        font-size: 0.88rem;
+        color: rgba(251, 246, 238, 0.7);
+    }
+    .votacion-total span {
+        font: 500 1.1rem/1 var(--mono);
+        color: var(--menta);
+    }
+    .con-resultados .votacion-ayuda {
+        display: none;
+    }
+    /* la revelación sale impresa, como el papelito del eco */
+    .votacion-revelacion {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        max-width: 17rem;
+        margin: 1.1rem auto 0;
+        padding: 1rem 1.2rem 1.1rem;
+        border-radius: 0.3rem;
+        background: var(--papel);
+        color: var(--tinta);
+        rotate: -2deg;
+        box-shadow: 0 16px 28px -14px rgba(0, 0, 0, 0.7);
+    }
+    .votacion-revelacion[hidden] {
+        display: none;
+    }
+    .revelacion-eyebrow {
+        font: 500 0.66rem/1.4 var(--mono);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .revelacion-texto {
+        font: 600 2.4rem/1.1 var(--redonda);
+        color: var(--coral);
+    }
+    .revelacion-detalle {
+        font-size: 0.85rem;
+        color: var(--tinta-suave);
+    }
+    /* lluvia de corazones (el motor crea los papelitos con su color) */
+    .confeti {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .confeti i {
+        position: absolute;
+        top: -20px;
+        width: 14px;
+        height: 13px;
+        -webkit-mask: var(--corazon) center / contain no-repeat;
+        mask: var(--corazon) center / contain no-repeat;
+        animation-name: caer;
+        animation-timing-function: cubic-bezier(0.25, 0.6, 0.5, 1);
+        animation-fill-mode: forwards;
+    }
+
+    /* ============================================
+       REGALOS Y PAÑALES
+       ============================================ */
+    .pantalla-regalos,
+    .pantalla-panales {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.4rem var(--margen) 4.8rem;
+        background: var(--cuarto);
+    }
+    .pantalla-regalos .pantalla-contenido,
+    .pantalla-panales .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .regalos-titulo {
+        margin: 0;
+        font: 600 clamp(2.2rem, 10vw, 2.7rem)/1.1 var(--redonda);
+    }
+    .regalos-intro {
+        margin: 0;
+        color: var(--tinta-suave);
+        text-wrap: pretty;
+    }
+    .regalo-tarjeta {
+        padding: 2rem 1.1rem 1.1rem;
+        border-radius: 1.2rem;
+        background: var(--latido-linea) top 0.85rem center / 60% 0.9rem no-repeat, var(--papel);
+        box-shadow: 0 0 0 1px var(--linea), 0 18px 30px -22px rgba(15, 28, 46, 0.45);
+    }
+    .regalo-icono {
+        display: none;   /* la línea de latido ya decora */
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.5rem;
+        font: 600 1.25rem/1.2 var(--redonda);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+        color: var(--tinta-suave);
+    }
+    .mesas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .mesa-item + .mesa-item {
+        padding-top: 0.8rem;
+        border-top: 1px dashed var(--linea);
+    }
+    .mesa-nombre {
+        font: 600 1.05rem/1.2 var(--redonda);
+    }
+    .mesa-codigo {
+        font: 400 0.86rem/1.4 var(--mono);
+        color: var(--tinta-suave);
+    }
+    .mesa-botones {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 0.55rem 0.95rem;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(111, 216, 195, 0.25);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 500 0.88rem/1 var(--redonda);
+        cursor: pointer;
+    }
+    .boton-copiar.copiado {
+        background: var(--menta);
+    }
+    .panales-tallas {
+        display: flex;
+        flex-direction: column;
+        margin: 0.7rem 0;
+        padding: 0;
+        list-style: none;
+    }
+    .panales-tallas li {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0.7rem;
+        border-radius: 0.5rem;
+        transition: background 0.2s ease;
+    }
+    .panales-tallas li + li {
+        border-top: 1px dashed var(--linea);
+    }
+    .panales-rango {
+        font: 500 0.92rem/1.3 var(--mono);
+    }
+    .panales-talla {
+        font-weight: 500;
+    }
+    .panales-tallas li.te-toca {
+        background: rgba(240, 133, 122, 0.16);
+    }
+    .panales-tallas li.te-toca .panales-talla {
+        color: #B9483D;
+    }
+    .panales-buscador {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        font: 500 0.66rem/1.4 var(--mono);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .panales-buscador input {
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--linea);
+        border-radius: 0.8rem;
+        background: var(--crema);
+        color: var(--tinta);
+        font: 400 1.05rem/1.3 var(--redonda);
+        text-align: center;
+        letter-spacing: 0;
+        text-transform: none;
+    }
+    .panales-buscador input:focus {
+        outline: 2px solid var(--menta);
+        border-color: transparent;
+    }
+    /* dos clases para ganarle a ".regalo-tarjeta p" */
+    .regalo-tarjeta .panales-resultado {
+        min-height: 1.4em;
+        margin-top: 0.6rem;
+        font: 600 1.1rem/1.3 var(--redonda);
+        color: var(--tinta);
+    }
+
+    /* ============================================
+       GALERIA: las tiras impresas del ultrasonido
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem 0.9rem;
+        align-content: center;
+        padding: 2.4rem max(var(--margen), (100% - 28rem) / 2) 4.8rem;
+        background: var(--cuarto);
+    }
+    .galeria::before {
+        content: "Más fotos";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -0.8rem;
+        font: 500 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .galeria::after {
+        content: "Esperándote";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 600 clamp(2.2rem, 10vw, 2.7rem)/1.1 var(--redonda);
+    }
+    /* cada foto impresa en papel térmico con su orilla negra */
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        padding: 0.45rem 0.45rem 1.6rem;
+        background: var(--noche);
+        border-radius: 0.2rem;
+        box-shadow: 0 14px 22px -14px rgba(15, 28, 46, 0.7);
+    }
+    .galeria img:nth-of-type(odd) {
+        rotate: -1.5deg;
+    }
+    .galeria img:nth-of-type(even) {
+        rotate: 1.5deg;
+        translate: 0 0.8rem;
+    }
+
+    /* ============================================
+       RSVP: ¿nos acompañas?
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.4rem var(--margen) 5rem;
+        background: var(--cuarto);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Confirma tu asistencia";
+        font: 500 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .rsvp h2 {
+        margin: 0.15rem auto 0.3rem;
+        font: 600 clamp(2.2rem, 10vw, 2.8rem)/1.1 var(--redonda);
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: var(--tinta-suave);
+    }
+    #total-confirmados {
+        font: 500 1.2rem/1 var(--mono);
+        color: var(--tinta);
+    }
+    /* Django escribe "10 de Abril": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-size: 0.9rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        margin: 1.2rem auto 0;
+        padding: 2rem 1.1rem 1.2rem;
+        border-radius: 1.2rem;
+        background: var(--latido-linea) top 0.85rem center / 60% 0.9rem no-repeat, var(--papel);
+        text-align: left;
+        box-shadow: 0 0 0 1px var(--linea), 0 18px 30px -20px rgba(15, 28, 46, 0.45);
+    }
+    /* campos redondos (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.7rem 0.9rem;
+        border: 1px solid var(--linea);
+        border-radius: 0.8rem;
+        background: var(--crema);
+        color: var(--tinta);
+        font: 400 1.05rem/1.35 var(--redonda);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(29, 43, 68, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: 2px solid var(--menta);
+        border-color: transparent;
+    }
+    #form-rsvp textarea {
+        min-height: 4.2rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.8rem;
+        padding: 0.2rem 0.3rem;
+        border-radius: 999px;
+        background: var(--crema);
+        box-shadow: inset 0 0 0 1px var(--linea);
+        font: 500 0.88rem/1.15 var(--redonda);
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        background: var(--noche);
+        color: var(--crema);
+        box-shadow: none;
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 500 0.64rem/1.3 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--menta-oscura);
+    }
+    .campo-con-label input {
+        max-width: 4.6rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.2rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--coral);
+        color: var(--papel);
+        font: 600 1.05rem/1 var(--redonda);
+        cursor: pointer;
+        box-shadow: 0 10px 18px -10px rgba(240, 133, 122, 0.9);
+    }
+    #form-rsvp button:hover {
+        background: #E5705F;
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--menta-oscura);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 600 1.3rem/1.3 var(--redonda);
+        color: var(--tinta);
+    }
+
+    /* --- La pulsera de visita, como la del hospital --- */
+    .pulsera-regalo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.6rem;
+    }
+    .pulsera {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: min(100%, 19rem);
+        padding: 0.45rem 0.6rem;
+        border-radius: 999px;
+        background: linear-gradient(var(--menta), #5CC7B1);
+        box-shadow: 0 10px 18px -10px rgba(35, 144, 123, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        animation: llegar-pulsera 1.1s var(--curva) both;
+    }
+    .pulsera-broche {
+        flex: none;
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #FFFFFF, #CDEFE7);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+    .pulsera-etiqueta {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 0.3rem 0.7rem;
+        border-radius: 0.5rem;
+        background: var(--papel);
+        text-align: left;
+    }
+    .pulsera-etiqueta small {
+        font: 500 0.55rem/1.3 var(--mono);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--coral);
+    }
+    .pulsera-nombre {
+        font: 500 1rem/1.2 var(--mono);
+        color: var(--tinta);
+    }
+    .rsvp .pulsera-texto {
+        margin-top: 0.6rem;
+        font-size: 0.92rem;
+    }
+
+    /* ============================================
+       PANTALLAS ANCHAS (compu / tablet acostada)
+       ============================================ */
+    @media (min-width: 40rem) {
+        .accion-icono {
+            flex-basis: calc(25% - 0.4rem);
+            flex-direction: column;
+            padding: 0.7rem 0.4rem;
+            border-radius: 1.1rem;
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual (el eco y el latido visual no dependen de esto).
+    (function () {
+        const PERIODO = 0.41;   // segundos entre latidos (146 por minuto)
+
+        // --- 1. Nombres: el "&" en coral ---
+        const titulo = document.querySelector('.hero .nombres');
+        const texto = titulo ? titulo.textContent.trim() : '';
+        const partes = texto.split(/\s+(&|y|e)\s+/i);
+        if (partes.length === 3) {
+            titulo.textContent = '';
+            const amp = document.createElement('span');
+            amp.className = 'amp';
+            amp.textContent = partes[1];
+            titulo.append(partes[0] + ' ', amp, ' ' + partes[2]);
+        }
+
+        // --- 2. El mensaje de bienvenida se muda a la cita ---
+        const cita = document.querySelector('.cita');
+        const mensaje = document.querySelector('.hero .mensaje');
+        if (cita && mensaje) {
+            cita.appendChild(mensaje);
+            cita.hidden = false;
+        }
+
+        // --- 3. El monitor: semana del embarazo, reloj y latidos por minuto ---
+        const monitor = document.getElementById('monitor');
+        let semanas = null;
+        if (monitor && monitor.dataset.fechaParto) {
+            // "2027-02-06" se arma a mano como fecha local (igual que el motor)
+            const [a, m, d] = monitor.dataset.fechaParto.split('-').map(Number);
+            const parto = new Date(a, m - 1, d);
+            if (!isNaN(parto)) {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const transcurridos = Math.min(Math.max(280 - Math.round((parto - hoy) / 86400000), 0), 280);
+                semanas = Math.floor(transcurridos / 7);
+            }
+        }
+        const etiquetaSemana = document.getElementById('monitor-semana');
+        if (etiquetaSemana) etiquetaSemana.textContent = semanas !== null ? `Sem ${semanas} ·` : '';
+        const hora = document.getElementById('monitor-hora');
+        const pintarHora = () => {
+            if (hora) hora.textContent = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        };
+        pintarHora();
+        setInterval(pintarHora, 15000);
+        // los latidos por minuto bailan un poquito, como en un monitor de verdad
+        const lpm = document.getElementById('lpm');
+        if (lpm) setInterval(() => { lpm.textContent = 142 + Math.round(Math.random() * 8); }, 1800);
+
+        // --- 4. "Escuchar su corazón": latido fetal hecho con Web Audio ---
+        // Cada latido es un golpe grave (seno que baja de tono) + el soplido del
+        // doppler (ruido filtrado). Sin archivos de audio: no hay nada que licenciar.
+        const botonEscuchar = document.getElementById('escuchar');
+        const Audio = window.AudioContext || window.webkitAudioContext;
+        if (botonEscuchar && Audio) {
+            botonEscuchar.hidden = false;
+            let ctx = null;
+            const latido = (t, fuerza) => {
+                const salida = ctx.createGain();
+                salida.gain.value = 0.6 * fuerza;   // golpe + soplido juntos no deben saturar
+                const filtro = ctx.createBiquadFilter();
+                filtro.type = 'lowpass';
+                filtro.frequency.value = 900;
+                salida.connect(filtro).connect(ctx.destination);
+                [[0, 1, 62], [0.12, 0.6, 80]].forEach(([dt, vol, f]) => {
+                    const osc = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(f * 1.7, t + dt);
+                    osc.frequency.exponentialRampToValueAtTime(f, t + dt + 0.09);
+                    g.gain.setValueAtTime(0.0001, t + dt);
+                    g.gain.exponentialRampToValueAtTime(vol, t + dt + 0.012);
+                    g.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.17);
+                    osc.connect(g).connect(salida);
+                    osc.start(t + dt);
+                    osc.stop(t + dt + 0.2);
+                    // el "soplido" del doppler
+                    const ruido = ctx.createBufferSource();
+                    const datos = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+                    const canal = datos.getChannelData(0);
+                    for (let i = 0; i < canal.length; i++) canal[i] = Math.random() * 2 - 1;
+                    ruido.buffer = datos;
+                    const banda = ctx.createBiquadFilter();
+                    banda.type = 'bandpass';
+                    banda.frequency.value = 260;
+                    banda.Q.value = 1.1;
+                    const gr = ctx.createGain();
+                    gr.gain.setValueAtTime(0.0001, t + dt);
+                    gr.gain.exponentialRampToValueAtTime(vol * 0.5, t + dt + 0.03);
+                    gr.gain.exponentialRampToValueAtTime(0.0001, t + dt + 0.18);
+                    ruido.connect(banda).connect(gr).connect(salida);
+                    ruido.start(t + dt);
+                });
+            };
+            botonEscuchar.addEventListener('click', () => {
+                if (botonEscuchar.disabled) return;
+                botonEscuchar.disabled = true;
+                const musica = document.getElementById('musica-fondo');
+                const botonMusica = document.getElementById('boton-musica');
+                const sonabaLaCancion = musica && !musica.paused;
+                if (sonabaLaCancion) musica.pause();
+                // play() + pause() dentro del toque "desbloquea" la canción en iPhone
+                // para poder arrancarla sola cuando termine el latido
+                if (musica && musica.paused) {
+                    const intento = musica.play();
+                    if (intento) intento.catch(() => {});
+                    musica.pause();
+                }
+                // en iPhone el sonido de Web Audio se calla con el switch de silencio;
+                // "playback" lo trata como un video (Safari 17+; en los demás no existe)
+                if (navigator.audioSession) navigator.audioSession.type = 'playback';
+                ctx = ctx || new Audio();
+                if (ctx.state === 'suspended') ctx.resume();
+                const inicio = ctx.currentTime + 0.08;
+                const LATIDOS = 11;
+                for (let i = 0; i < LATIDOS; i++) latido(inicio + i * PERIODO, i > LATIDOS - 4 ? (LATIDOS - i) / 4 : 1);
+                // el monitor late en sincronía: se reinician las animaciones al tocar
+                monitor.classList.remove('escuchando');
+                void monitor.offsetWidth;
+                monitor.classList.add('escuchando');
+                botonEscuchar.lastChild.textContent = ' Escuchando…';
+                setTimeout(() => {
+                    monitor.classList.remove('escuchando');
+                    botonEscuchar.disabled = false;
+                    botonEscuchar.lastChild.textContent = ' Escuchar otra vez';
+                    // y arranca la canción de la invitación (si tiene)
+                    if (botonMusica && musica && musica.paused) botonMusica.click();
+                }, LATIDOS * PERIODO * 1000 + 300);
+            });
+        }
+
+        // --- 5. Dulce espera: el corazón marca la semana en la línea de latidos ---
+        const trayecto = document.querySelector('.trayecto');
+        const numeroSemana = document.getElementById('bebe-semana');
+        if (trayecto && numeroSemana) {
+            const semana = parseInt(numeroSemana.textContent, 10);
+            if (!isNaN(semana)) trayecto.style.setProperty('--avance', Math.min(Math.max(semana / 40, 0.02), 1));
+            const nota = document.querySelector('.bebe-nota');
+            if (nota) nota.textContent = 'Un embarazo dura 40 semanas: este es el camino de su corazón.';
+        }
+
+        // --- 6. RSVP ---
+        const encabezado = document.querySelector('.rsvp h2');
+        if (encabezado) encabezado.textContent = '¿Nos acompañas?';
+        const form = document.getElementById('form-rsvp');
+        const enviar = form && form.querySelector('button[type="submit"]');
+        if (enviar) enviar.textContent = 'Confirmar asistencia';
+
+        // --- 7. Al confirmar con "Sí", el invitado recibe su pulsera de visita ---
+        // El motor borra el formulario antes de avisar, así que el nombre se guarda al enviar.
+        let nombreInvitado = '';
+        if (form) {
+            form.addEventListener('submit', () => {
+                const campo = form.querySelector('[name="nombre_invitado"]');
+                nombreInvitado = campo ? campo.value.trim() : '';
+            });
+        }
+        const status = document.getElementById('rsvp-status');
+        const plantillaPulsera = document.getElementById('plantilla-pulsera');
+        document.addEventListener('rsvp:enviado', e => {
+            document.querySelectorAll('.pulsera-regalo').forEach(el => el.remove());
+            if (!status || !plantillaPulsera || e.detail.asistencia !== 'si') return;
+            const copia = plantillaPulsera.content.cloneNode(true);
+            // textContent (no innerHTML): el nombre lo escribe el invitado
+            copia.querySelector('.pulsera-nombre').textContent = nombreInvitado || 'Invitado especial';
+            status.after(copia);
+        });
+    })();
+</script>
+{% endblock %}

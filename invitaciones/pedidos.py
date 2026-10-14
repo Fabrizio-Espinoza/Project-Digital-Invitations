@@ -96,9 +96,17 @@ EXTRAS_DEL_DISENO = {
 }
 
 # Diseños cuya portada es una foto de los festejados: el formulario la pide aparte de la galería
-DISENOS_CON_PORTADA = {"boda-velo-04", "xv-cajita-04"}
-# A quién se le pide la foto, según el evento
-FOTO_DE = {"boda": "ustedes", "xv": "la quinceañera"}
+DISENOS_CON_PORTADA = {"boda-velo-04", "xv-cajita-04", "baby-shower-latido-04"}
+# Qué foto se pide para la portada, según el evento. El eco es un dato de salud y
+# su impresión trae el nombre de la mamá y la clínica: se pide recortarlo antes.
+AYUDA_PORTADA = {
+    "boda": "Es lo primero que ven tus invitados: una foto de ustedes, vertical, con buena luz, "
+            "sin filtros ni textos encima.",
+    "xv": "Es lo primero que ven tus invitados: una foto de la quinceañera, vertical, con buena luz, "
+          "sin filtros ni textos encima.",
+    "baby_shower": "Es lo primero que ven tus invitados: la foto del ultrasonido. Antes de subirla, "
+                   "recórtala para que no salgan tu nombre ni los datos de la clínica.",
+}
 
 # Tabla de pañales por inicial del apellido (la misma del demo); se ajusta después si piden otra.
 PANALES_POR_DEFECTO = [
@@ -170,9 +178,9 @@ class FormularioPedido(forms.Form):
 
         if self.con_portada:
             # el archivo se lee aparte, de request.FILES (como las fotos de la galería)
-            quien = FOTO_DE.get(tipo, "los festejados")
-            secciones.append(("Foto de portada", f"Es lo primero que ven tus invitados: una foto de {quien}, "
-                              "vertical, con buena luz, sin filtros ni textos encima.", [], []))
+            ayuda = AYUDA_PORTADA.get(tipo, "Es lo primero que ven tus invitados: una foto de los festejados, "
+                                            "con buena luz, sin filtros ni textos encima.")
+            secciones.append(("Foto de portada", ayuda, [], []))
 
         if tipo == "baby_shower":
             f["fecha_probable_parto"] = _fecha("Fecha probable de parto",
