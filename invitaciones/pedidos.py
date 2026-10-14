@@ -14,27 +14,18 @@ Tres piezas:
   listas en el POST (itinerario-hora, itinerario-evento…) y las lee leer_filas.
 - guardar_pedido: crea o actualiza la Invitacion (siempre como borrador).
 """
-import uuid
 from datetime import datetime
-from io import BytesIO
 from urllib.parse import quote
 
 from django import forms
 from django.core.exceptions import ValidationError
-from django.core.files.base import ContentFile
 from django.core.validators import URLValidator
 from django.db import transaction
 from django.utils import timezone
-from PIL import Image, ImageOps, UnidentifiedImageError
 
 from .models import ImagenGaleria, Invitacion
 
 MAX_FOTOS = 12
-MAX_MB_FOTO = 15
-# px: un celular pinta la galería a ~390 px × 3 de densidad ≈ 1200 px; 1600 da margen
-# para ampliar y pesa ~40 % menos que 2000 (unos 180 KB por foto)
-LADO_MAXIMO_FOTO = 1600
-CALIDAD_JPEG = 82
 
 # ------------------------------------------------------------------
 # Textos que cambian según el tipo de evento
@@ -104,6 +95,9 @@ EXTRAS_DEL_DISENO = {
     "baby-shower-lunas-01": ["paleta"],
 }
 
+# Diseños cuya portada es una foto de los festejados: el formulario la pide aparte de la galería
+DISENOS_CON_PORTADA = {"boda-velo-04"}
+
 # Tabla de pañales por inicial del apellido (la misma del demo); se ajusta después si piden otra.
 PANALES_POR_DEFECTO = [
     {"desde": "A", "hasta": "F", "talla": "Etapa 1"},
@@ -155,6 +149,7 @@ class FormularioPedido(forms.Form):
         self.con_musica = pedido.nivel == "premium" and plantilla.soporta_musica
         self.con_galeria = pedido.nivel != "imagen" and plantilla.soporta_galeria
         self.con_votacion = pedido.nivel == "premium" and plantilla.soporta_votacion
+        self.con_portada = plantilla.slug_tema in DISENOS_CON_PORTADA
         self.dos_lugares = tipo in ("boda", "xv")
         f = self.fields
         secciones = []
@@ -170,6 +165,11 @@ class FormularioPedido(forms.Form):
         f["mensaje"] = _texto("Mensaje para tus invitados", MENSAJE_POR_DEFECTO.get(tipo, ""), largo=600, area=True,
                               ayuda="Opcional. Si lo dejas vacío, usamos el que ves de ejemplo.")
         secciones.append(("Lo básico", "", ["anfitriones", "titulo", "fecha", "hora", "mensaje"], []))
+
+        if self.con_portada:
+            # el archivo se lee aparte, de request.FILES (como las fotos de la galería)
+            secciones.append(("Foto de portada", "Es lo primero que ven tus invitados: una foto de ustedes, "
+                              "vertical, con buena luz, sin filtros ni textos encima.", [], []))
 
         if tipo == "baby_shower":
             f["fecha_probable_parto"] = _fecha("Fecha probable de parto",
@@ -293,6 +293,7 @@ class FormularioPedido(forms.Form):
                 "campos": [self[n] for n in nombres],
                 "repetibles": [self._repetible(r, filas.get(r) or [{}]) for r in repetibles],
                 "fotos": titulo in ("Música y fotos", "Fotos"),
+                "portada": titulo == "Foto de portada",
             })
         return salida
 
@@ -364,32 +365,6 @@ def leer_filas(post, grupos):
             errores.append(f"{spec['titulo']}: máximo {spec['maximo']} renglones.")
         filas[grupo] = lista
     return filas, errores
-
-
-# ------------------------------------------------------------------
-# Fotos
-# ------------------------------------------------------------------
-def preparar_foto(archivo):
-    """
-    Revisa que sea una foto de verdad y la deja lista para la galería:
-    derecha (los celulares la guardan "acostada" con una etiqueta EXIF),
-    máximo LADO_MAXIMO_FOTO px por lado y en JPEG. Al volver a guardarla se quitan los
-    datos EXIF, que en fotos de celular incluyen la ubicación GPS de la casa.
-    """
-    if archivo.size > MAX_MB_FOTO * 1024 * 1024:
-        raise ValidationError(f"«{archivo.name}» pesa más de {MAX_MB_FOTO} MB.")
-    try:
-        with Image.open(archivo) as imagen:
-            imagen.verify()
-        archivo.seek(0)
-        with Image.open(archivo) as imagen:
-            imagen = ImageOps.exif_transpose(imagen).convert("RGB")
-            imagen.thumbnail((LADO_MAXIMO_FOTO, LADO_MAXIMO_FOTO), Image.LANCZOS)
-            salida = BytesIO()
-            imagen.save(salida, "JPEG", quality=CALIDAD_JPEG, optimize=True, progressive=True)
-    except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
-        raise ValidationError(f"«{archivo.name}» no se pudo abrir. Usa fotos JPG o PNG.")
-    return ContentFile(salida.getvalue(), name=f"{uuid.uuid4().hex[:12]}.jpg")
 
 
 # ------------------------------------------------------------------
@@ -476,7 +451,7 @@ def completar_por_defecto(datos, tipo):
     return datos
 
 
-def guardar_pedido(pedido, datos, filas, fotos, borrar_fotos=()):
+def guardar_pedido(pedido, datos, filas, fotos, borrar_fotos=(), portada=None):
     """
     Crea o actualiza la invitación del pedido con lo que mandó el cliente.
     Siempre queda como borrador (activa=False): tú la revisas y la publicas.
@@ -528,6 +503,8 @@ def guardar_pedido(pedido, datos, filas, fotos, borrar_fotos=()):
         # si ya existía se conserva tal cual (con el resultado, si ya se reveló)
         extra["votacion"] = votacion_anterior or votacion_por_defecto()
     inv.contenido_extra = extra
+    if portada is not None:
+        inv.foto_portada = portada      # la anterior se borra del disco al guardar
 
     with transaction.atomic():
         inv.save()

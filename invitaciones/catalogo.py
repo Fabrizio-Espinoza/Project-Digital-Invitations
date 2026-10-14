@@ -46,6 +46,14 @@ DISENOS = [
         "frase": "Un hotel boutique con su monograma: cada invitado hace check-in y recibe su llave.",
         "ideal": "Bodas en hotel, hacienda o de destino",
     },
+    {
+        "tipo": "boda",
+        "nombre": "El Velo",
+        "slug_tema": "boda-velo-04",
+        "demo": "demo-boda-renata-tomas",
+        "frase": "Su foto bajo un velo de tul: cada invitado lo levanta con un toque y los descubre.",
+        "ideal": "Parejas que quieren su foto como protagonista",
+    },
     # ----- XV años -----
     {
         "tipo": "xv",

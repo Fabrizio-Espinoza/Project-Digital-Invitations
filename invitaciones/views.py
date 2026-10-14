@@ -19,7 +19,8 @@ from django.views.decorators.http import require_POST
 from .catalogo import DISENOS, TIPOS, captura
 from .limites import limite_superado
 from .models import Invitacion, Confirmacion, Pedido, Voto
-from .pedidos import MAX_FOTOS, FormularioPedido, datos_iniciales, guardar_pedido, leer_filas, preparar_foto
+from .fotos import LADO_MAXIMO_PORTADA, preparar_foto
+from .pedidos import MAX_FOTOS, FormularioPedido, datos_iniciales, guardar_pedido, leer_filas
 
 # Duración que se le pone al evento en el calendario del invitado. La
 # invitación solo guarda la hora de inicio; 4 h cubre bien un baby shower
@@ -103,6 +104,8 @@ def _pintar_invitacion(request, invitacion, **extra):
         "mostrar_musica": invitacion.nivel == "premium" and invitacion.plantilla.soporta_musica,
         "mostrar_galeria": invitacion.nivel != "imagen" and invitacion.plantilla.soporta_galeria,
         "iconos_pwa": iconos_pwa(invitacion.plantilla),
+        # la foto de la portada (o la primera de la galería); la piden los diseños con foto
+        "foto_portada": invitacion.foto_portada_src,
     }
     votacion = _votacion_habilitada(invitacion)
     contexto["mostrar_votacion"] = votacion is not None
@@ -526,8 +529,14 @@ def pedido(request, token):
                         fotos.append(preparar_foto(archivo))
                     except ValidationError as error:
                         errores.extend(error.messages)
+        portada = None
+        if formulario.con_portada and request.FILES.get("foto_portada"):
+            try:
+                portada = preparar_foto(request.FILES["foto_portada"], LADO_MAXIMO_PORTADA)
+            except ValidationError as error:
+                errores.extend(error.messages)
         if formulario.is_valid() and not errores:
-            guardar_pedido(pedido, formulario.cleaned_data, filas, fotos, borrar)
+            guardar_pedido(pedido, formulario.cleaned_data, filas, fotos, borrar, portada)
             return redirect(f"{reverse('pedido', args=[token])}?listo=1")
         if request.FILES:
             errores.append("Por seguridad, vuelve a elegir tus fotos antes de enviar.")
@@ -541,6 +550,7 @@ def pedido(request, token):
         "secciones": formulario.secciones(filas),
         "errores": errores,
         "galeria": galeria,
+        "portada": pedido.invitacion.foto_portada if pedido.invitacion else None,
         "max_fotos": MAX_FOTOS,
     }))
 
