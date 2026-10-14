@@ -407,7 +407,7 @@
     {% if mostrar_rsvp %}
     <section class="rsvp animar-entrada" id="rsvp">
         <h2>Confirma tu asistencia</h2>
-        <p><span id="total-confirmados">…</span> personas ya confirmaron</p>
+        <p><span id="total-confirmados">…</span> <span id="texto-confirmados">personas ya confirmaron</span></p>
         {% if invitacion.fecha_limite_rsvp %}
         <p class="fecha-limite">Por favor confirma antes del {{ invitacion.fecha_limite_rsvp|date:"d \d\e F" }}</p>
         {% endif %}
@@ -825,11 +825,17 @@
 
         {% if mostrar_rsvp %}
         // --- RSVP: envío por fetch (sin recargar) + polling para el conteo "en vivo" ---
+        // El número y el texto van juntos: "1 persona ya confirmó" / "8 personas ya confirmaron".
+        function pintarConfirmados(total) {
+            document.getElementById('total-confirmados').textContent = total;
+            document.getElementById('texto-confirmados').textContent =
+                Number(total) === 1 ? 'persona ya confirmó' : 'personas ya confirmaron';
+        }
         function actualizarConteo() {
             fetch(`/invitaciones/${slug}/rsvp/conteo/`)
                 .then(r => r.json())
                 .then(data => {
-                    document.getElementById('total-confirmados').textContent = data.total_confirmados;
+                    pintarConfirmados(data.total_confirmados);
                 })
                 .catch(err => console.error('Error al pedir el conteo:', err));
         }
@@ -865,7 +871,7 @@
             }))
             .then(data => {
                 estadoRsvp.textContent = '¡Gracias por confirmar!';
-                document.getElementById('total-confirmados').textContent = data.total_confirmados;
+                pintarConfirmados(data.total_confirmados);
                 e.target.reset();
                 // Aviso para las plantillas: cada tema puede reaccionar a una
                 // confirmación exitosa (confeti, vibración, etc.) escuchando

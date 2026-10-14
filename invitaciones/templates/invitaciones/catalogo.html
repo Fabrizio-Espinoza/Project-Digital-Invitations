@@ -323,6 +323,161 @@
     }
 
     /* ============================================
+       PANEL DEL ANFITRIÓN (texto + un celular con el panel de muestra)
+       ============================================ */
+    .panel-vivo { padding-block: 3.5rem; }
+    .panel-vivo .envoltura {
+        display: grid;
+        gap: 2.2rem;
+        align-items: center;
+    }
+    .panel-vivo h2 { font-size: clamp(2.2rem, 7vw, 3.2rem); max-width: 16ch; }
+    .panel-vivo h2 em { color: var(--vibra); }
+    .panel-vivo .intro { max-width: 32rem; margin: 0.8rem 0 1.4rem; color: var(--tinta-suave); }
+    .panel-lista { display: grid; gap: 0.7rem; margin: 0; padding: 0; list-style: none; }
+    .panel-lista li { position: relative; padding-left: 1.8rem; }
+    .panel-lista li::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.3rem;
+        width: 1.1rem;
+        height: 1.1rem;
+        border-radius: 50%;
+        background: var(--vibra) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12.5l4 4 8-9'/%3E%3C/svg%3E") center / 70% no-repeat;
+    }
+    .panel-lista strong { font-weight: 800; }
+    /* el celular con el panel de muestra (HTML, no captura: siempre se ve nítido) */
+    .muestra {
+        justify-self: center;
+        width: min(100%, 19rem);
+        padding: 0.7rem;
+        border-radius: 34px;
+        background: var(--tinta);
+        box-shadow: 0 30px 60px -28px rgba(27, 23, 20, 0.6);
+    }
+    .muestra-pantalla {
+        padding: 1.2rem 1rem 1rem;
+        border-radius: 26px;
+        background: var(--papel);
+        font-size: 0.8rem;
+    }
+    .muestra-cabeza { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+    .muestra-cabeza b { font: italic 400 1.35rem/1.1 var(--serif); }
+    .muestra-vivo {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.68rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #2E7D5B;
+    }
+    .muestra-vivo::before {
+        content: "";
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: #2E7D5B;
+        animation: latir 1.6s ease-in-out infinite;
+    }
+    .muestra-faltan { margin: 0.2rem 0 0.9rem; color: var(--tinta-suave); }
+    .muestra-numeros { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 0.4rem; }
+    .muestra-numeros div {
+        padding: 0.55rem 0.5rem;
+        border: 1px solid var(--linea);
+        border-radius: 12px;
+        background: #fff;
+    }
+    .muestra-numeros strong { display: block; font: 400 1.7rem/1 var(--serif); }
+    .muestra-numeros .principal strong { color: var(--vibra); font-size: 2.2rem; }
+    .muestra-numeros span { font-size: 0.66rem; color: var(--tinta-suave); }
+    .muestra-barra {
+        display: flex;
+        gap: 2px;
+        height: 0.4rem;
+        margin: 0.7rem 0 0.8rem;
+        border-radius: 99px;
+        overflow: hidden;
+    }
+    .muestra-barra i:nth-child(1) { flex: 41; background: #2E7D5B; }
+    .muestra-barra i:nth-child(2) { flex: 6; background: #D9A23B; }
+    .muestra-barra i:nth-child(3) { flex: 4; background: #B9AEA3; }
+    .muestra-lista { margin: 0; padding: 0; list-style: none; }
+    .muestra-lista li {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0.45rem 0;
+        border-top: 1px solid var(--linea);
+    }
+    .muestra-lista em { font-style: normal; font-size: 0.68rem; font-weight: 800; color: #2E7D5B; }
+    .muestra-lista .tal-vez em { color: #B07A14; }
+    .muestra-lista .nuevo { animation: llega 4s ease-in-out infinite; }
+    .muestra-botones { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-top: 0.7rem; }
+    .muestra-botones span {
+        padding: 0.5rem 0.3rem;
+        border-radius: 99px;
+        background: var(--tinta);
+        color: var(--papel);
+        font-size: 0.66rem;
+        font-weight: 800;
+        text-align: center;
+    }
+    .muestra-botones span:first-child { background: var(--whatsapp); }
+    @keyframes latir { 50% { opacity: 0.35; } }
+    @keyframes llega {
+        0%, 12% { opacity: 0; translate: 0 -0.4rem; }
+        22%, 100% { opacity: 1; translate: 0 0; }
+    }
+    @media (min-width: 800px) {
+        .panel-vivo .envoltura { grid-template-columns: 1.2fr 1fr; gap: 3rem; }
+    }
+
+    /* ============================================
+       A TU MEDIDA (cambiar uno del catálogo o uno desde cero)
+       ============================================ */
+    .medida { padding-block: 1rem 3.5rem; }
+    .medida h2 { font-size: clamp(2.2rem, 7vw, 3.2rem); max-width: 18ch; }
+    .medida h2 em { color: var(--vibra); }
+    .medida .intro { max-width: 34rem; margin: 0.8rem 0 1.8rem; color: var(--tinta-suave); }
+    .medida-opciones {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 1rem;
+    }
+    .medida-opcion {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        padding: 1.5rem;
+        border: 1px solid var(--linea);
+        border-radius: var(--radio);
+        background: #fff;
+    }
+    .medida-opcion svg {
+        width: 2.6rem;
+        height: 2.6rem;
+        margin-bottom: 0.4rem;
+        padding: 0.55rem;
+        border-radius: 50%;
+        background: var(--papel-hondo);
+        color: var(--vibra-hondo);
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+    .medida-opcion strong { font-size: 1.1rem; font-weight: 800; }
+    .medida-opcion p { margin: 0 0 0.8rem; color: var(--tinta-suave); }
+    .medida-opcion .boton { margin-top: auto; align-self: flex-start; }
+    .medida-opcion-destacada { border-color: var(--tinta); background: var(--tinta); color: var(--papel); }
+    .medida-opcion-destacada p { color: rgba(247, 242, 236, 0.72); }
+    .medida-opcion-destacada svg { background: rgba(247, 242, 236, 0.1); color: #FF8A98; }
+
+    /* ============================================
        CÓMO FUNCIONA
        ============================================ */
     .pasos { padding-block: 3.5rem; }
@@ -479,7 +634,7 @@
                 <li>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>
                     <strong>Confirmación en vivo</strong>
-                    <p>Tus invitados confirman ahí mismo y el conteo sube solo. Nada de perseguir a nadie por mensaje.</p>
+                    <p>Tus invitados confirman ahí mismo y tú lo ves al momento en tu propio panel. Nada de perseguir a nadie por mensaje.</p>
                 </li>
                 <li>
                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 1.5M9.5 2.5h5"/></svg>
@@ -507,6 +662,45 @@
                     <p>Nada que descargar: es un link. Si quieren, la dejan en su pantalla de inicio.</p>
                 </li>
             </ul>
+        </div>
+    </section>
+
+    <!-- ===== PANEL DEL ANFITRIÓN ===== -->
+    <section class="panel-vivo" id="panel">
+        <div class="envoltura">
+            <div>
+                <p class="eyebrow">Incluido con tu invitación</p>
+                <h2>Tu panel <em>en vivo</em>: sabes quién va sin preguntarle a nadie</h2>
+                <p class="intro">Además de tu invitación recibes un link privado, solo para ti. Ahí ves cada confirmación en el momento en que llega, desde tu celular.</p>
+                <ul class="panel-lista">
+                    <li><strong>Cuántas personas van</strong>, contando acompañantes, y los días que faltan.</li>
+                    <li><strong>La lista completa</strong> con quién dijo sí, tal vez o no, con buscador por nombre.</li>
+                    <li><strong>Los mensajes</strong> que te dejaron tus invitados.</li>
+                    <li><strong>Tu lista en Excel</strong> con un toque, para el salón o el banquete.</li>
+                    <li><strong>Un botón para mandar tu invitación</strong> por WhatsApp a quien te falte.</li>
+                    <li>En baby showers con juego de «¿Niña o niño?», <strong>revelas el resultado desde tu celular</strong> y les aparece a todos.</li>
+                </ul>
+            </div>
+            <!-- muestra del panel (datos de ejemplo) -->
+            <div class="muestra" aria-hidden="true">
+                <div class="muestra-pantalla">
+                    <div class="muestra-cabeza"><b>Renata &amp; Tomás</b><span class="muestra-vivo">En vivo</span></div>
+                    <p class="muestra-faltan">Faltan 32 días</p>
+                    <div class="muestra-numeros">
+                        <div class="principal"><strong>86</strong><span>personas confirmadas</span></div>
+                        <div><strong>6</strong><span>tal vez</span></div>
+                        <div><strong>4</strong><span>no podrán</span></div>
+                    </div>
+                    <div class="muestra-barra"><i></i><i></i><i></i></div>
+                    <ul class="muestra-lista">
+                        <li class="nuevo"><span>Ana Sofía Pérez</span><em>Sí va · +1</em></li>
+                        <li><span>Familia Ruiz</span><em>Sí va · +3</em></li>
+                        <li class="tal-vez"><span>Diego Lozano</span><em>Tal vez</em></li>
+                        <li><span>Lucía Herrera</span><em>Sí va</em></li>
+                    </ul>
+                    <div class="muestra-botones"><span>Mandar invitación</span><span>Lista para Excel</span></div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -564,6 +758,27 @@
         </div>
     </section>
 
+    <!-- ===== A TU MEDIDA ===== -->
+    <section class="envoltura medida" id="a-tu-medida">
+        <p class="eyebrow">¿No ves la tuya?</p>
+        <h2>También la hacemos <em>a tu medida</em></h2>
+        <p class="intro">El catálogo es el punto de partida, no el límite. Si tu evento tiene otra idea, la diseñamos contigo.</p>
+        <div class="medida-opciones">
+            <div class="medida-opcion">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20z"/><path d="M13.5 7.5l3 3"/></svg>
+                <strong>Ajustamos uno del catálogo</strong>
+                <p>Tus colores, otra tipografía, tus frases, quitar o agregar elementos: lo hacemos a la medida de tu evento.</p>
+                <a class="boton boton-claro boton-chico" href="{{ whatsapp_ajustar }}" target="_blank" rel="noopener">Quiero cambiar un diseño</a>
+            </div>
+            <div class="medida-opcion medida-opcion-destacada">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4L12 3z"/><path d="M18.5 15.5l.8 2 2 .8-2 .7-.8 2-.7-2-2-.7 2-.8.7-2z"/></svg>
+                <strong>Un diseño totalmente nuevo</strong>
+                <p>Cuéntanos tu temática, tus colores o tu inspiración y creamos una invitación única, desde cero, solo para tu evento.</p>
+                <a class="boton boton-vibra boton-chico" href="{{ whatsapp_nueva }}" target="_blank" rel="noopener">Platícanos tu idea</a>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== CÓMO FUNCIONA ===== -->
     <section class="envoltura pasos">
         <p class="eyebrow">Cómo funciona</p>
@@ -571,7 +786,7 @@
         <ol>
             <li><strong>Elige tu diseño</strong><p>Abre los demos, juega con ellos y escoge el que va con tu evento.</p></li>
             <li><strong>Llena tus datos</strong><p>Te mandamos un formulario sencillo para tu celular: nombres, fecha, lugares, tu canción y tus fotos. Al terminar ves cómo va quedando.</p></li>
-            <li><strong>Comparte tu link</strong><p>Te entregamos tu invitación lista para mandar a tus invitados y ver quién confirma.</p></li>
+            <li><strong>Comparte tu link</strong><p>Te entregamos tu invitación lista para mandar a tus invitados y tu panel en vivo para ver quién confirma.</p></li>
         </ol>
     </section>
 
@@ -588,15 +803,23 @@
         </details>
         <details>
             <summary>¿Cómo sé quién confirmó?</summary>
-            <p>Te compartimos la lista con los nombres, el número de acompañantes y los mensajes que te dejaron tus invitados.</p>
+            <p>Con tu panel en vivo: un link privado, solo para ti, donde ves al momento quién dijo sí, tal vez o no, con cuántos acompañantes y los mensajes que te dejaron. Puedes buscar por nombre y descargar la lista para Excel.</p>
         </details>
         <details>
             <summary>¿Puedo poner mi canción y mis fotos?</summary>
             <p>Sí. La música suena con un toque (los celulares no dejan que suene sola) y las fotos van en una galería con el estilo del diseño.</p>
         </details>
         <details>
-            <summary>¿Puedo cambiar colores o pedir algo especial?</summary>
-            <p>Escríbenos por WhatsApp con tu idea y lo platicamos.</p>
+            <summary>¿Puedo cambiarle cosas a un diseño del catálogo?</summary>
+            <p>Sí. Ajustamos colores, tipografías, frases y elementos para que quede como lo imaginas. Escríbenos por WhatsApp con lo que quieres cambiar.</p>
+        </details>
+        <details>
+            <summary>¿Pueden hacer un diseño que no está en el catálogo?</summary>
+            <p>Sí. Si tienes una temática o una idea propia, diseñamos tu invitación desde cero, única para tu evento.</p>
+        </details>
+        <details>
+            <summary>¿Puedo corregir mis datos después de mandarlos?</summary>
+            <p>Sí. Antes de publicarla ves cómo queda y puedes corregir desde el mismo formulario las veces que necesites. Ya publicada, nos pides el cambio por WhatsApp.</p>
         </details>
         <details>
             <summary>¿También hacen invitaciones en imagen o PDF?</summary>
