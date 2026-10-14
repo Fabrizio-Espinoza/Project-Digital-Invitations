@@ -395,7 +395,7 @@
     </section>
     {% endif %}
 
-    {% if mostrar_musica and invitacion.musica_url %}
+    {% if mostrar_musica and invitacion.musica_src %}
 {# preload="none": la canción (varios MB) solo se descarga cuando tocan play, no al abrir la invitación #}
 <audio id="musica-fondo" loop preload="none" src="{{ invitacion.musica_src }}"></audio>
 <button id="boton-musica" class="boton-musica" type="button" aria-label="Reproducir música">
@@ -480,7 +480,7 @@
         // vinil que gira). El estado se lee del propio <audio> (eventos
         // play/pause), así el botón nunca se desfasa si el navegador
         // rechaza el play().
-        {% if mostrar_musica and invitacion.musica_url %}
+        {% if mostrar_musica and invitacion.musica_src %}
         const musica = document.getElementById('musica-fondo');
         const botonMusica = document.getElementById('boton-musica');
 

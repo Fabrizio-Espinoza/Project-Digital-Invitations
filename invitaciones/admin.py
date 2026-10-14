@@ -43,8 +43,31 @@ class InvitacionAdmin(admin.ModelAdmin):
     list_display = ("titulo_evento", "plantilla", "nivel", "fecha_evento", "activa", "total_confirmados")
     list_filter = ("nivel", "plantilla__tipo_evento", "activa")
     search_fields = ("titulo_evento", "anfitriones", "slug")
-    readonly_fields = ("id", "slug", "creada_en", "panel_del_anfitrion", "resumen_votacion")
+    readonly_fields = ("id", "slug", "creada_en", "panel_del_anfitrion", "resumen_votacion",
+                       "cancion_pedida", "escuchar_cancion")
     inlines = [ImagenGaleriaInline, ConfirmacionInline]
+    # Secciones en el orden en que se atiende un pedido; lo técnico va al final y plegado
+    fieldsets = (
+        (None, {"fields": ("plantilla", "nivel", "activa", "slug", "panel_del_anfitrion")}),
+        ("Evento", {"fields": ("titulo_evento", "anfitriones", "fecha_evento", "lugar_nombre",
+                               "lugar_mapa_url", "mensaje_bienvenida", "fecha_limite_rsvp")}),
+        ("Música", {"fields": ("cancion_pedida", "musica_archivo", "escuchar_cancion", "musica_url")}),
+        ("Votación", {"fields": ("resumen_votacion",)}),
+        ("Detalles del tipo de evento (avanzado)", {"classes": ("collapse",), "fields": ("contenido_extra",)}),
+        ("Registro", {"classes": ("collapse",), "fields": ("id", "creada_en")}),
+    )
+
+    @admin.display(description="Canción que pidió el cliente")
+    def cancion_pedida(self, obj):
+        pedido = getattr(obj, "pedido", None) if obj and not obj._state.adding else None
+        return (pedido.cancion if pedido else "") or "—"
+
+    @admin.display(description="Escuchar")
+    def escuchar_cancion(self, obj):
+        if obj is None or obj._state.adding or not obj.musica_src:
+            return "Sin canción todavía."
+        return format_html('<audio controls preload="none" src="{}" style="width: 100%; max-width: 360px"></audio>',
+                           obj.musica_src)
 
     @admin.display(description="Panel del anfitrión")
     def panel_del_anfitrion(self, obj):

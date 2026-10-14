@@ -1268,3 +1268,84 @@ class CargaLigeraTests(TestCase):
         self.assertContains(respuesta, 'src="/media/invitaciones/galeria/x.jpg" alt="" loading="lazy" decoding="async"')
         # la canción pesa varios MB: solo se baja al tocar play
         self.assertContains(respuesta, 'preload="none"')
+
+
+# ---------------------------------------------------------------------------
+# Canción subida desde el admin
+# ---------------------------------------------------------------------------
+from django.core.exceptions import ValidationError as ErrorDeValidacion
+
+from .models import validar_cancion
+
+MP3_FALSO = b"ID3\x04\x00\x00\x00\x00\x00\x00" + b"\x00" * 2000      # cabecera ID3 de un MP3
+M4A_FALSO = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 2000             # cabecera de un M4A
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class CancionSubidaTests(TestCase):
+    def setUp(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        self.inv = Invitacion.objects.get(slug="demo-hotel-amor")
+
+    def test_solo_acepta_audio_de_verdad(self):
+        validar_cancion(SimpleUploadedFile("a.mp3", MP3_FALSO))
+        validar_cancion(SimpleUploadedFile("a.m4a", M4A_FALSO))
+        with self.assertRaisesMessage(ErrorDeValidacion, "no parece una canción"):
+            validar_cancion(SimpleUploadedFile("virus.mp3", b"<html>no soy musica</html>"))
+        enorme = SimpleUploadedFile("larga.mp3", b"ID3" + b"\x00" * (15 * 1024 * 1024 + 1))
+        with self.assertRaisesMessage(ErrorDeValidacion, "pesa más de 15 MB"):
+            validar_cancion(enorme)
+
+    def test_el_archivo_manda_sobre_el_link_y_suena_en_la_invitacion(self):
+        self.inv.musica_url = ""
+        self.inv.musica_archivo = SimpleUploadedFile("Perfect - Ed Sheeran.mp3", MP3_FALSO)
+        self.inv.save()
+        # nombre al azar en minúsculas, sin el nombre original
+        self.assertRegex(self.inv.musica_archivo.name, r"^invitaciones/musica/[0-9a-f]{12}\.mp3$")
+        self.assertEqual(self.inv.musica_src, f"/media/{self.inv.musica_archivo.name}")
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[self.inv.slug]))
+        self.assertContains(respuesta, f'preload="none" src="/media/{self.inv.musica_archivo.name}"')
+        self.assertContains(respuesta, 'id="musica-fondo"')
+
+    def test_cambiar_o_quitar_la_cancion_borra_el_archivo_viejo(self):
+        self.inv.musica_archivo = SimpleUploadedFile("a.mp3", MP3_FALSO)
+        self.inv.save()
+        primera = Path(self.inv.musica_archivo.path)
+        self.inv.musica_archivo = SimpleUploadedFile("b.mp3", MP3_FALSO)
+        self.inv.save()
+        segunda = Path(self.inv.musica_archivo.path)
+        self.assertFalse(primera.exists())
+        self.assertTrue(segunda.exists())
+        self.inv.activa = False
+        self.inv.save(update_fields=["activa"])        # guardar otra cosa no toca la canción
+        self.assertTrue(segunda.exists())
+        self.inv.musica_archivo = ""
+        self.inv.save()
+        self.assertFalse(segunda.exists())
+
+    def test_el_admin_sube_la_cancion_y_muestra_lo_que_pidio_el_cliente(self):
+        admin = User.objects.create_superuser("dueno", "d@ejemplo.mx", "clave-larga-123")
+        self.client.force_login(admin)
+        Pedido.objects.create(cliente="Sofía", plantilla=self.inv.plantilla, invitacion=self.inv,
+                              cancion="Perfect – Ed Sheeran")
+        url = reverse("admin:invitaciones_invitacion_change", args=[self.inv.pk])
+        pagina = self.client.get(url)
+        self.assertContains(pagina, "Perfect – Ed Sheeran")
+        self.assertContains(pagina, 'name="musica_archivo"')
+
+        # subir desde el formulario del admin: todos los campos + el archivo
+        datos = {campo.html_name: campo.value() for campo in pagina.context["adminform"].form
+                 if campo.value() is not None and campo.name != "musica_archivo"}
+        datos["contenido_extra"] = json.dumps(self.inv.contenido_extra)
+        datos["fecha_evento_0"], datos["fecha_evento_1"] = (
+            timezone.localtime(self.inv.fecha_evento).strftime("%Y-%m-%d"),
+            timezone.localtime(self.inv.fecha_evento).strftime("%H:%M:%S"))
+        for prefijo in ("galeria", "confirmaciones"):
+            datos.update({f"{prefijo}-TOTAL_FORMS": "0", f"{prefijo}-INITIAL_FORMS": "0"})
+        datos["musica_archivo"] = SimpleUploadedFile("cancion.mp3", MP3_FALSO)
+        respuesta = self.client.post(url, datos)
+        self.assertEqual(respuesta.status_code, 302, getattr(respuesta, "context", None)
+                         and respuesta.context["adminform"].form.errors)
+        self.inv.refresh_from_db()
+        self.assertTrue(self.inv.musica_archivo.name.endswith(".mp3"))
+        self.assertContains(self.client.get(url), "<audio controls")

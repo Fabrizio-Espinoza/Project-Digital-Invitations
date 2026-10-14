@@ -180,7 +180,8 @@ en cualquier celular.
 2. **Copiar mensaje para WhatsApp** y mandárselo al cliente (el botón de copiar
    necesita HTTPS; en la compu por IP, copia el link a mano).
 3. Cuando lo llene, el pedido dice "📝 Datos recibidos: revisar". Ábrelo →
-   *Vista previa*. Sube su canción y ajusta lo que haga falta en *Editar invitación*.
+   *Vista previa*. En *Editar invitación* → sección **Música**: ahí ves la canción que pidió;
+   sube el MP3 en **Canción** y pruébalo en **Escuchar**. Ajusta lo demás que haga falta.
 4. En la lista de pedidos, márcalo → acción **Publicar la invitación** → manda
    al cliente el link para sus invitados (aparece en el pedido).
 5. Mándale también su **panel del anfitrión**: en la invitación → «Panel del
