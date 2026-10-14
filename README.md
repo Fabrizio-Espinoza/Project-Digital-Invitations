@@ -59,6 +59,23 @@ Desplegado en PythonAnywhere con HTTPS (Let's Encrypt). La guía completa está 
 - Revisiones propias en `manage.py check --deploy` (datos del aviso, WhatsApp, ruta del admin).
 - **Pruebas automáticas** (unitarias y de integración) que corren en GitHub Actions con cada cambio.
 
+## Cómo lo construí
+
+Construí este proyecto con **[Claude Code](https://claude.com/claude-code)** como herramienta de programación. Por eso muchos commits aparecen con Claude como autor o coautor. El reparto fue así:
+
+**Lo que hice yo**
+- La idea de negocio: invitaciones interactivas para el mercado mexicano, vendidas por anuncios y WhatsApp, por encima del precio de la competencia.
+- Las decisiones de producto: qué tipos de evento cubrir, el flujo completo (catálogo → pedido → formulario del cliente → vista previa → publicación → panel del anfitrión), qué ve cada quien y qué incluye cada paquete.
+- Dirigir y aprobar cada diseño: pedía un concepto, lo revisaba y pedía cambios hasta que quedaba listo para vender.
+- Probar todo en mi iPhone real, primero por WiFi y luego en producción, y reportar lo que fallaba.
+- Desplegarlo: crear la cuenta del hosting, configurar el servidor, los secretos, HTTPS y los archivos estáticos, y resolver los errores del despliegue.
+
+**Lo que hizo Claude Code**
+- Escribir la mayor parte del código (Django, HTML, CSS y JavaScript) y las pruebas.
+- Proponer conceptos de diseño, tipografías y paletas, y explicarme cada decisión técnica para entenderla y poder mantenerla.
+
+Para mí la habilidad está en saber qué construir, para quién, y llevarlo hasta producción. La IA me permitió hacerlo en semanas y no en meses.
+
 ## Correrlo en tu compu
 
 ```bash
