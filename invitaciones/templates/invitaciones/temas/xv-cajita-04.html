@@ -1,0 +1,1641 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  CAJITA MUSICAL — cuarta plantilla de XV años. La primera con foto de la quinceañera.
+
+  Concepto: la cajita musical con su bailarina es el juguete de la niña que
+  hoy cumple quince; los XV son la despedida de la infancia y la noche gira
+  alrededor de un vals. La invitación es esa cajita: el invitado le da cuerda,
+  la tapa se abre, en el espejo aparece la foto de la quinceañera, la bailarina
+  gira y suena su vals (ese toque es la interacción que el navegador exige
+  para dejar sonar el audio).
+
+    Portada ....... la cajita cerrada (laca marfil y molduras de oro, placa "XV",
+                    llave de cuerda que se mueve). "Dale cuerda" gira la llave,
+                    la tapa se abre en 3D y el espejo muestra la foto; la
+                    bailarina sube y gira SOLO mientras suena la música, como
+                    en una cajita de verdad. Sin JS la cajita se ve abierta.
+    Mi gran noche . por dentro todo es el joyero: terciopelo vino con vivos de
+                    oro. La fecha va en una medalla grabada (uno de los regalos
+                    simbólicos de los XV), los colores de la vestimenta son
+                    piedras preciosas y el countdown va en cuatro estuches.
+    Programa ...... papás y padrinos grabados; el itinerario es la tira de papel
+                    perforado con la que suena una cajita musical.
+    Galería ....... cada foto en un relicario de corazón que se abre al llegar.
+    RSVP .......... "¿Me acompañas?"; al confirmar con "Sí", el invitado recibe
+                    un dije de oro con su inicial "para mi joyero".
+    Música ........ la llave de cuerda, que gira mientras suena.
+
+  Distinta de Medianoche Dorada (noche, estrellas, tiara), de Carnet de Baile
+  (coquette, rosa, papel) y de La Gira (pop, holográfico): clásica y elegante,
+  con la foto de protagonista. Paleta terciopelo vino · oro antiguo · laca marfil.
+  Tipografía: Pinyon Script (la letra de los grabadores, para el nombre) +
+  Marcellus (romanas de placa grabada). Ambas OFL. Todo el arte (cajita,
+  bailarina, medalla, relicarios, dije) es CSS/SVG propio. Sin foto, el espejo
+  muestra la inicial grabada.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Mis XV años{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<svg class="defs-tema" aria-hidden="true" focusable="false">
+    <defs>
+        <linearGradient id="c-oro" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#8C6528"/><stop offset=".35" stop-color="#F0D9A0"/>
+            <stop offset=".6" stop-color="#C9A15A"/><stop offset="1" stop-color="#8C6528"/>
+        </linearGradient>
+        <!-- la bailarina de la cajita: brazos arriba, tutú y de puntas -->
+        <symbol id="c-bailarina" viewBox="0 0 60 130">
+            <path d="M30 4c3.4 0 5.6 2.4 5.6 5.6S33.4 15.4 30 15.4 24.4 12.8 24.4 9.6 26.6 4 30 4z"/>
+            <path d="M28 15h4l1.5 6c5-4 8-9.5 9-16 .3-1.6 2.4-1.4 2.3.2-.6 8.4-4.6 15.4-10.3 19.6L34 40h-8l-.5-15.2C19.8 20.6 15.8 13.6 15.2 5.2c-.1-1.6 2-1.8 2.3-.2 1 6.5 4 12 9 16L28 15z"/>
+            <path d="M8 46c6-6 14-8 22-8s16 2 22 8c-3 1-4 3-7 3s-4-2-7-2-4 2-8 2-5-2-8-2-4 2-7 2-4-2-7-3z"/>
+            <path d="M26.5 49h3l.8 34-1.4 40c-.1 1.5-2 1.5-2.1 0L26 83z"/>
+            <path d="M30.5 49h3l.8 18c3 4 5.4 9.6 5 14.6-.1 1.4-1.9 1.6-2.3.3-1.1-4-3.3-7.6-5.4-9.6z"/>
+        </symbol>
+        <!-- llave de cuerda vista de lado: el eje entra a la caja y las dos alas giran sobre él -->
+        <symbol id="c-llave" viewBox="0 0 40 40">
+            <rect x="1" y="18.6" width="24" height="2.8" rx="1.2"/>
+            <path fill-rule="evenodd" d="M29 19C22 15 21 3 29 3S36 15 29 19ZM29 15C25.6 12.6 25.6 7 29 7S32.4 12.6 29 15Z"/>
+            <path fill-rule="evenodd" d="M29 21C22 25 21 37 29 37S36 25 29 21ZM29 25C25.6 27.4 25.6 33 29 33S32.4 27.4 29 25Z"/>
+            <circle cx="29" cy="20" r="2.8"/>
+        </symbol>
+    </defs>
+</svg>
+
+<!-- La cajita musical. Sin JS se ve abierta (la foto en el espejo y la bailarina arriba);
+     el JS la cierra al cargar y la abre cuando le dan cuerda. -->
+<div class="cajita" id="cajita">
+    <div class="cajita-aviso" aria-hidden="true">
+        <span class="nota-flotante">♪</span><span class="nota-flotante">♫</span><span class="nota-flotante">♪</span>
+        <span class="aviso-texto">Una melodía para ti</span>
+    </div>
+    <div class="tapa">
+        <div class="tapa-cara">
+            <svg class="tapa-corona" viewBox="0 0 120 40" aria-hidden="true"><path d="M10 34 L18 12 L38 26 L60 4 L82 26 L102 12 L110 34 Z" fill="url(#c-oro)"/><circle cx="60" cy="5" r="3.4" fill="#F0D9A0"/><circle cx="18" cy="11" r="2.4" fill="#F0D9A0"/><circle cx="102" cy="11" r="2.4" fill="#F0D9A0"/></svg>
+            <div class="espejo">
+                {% if foto_portada %}
+                <img src="{{ foto_portada }}" alt="{{ invitacion.anfitriones }}" fetchpriority="high" decoding="async">
+                {% else %}
+                <span class="espejo-inicial" aria-hidden="true">{{ invitacion.anfitriones|slice:":1" }}</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="bailarina" aria-hidden="true">
+        <div class="bailarina-sube">
+            <!-- dos siluetas cruzadas a 90°: al girar siempre se ve una de frente (nunca una rayita) -->
+            <div class="bailarina-giro">
+                <svg class="bailarina-cuerpo" viewBox="0 0 60 130"><use href="#c-bailarina" fill="url(#c-oro)"/></svg>
+                <svg class="bailarina-cuerpo bailarina-cruz" viewBox="0 0 60 130"><use href="#c-bailarina" fill="url(#c-oro)"/></svg>
+            </div>
+            <span class="pedestal"></span>
+        </div>
+    </div>
+    <div class="caja-frente" aria-hidden="true">
+        <span class="placa">XV</span>
+        <span class="cerradura"></span>
+        <svg class="llave-cuerda" viewBox="0 0 40 40"><use href="#c-llave" fill="url(#c-oro)"/></svg>
+    </div>
+</div>
+<button type="button" class="dar-cuerda" id="dar-cuerda" hidden>
+    <svg viewBox="0 0 40 40" aria-hidden="true"><use href="#c-llave" fill="currentColor"/></svg>
+    Dale cuerda
+</button>
+{% endblock %}
+
+{% block hero_extra %}
+<p class="fecha-portada">{{ invitacion.fecha_evento|date:"l j \d\e F" }} · {{ invitacion.fecha_evento|date:"Y" }}</p>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="info-cabecera">
+    <p class="kicker">Te espero en</p>
+    <h2 class="titulo">Mi gran noche</h2>
+</header>
+<!-- aquí el JS acomoda el mensaje de bienvenida (sin JS se queda en la portada) -->
+<blockquote class="cita" hidden></blockquote>
+<!-- la fecha grabada en una medalla, uno de los regalos simbólicos de los XV -->
+<figure class="medalla" role="img" aria-label="{{ invitacion.fecha_evento|date:'l j \d\e F \d\e Y' }}, {{ invitacion.fecha_evento|date:'g:i A' }}">
+    <svg viewBox="0 0 200 200" aria-hidden="true">
+        <defs>
+            <radialGradient id="m-oro" cx=".38" cy=".3" r=".8">
+                <stop offset="0" stop-color="#F6E3B0"/><stop offset=".45" stop-color="#D4AE66"/><stop offset="1" stop-color="#8C6528"/>
+            </radialGradient>
+            <path id="m-arco-sup" d="M38 100 A62 62 0 0 1 162 100"/>
+            <path id="m-arco-inf" d="M30 100 A70 70 0 0 0 170 100"/>
+        </defs>
+        <circle cx="100" cy="100" r="96" fill="url(#m-oro)"/>
+        <circle cx="100" cy="100" r="86" fill="none" stroke="#8C6528" stroke-width="1.4" stroke-dasharray="1.5 4.2"/>
+        <circle cx="100" cy="100" r="79" fill="none" stroke="#FBEBC2" stroke-width="1" opacity=".7"/>
+        <circle cx="100" cy="100" r="55" fill="none" stroke="#8C6528" stroke-width="1" opacity=".55"/>
+        <text class="medalla-arco"><textPath href="#m-arco-sup" startOffset="50%" text-anchor="middle">{{ invitacion.fecha_evento|date:"F"|upper }}</textPath></text>
+        <text class="medalla-arco"><textPath href="#m-arco-inf" startOffset="50%" text-anchor="middle">{{ invitacion.fecha_evento|date:"Y" }}</textPath></text>
+        <text class="medalla-dia" x="100" y="100" text-anchor="middle" dominant-baseline="central">{{ invitacion.fecha_evento|date:"j" }}</text>
+    </svg>
+    <figcaption>{{ invitacion.fecha_evento|date:"l" }} · {{ invitacion.fecha_evento|date:"g:i A" }}</figcaption>
+</figure>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- el dije que recibe quien confirma con "Sí" (el JS lo copia y le graba la inicial) -->
+<template id="plantilla-dije">
+    <div class="dije-regalo">
+        <div class="dije" aria-hidden="true">
+            <span class="dije-argolla"></span>
+            <span class="dije-corazon"><span class="dije-inicial"></span></span>
+        </div>
+        <p class="dije-texto"></p>
+    </div>
+</template>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Pinyon+Script&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 terciopelo vino · 30 laca marfil · 10 oro antiguo */
+        --vino: #5C1526;
+        --vino-hondo: #380A16;
+        --vino-claro: #8A2E43;
+        --oro: #C9A15A;
+        --oro-claro: #F0D9A0;
+        --oro-oscuro: #8C6528;
+        --marfil: #F6EEE2;
+        --marfil-sombra: #E3D3BC;
+        --tinta: #3A1820;
+        --tinta-suave: rgba(58, 24, 32, 0.72);
+
+        --script: 'Pinyon Script', 'Snell Roundhand', cursive;
+        --romana: 'Marcellus', 'Trajan Pro', Georgia, serif;
+
+        --margen: clamp(1.3rem, 6vw, 2.4rem);
+        --ancho: 27rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        --degradado-oro: linear-gradient(135deg, #8C6528, #F0D9A0 38%, #C9A15A 62%, #8C6528);
+        /* terciopelo: grano fino (ruido SVG) + brillo de luz arriba + vino profundo */
+        --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .32 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        --terciopelo: var(--grano), radial-gradient(ellipse 90% 60% at 50% 18%, rgba(214, 110, 132, 0.28), rgba(214, 110, 132, 0) 70%),
+                      linear-gradient(var(--vino), var(--vino-hondo));
+        /* vivo de oro de los compartimentos del joyero */
+        --vivo-oro: inset 0 0 0 1px rgba(240, 217, 160, 0.75), inset 0 0 0 4px rgba(56, 10, 22, 0.55), inset 0 0 0 5px rgba(201, 161, 90, 0.45),
+                    inset 0 14px 30px rgba(0, 0, 0, 0.35);
+        /* corazón de los relicarios y del dije */
+        --corazon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cpath d='M50 90C22 70 2 52 2 28 2 12 14 2 28 2c10 0 17 5 22 13C55 7 62 2 72 2c14 0 26 10 26 26 0 24-20 42-48 62z'/%3E%3C/svg%3E");
+        /* llave de cuerda para el botón de música */
+        --llave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill-rule='evenodd' d='M20 19C13 15 12 3 20 3S27 15 20 19ZM20 15C16.6 12.6 16.6 7 20 7S23.4 12.6 20 15ZM20 21C13 25 12 37 20 37S27 25 20 21ZM20 25C16.6 27.4 16.6 33 20 33S23.4 27.4 20 25Z'/%3E%3Ccircle cx='20' cy='20' r='2.8'/%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--vino-hondo);
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        background: var(--vino-hondo);
+        color: var(--marfil);
+        font: 400 1.02rem/1.55 var(--romana);
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(201, 161, 90, 0.25);
+    }
+    ::selection {
+        background: var(--oro-claro);
+        color: var(--vino-hondo);
+    }
+    .defs-tema {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+    }
+    .kicker {
+        margin: 0;
+        font: 400 0.72rem/1.4 var(--romana);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    /* script de grabador con brillo de oro */
+    .titulo {
+        margin: 0;
+        padding: 0 0.2em;
+        background: var(--degradado-oro);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font: 400 clamp(2.6rem, 12vw, 3.4rem)/1.25 var(--script);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-regalos,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (la llave de cuerda)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.1rem;
+        height: 3.1rem;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: var(--grano), radial-gradient(circle at 40% 35%, var(--vino-claro), var(--vino-hondo));
+        cursor: pointer;
+        box-shadow: 0 0 0 1.5px var(--oro), 0 0 0 4px var(--vino-hondo), 0 0 0 5px rgba(201, 161, 90, 0.6), 0 10px 18px -6px rgba(0, 0, 0, 0.6);
+        transition: opacity 0.6s ease;
+    }
+    .boton-musica svg {
+        display: none;   /* la llave reemplaza los iconos de nota/pausa del motor */
+    }
+    .boton-musica::before {
+        content: "";
+        position: absolute;
+        inset: 0.6rem;
+        background: var(--degradado-oro);
+        -webkit-mask: var(--llave) center / contain no-repeat;
+        mask: var(--llave) center / contain no-repeat;
+    }
+    /* mientras suena, la llave da vueltas, como cuando la cajita se va desenrollando */
+    .boton-musica.sonando::before {
+        animation: girar-llave 3.6s linear infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--oro-claro);
+        outline-offset: 5px;
+    }
+    /* con la cajita cerrada, el botón espera: darle cuerda ya arranca la música */
+    body:has(.cajita.cerrada) .boton-musica {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada:not(.hero) {
+        opacity: 0;
+        transition: opacity 0.9s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.info-cabecera, .cita, .medalla, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.9s var(--curva) var(--retraso, 0s) both;
+    }
+    .hero.visible .hero-contenido > * {
+        animation: aparecer 1s var(--curva) var(--retraso, 0s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.9rem; }
+    }
+    @keyframes girar-llave {
+        to { rotate: 360deg; }
+    }
+    /* la llave del costado: vista de frente, al darle cuerda gira sobre su eje */
+    @keyframes dar-cuerda {
+        to { transform: rotateX(1080deg); }
+    }
+    @keyframes llamar {
+        0%, 70%, 100% { transform: rotateX(0deg); }
+        80% { transform: rotateX(60deg); }
+        90% { transform: rotateX(-30deg); }
+    }
+    /* la tapa se abre, se pasa un poquito y se acomoda en la bisagra */
+    @keyframes abrir-tapa {
+        0% { transform: rotateX(-90deg); }
+        68% { transform: rotateX(9deg); }
+        84% { transform: rotateX(2deg); }
+        100% { transform: rotateX(5deg); }
+    }
+    @keyframes subir {
+        from { translate: 0 105%; }
+    }
+    @keyframes girar-bailarina {
+        to { transform: rotateY(360deg); }
+    }
+    /* un destello cruza el espejo al abrir */
+    @keyframes reflejo {
+        from { translate: -120% 0; }
+        to { translate: 120% 0; }
+    }
+    @keyframes flotar {
+        0% { opacity: 0; translate: 0 0.6rem; }
+        30% { opacity: 1; }
+        100% { opacity: 0; translate: 0.4rem -2.2rem; }
+    }
+    @keyframes columpio {
+        0% { opacity: 0; translate: 0 -2rem; rotate: 22deg; }
+        30% { opacity: 1; translate: 0 0; rotate: -14deg; }
+        52% { rotate: 8deg; }
+        72% { rotate: -4deg; }
+        100% { rotate: 0deg; }
+    }
+    @keyframes brillo-dije {
+        0%, 100% { opacity: 0; }
+        50% { opacity: 1; }
+    }
+
+    /* ============================================
+       PORTADA: la cajita musical
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.1rem;
+        padding: 2.2rem var(--margen) calc(4.4rem + env(safe-area-inset-bottom));
+        background: var(--grano), radial-gradient(ellipse 80% 55% at 50% 38%, rgba(232, 140, 158, 0.34), rgba(232, 140, 158, 0) 70%),
+                    linear-gradient(var(--vino), var(--vino-hondo));
+        overflow: hidden;
+    }
+    /* sus piezas se acomodan directo en la columna de la portada (cajita, nombre, botón) */
+    .hero .marco-decorativo {
+        display: contents;
+    }
+    .cajita {
+        --ancho-caja: min(72vw, 23rem, 37vh);
+        --tapa-alto: calc(var(--ancho-caja) * 1.16);
+        --frente-alto: calc(var(--ancho-caja) * 0.36);
+        position: relative;
+        order: 1;
+        width: var(--ancho-caja);
+        height: calc(var(--tapa-alto) + var(--frente-alto) + 0.6rem);
+        flex: none;
+        /* el ojo a la altura de la bisagra: cerrada, la tapa queda de canto y no se ve */
+        perspective: 1100px;
+        perspective-origin: 50% var(--tapa-alto);
+        cursor: default;
+    }
+    .cajita.cerrada {
+        cursor: pointer;
+    }
+    /* sombra de la cajita sobre el terciopelo */
+    .cajita::after {
+        content: "";
+        position: absolute;
+        left: -8%;
+        right: -8%;
+        bottom: -0.6rem;
+        height: 1.6rem;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+        z-index: -1;
+    }
+    /* lo que se ve arriba con la cajita cerrada: notas flotando y la invitación a darle cuerda */
+    .cajita-aviso {
+        position: absolute;
+        inset: 18% 0 auto;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        transition: opacity 0.5s ease;
+    }
+    .cajita.cerrada .cajita-aviso {
+        display: flex;
+    }
+    .aviso-texto {
+        margin-top: 2.6rem;
+        font: 400 2.1rem/1.2 var(--script);
+        color: var(--oro-claro);
+    }
+    .nota-flotante {
+        position: absolute;
+        top: 0;
+        font: 400 1.6rem/1 var(--romana);
+        color: var(--oro);
+        animation: flotar 3.2s ease-in-out infinite;
+    }
+    .nota-flotante:nth-child(1) { left: 26%; }
+    .nota-flotante:nth-child(2) { left: 48%; top: -1.2rem; font-size: 2rem; animation-delay: 1.1s; }
+    .nota-flotante:nth-child(3) { left: 68%; animation-delay: 2.1s; }
+
+    /* --- La tapa: gira sobre la bisagra (su orilla de abajo) --- */
+    .tapa {
+        position: absolute;
+        inset: 0 0 auto;
+        height: var(--tapa-alto);
+        transform-origin: 50% 100%;
+        transform: rotateX(5deg);
+    }
+    .cajita.cerrada .tapa {
+        transform: rotateX(-90deg);
+    }
+    .cajita.abriendo .tapa {
+        animation: abrir-tapa 1.7s cubic-bezier(0.3, 0.6, 0.25, 1) both;
+    }
+    .tapa-cara {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: start center;
+        padding-top: 9%;
+        border-radius: 0.5rem 0.5rem 0.2rem 0.2rem;
+        background: linear-gradient(160deg, #FBF5EB, var(--marfil) 45%, var(--marfil-sombra));
+        box-shadow: inset 0 0 0 3px var(--oro), inset 0 0 0 6px var(--marfil), inset 0 0 0 7px rgba(140, 101, 40, 0.6),
+                    inset 0 -24px 30px -20px rgba(140, 101, 40, 0.35);
+    }
+    .tapa-corona {
+        position: absolute;
+        top: 1.6%;
+        left: 50%;
+        width: 22%;
+        translate: -50% 0;
+    }
+    /* el espejo ovalado con marco de oro: aquí va la foto */
+    .espejo {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 80%;
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        border-radius: 50%;
+        background: linear-gradient(160deg, #EFE6E2, #B8A9A8);
+        box-shadow: 0 0 0 3px var(--oro-claro), 0 0 0 5px var(--oro-oscuro), 0 0 0 8px var(--marfil), 0 0 0 9px rgba(140, 101, 40, 0.55),
+                    inset 0 0 18px rgba(0, 0, 0, 0.35);
+    }
+    .espejo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 30%;
+    }
+    .espejo::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(115deg, rgba(255, 255, 255, 0) 35%, rgba(255, 255, 255, 0.45) 50%, rgba(255, 255, 255, 0) 65%);
+        translate: -120% 0;
+        pointer-events: none;
+    }
+    .cajita.abriendo .espejo::after {
+        animation: reflejo 1.4s ease-in-out 1.3s both;
+    }
+    .espejo-inicial {
+        font: 400 6rem/1 var(--script);
+        color: rgba(140, 101, 40, 0.65);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    /* --- La bailarina: de pie frente al espejo, sube al abrir --- */
+    .bailarina {
+        position: absolute;
+        left: 50%;
+        bottom: var(--frente-alto);
+        z-index: 2;
+        width: calc(var(--ancho-caja) * 0.2);
+        height: calc(var(--tapa-alto) * 0.34);
+        translate: -50% 0;
+        overflow: hidden;   /* así nace escondida detrás del frente de la caja */
+    }
+    .bailarina-sube {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        perspective: 320px;
+    }
+    .bailarina-giro {
+        position: relative;
+        flex: 1;
+        width: 100%;
+        min-height: 0;
+        transform-style: preserve-3d;
+    }
+    .bailarina-cuerpo {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.35));
+    }
+    .bailarina-cruz {
+        transform: rotateY(90deg);
+    }
+    .pedestal {
+        flex: none;
+        width: 72%;
+        height: 0.45rem;
+        border-radius: 50%;
+        background: var(--degradado-oro);
+    }
+    .cajita.cerrada .bailarina-sube {
+        translate: 0 105%;
+    }
+    .cajita.abriendo .bailarina-sube {
+        animation: subir 1s var(--curva) 0.7s both;
+    }
+    /* como en una cajita de verdad: la bailarina gira solo mientras suena la música */
+    .cajita:not(.cerrada) .bailarina-giro {
+        animation: girar-bailarina 3.4s linear infinite;
+        animation-play-state: paused;
+    }
+    body:has(.boton-musica.sonando) .cajita:not(.cerrada) .bailarina-giro {
+        animation-play-state: running;
+    }
+    /* sin música (paquete sin canción): da tres vueltas al abrir y se queda quieta */
+    body:not(:has(.boton-musica)) .cajita.abriendo .bailarina-giro {
+        animation-iteration-count: 3;
+        animation-play-state: running;
+    }
+
+    /* --- El frente de la caja: laca marfil, molduras de oro, placa y llave --- */
+    .caja-frente {
+        position: absolute;
+        left: -4%;
+        right: -4%;
+        bottom: 0.6rem;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        height: var(--frente-alto);
+        border-radius: 0.3rem 0.3rem 0.5rem 0.5rem;
+        background:
+            linear-gradient(var(--oro-claro), var(--oro) 40%, var(--oro-oscuro)) top / 100% 9% no-repeat,
+            linear-gradient(var(--oro-oscuro), var(--oro) 60%, var(--oro-claro)) bottom / 100% 9% no-repeat,
+            linear-gradient(170deg, #FBF5EB, var(--marfil) 50%, var(--marfil-sombra));
+        box-shadow: inset 0 0 0 1px rgba(140, 101, 40, 0.5), 0 10px 18px -8px rgba(0, 0, 0, 0.6);
+    }
+    /* patitas de bolita dorada */
+    .caja-frente::before,
+    .caja-frente::after {
+        content: "";
+        position: absolute;
+        bottom: -0.55rem;
+        width: 0.9rem;
+        height: 0.7rem;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, var(--oro-claro), var(--oro-oscuro));
+    }
+    .caja-frente::before { left: 6%; }
+    .caja-frente::after { right: 6%; }
+    .placa {
+        display: grid;
+        place-items: center;
+        width: 30%;
+        aspect-ratio: 2 / 1;
+        border-radius: 50%;
+        background: radial-gradient(ellipse at 40% 30%, #F6E3B0, var(--oro) 60%, var(--oro-oscuro));
+        box-shadow: 0 0 0 1.5px var(--oro-oscuro), 0 0 0 3px var(--marfil), 0 0 0 4px rgba(140, 101, 40, 0.6);
+        font: 400 calc(var(--ancho-caja) * 0.085)/1 var(--romana);
+        letter-spacing: 0.08em;
+        color: var(--oro-oscuro);
+        text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
+    }
+    .cerradura {
+        position: absolute;
+        left: 50%;
+        bottom: 16%;
+        width: 0.42rem;
+        height: 0.7rem;
+        translate: -50% 0;
+        border-radius: 50% 50% 0.1rem 0.1rem;
+        background: var(--vino-hondo);
+        box-shadow: 0 0 0 2px var(--oro);
+    }
+    /* la llave de cuerda asoma por el costado derecho */
+    .llave-cuerda {
+        position: absolute;
+        right: -2.1rem;
+        top: 50%;
+        width: 2.6rem;
+        height: 2.6rem;
+        margin-top: -1.3rem;
+        transform-origin: 50% 50%;
+        filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
+    }
+    .cajita.cerrada .llave-cuerda {
+        animation: llamar 2.6s ease-in-out 1s infinite;
+    }
+    .cajita.dando-cuerda .llave-cuerda {
+        animation: dar-cuerda 1.1s cubic-bezier(0.5, 0, 0.3, 1) both;
+    }
+
+    /* --- Botón "Dale cuerda" (solo con la cajita cerrada) --- */
+    .dar-cuerda {
+        order: 3;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.85rem 1.5rem 0.8rem 1.2rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--degradado-oro);
+        color: var(--vino-hondo);
+        font: 400 0.8rem/1 var(--romana);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 10px 20px -8px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 245, 220, 0.6);
+        transition: opacity 0.4s ease, visibility 0.4s;
+    }
+    .dar-cuerda svg {
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+    .dar-cuerda:focus-visible {
+        outline: 2px solid var(--oro-claro);
+        outline-offset: 4px;
+    }
+    /* ya abierta, el botón se apaga sin mover el resto de la portada */
+    .hero:has(.cajita:not(.cerrada)) .dar-cuerda {
+        visibility: hidden;
+        opacity: 0;
+    }
+
+    /* --- El nombre --- */
+    .hero-contenido {
+        order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .hero .eyebrow {
+        margin: 0;
+        font: 400 0.74rem/1.4 var(--romana);
+        letter-spacing: 0.38em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .nombres {
+        --retraso: 0.1s;
+        width: 100%;
+        margin: 0.1rem 0 0.2rem;
+        padding: 0 0.3em;
+        background: var(--degradado-oro);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font: 400 clamp(3.2rem, 15vw, 4.4rem)/1.2 var(--script);
+        white-space: nowrap;
+    }
+    /* sin JS el mensaje se queda aquí (con JS se muda a "Mi gran noche") */
+    .hero .mensaje {
+        --retraso: 0.2s;
+        max-width: 30ch;
+        margin: 0 0 0.6rem;
+        font-size: 0.95rem;
+        color: rgba(246, 238, 226, 0.85);
+    }
+    .fecha-portada {
+        --retraso: 0.25s;
+        margin: 0;
+        font: 400 0.74rem/1.4 var(--romana);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--marfil);
+    }
+
+    /* ============================================
+       PANTALLA INFO: mi gran noche (el joyero por dentro)
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 0.85rem;
+        padding: 2rem var(--margen) 4.6rem;
+        background: var(--terciopelo);
+    }
+    .marco-decorativo-info,
+    .pantalla-info .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.85rem;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .cita {
+        --retraso: 0.1s;
+        margin: 0;
+    }
+    .cita .mensaje {
+        margin: 0;
+        font-size: 1rem;
+        line-height: 1.6;
+        color: rgba(246, 238, 226, 0.88);
+        text-wrap: pretty;
+    }
+    .cita::after {
+        content: "";
+        display: block;
+        width: 3.4rem;
+        height: 1px;
+        margin: 0.7rem auto 0;
+        background: var(--degradado-oro);
+    }
+    /* la medalla grabada con la fecha */
+    .medalla {
+        --retraso: 0.2s;
+        margin: 0;
+    }
+    .medalla svg {
+        display: block;
+        width: 8.2rem;
+        height: 8.2rem;
+        margin: 0 auto;
+        filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+    }
+    .medalla-arco {
+        font: 400 13px/1 var(--romana);
+        letter-spacing: 0.24em;
+        fill: #6E4C1C;
+    }
+    .medalla-dia {
+        font: 400 64px/1 var(--romana);
+        fill: #6E4C1C;
+    }
+    .medalla figcaption {
+        margin-top: 0.55rem;
+        font: 400 0.8rem/1.4 var(--romana);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--oro-claro);
+    }
+    /* la fecha del motor se reemplaza por la medalla */
+    .pantalla-info .detalles {
+        display: none;
+    }
+    /* los lugares: dos tarjetitas de laca con orilla de oro, como las de un estuche */
+    .lugares {
+        --retraso: 0.3s;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        gap: 0.7rem;
+        width: 100%;
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0.15rem;
+        padding: 0.8rem 0.7rem;
+        border-radius: 0.35rem;
+        background: linear-gradient(170deg, #FBF5EB, var(--marfil) 60%, var(--marfil-sombra));
+        box-shadow: inset 0 0 0 1px var(--oro), inset 0 0 0 4px var(--marfil), inset 0 0 0 5px rgba(140, 101, 40, 0.45),
+                    0 8px 14px -8px rgba(0, 0, 0, 0.6);
+        color: var(--tinta);
+    }
+    .detalle-label {
+        font: 400 0.62rem/1.4 var(--romana);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .lugar-item .detalle-label {
+        color: var(--oro-oscuro);
+    }
+    .detalle-valor {
+        font: 400 1.02rem/1.3 var(--romana);
+        text-wrap: balance;
+    }
+    .lugar-direccion {
+        font-size: 0.82rem;
+        color: var(--tinta-suave);
+    }
+    /* los colores de la vestimenta como piedras preciosas engastadas en oro */
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    .vestimenta-color {
+        position: relative;
+        width: 1.7rem;
+        height: 1.7rem;
+        border-radius: 50%;
+        box-shadow: 0 0 0 2px var(--oro-claro), 0 0 0 3.5px var(--oro-oscuro), 0 4px 8px rgba(0, 0, 0, 0.5),
+                    inset -3px -4px 6px rgba(0, 0, 0, 0.45), inset 2px 3px 4px rgba(255, 255, 255, 0.35);
+    }
+    .vestimenta-color::after {
+        content: "";
+        position: absolute;
+        top: 20%;
+        left: 24%;
+        width: 28%;
+        height: 20%;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.75);
+        rotate: -30deg;
+    }
+    /* el countdown en cuatro estuches de terciopelo */
+    .countdown {
+        --retraso: 0.4s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 21rem;
+    }
+    .countdown::before {
+        content: "Faltan";
+        grid-column: 1 / -1;
+        font: 400 1.7rem/1 var(--script);
+        color: var(--oro-claro);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0.45rem 0 0.35rem;
+        border-radius: 0.6rem;
+        background: var(--grano), linear-gradient(var(--vino-hondo), #4A0F1D);
+        box-shadow: var(--vivo-oro);
+    }
+    .countdown span {
+        font: 400 1.6rem/1.1 var(--romana);
+        font-variant-numeric: tabular-nums;
+        color: var(--oro-claro);
+    }
+    .countdown label {
+        font: 400 0.55rem/1.4 var(--romana);
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: rgba(246, 238, 226, 0.75);
+    }
+    .acciones-rapidas {
+        --retraso: 0.5s;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.55rem;
+        width: 100%;
+    }
+    .accion-icono {
+        flex: 0 1 calc(50% - 0.3rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.45rem;
+        min-height: 2.7rem;
+        padding: 0.35rem 0.8rem 0.3rem 0.45rem;
+        border: 1px solid rgba(201, 161, 90, 0.7);
+        border-radius: 999px;
+        color: var(--marfil);
+        text-decoration: none;
+        font: 400 0.64rem/1.2 var(--romana);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        transition: background 0.25s ease;
+    }
+    .accion-icono:hover {
+        background: rgba(201, 161, 90, 0.15);
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--oro-claro);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 1.95rem;
+        height: 1.95rem;
+        border-radius: 50%;
+        background: var(--degradado-oro);
+        color: var(--vino-hondo);
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: familia y la melodía de la noche
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.4rem;
+        padding: 2.6rem var(--margen) 4.8rem;
+        background: var(--terciopelo);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: flex;
+        flex-direction: column;
+        gap: 0.7rem;
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    .familia-rol {
+        font: 400 0.62rem/1.4 var(--romana);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .familia-nombres {
+        font: 400 1.7rem/1.25 var(--script);
+        color: var(--marfil);
+        text-wrap: balance;
+    }
+    /* el itinerario como la tira de papel perforado con la que suena una cajita */
+    .itinerario {
+        --retraso: 0.15s;
+        position: relative;
+        padding: 1rem 2.1rem 1.1rem;
+        border-radius: 0.2rem;
+        background:
+            radial-gradient(circle, var(--vino-hondo) 0.22rem, transparent 0.26rem) left 0.55rem top 0.4rem / 0.8rem 1.1rem repeat-y,
+            radial-gradient(circle, var(--vino-hondo) 0.22rem, transparent 0.26rem) right 0.55rem top 0.4rem / 0.8rem 1.1rem repeat-y,
+            linear-gradient(90deg, transparent 1.6rem, rgba(140, 101, 40, 0.35) 1.6rem 1.65rem, transparent 1.65rem calc(100% - 1.65rem), rgba(140, 101, 40, 0.35) calc(100% - 1.65rem) calc(100% - 1.6rem), transparent 0),
+            linear-gradient(175deg, #FBF5EB, var(--marfil) 60%, var(--marfil-sombra));
+        color: var(--tinta);
+        box-shadow: 0 14px 24px -14px rgba(0, 0, 0, 0.7);
+    }
+    .itinerario::before {
+        content: "La melodía de la noche";
+        display: block;
+        font: 400 0.62rem/1.4 var(--romana);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--oro-oscuro);
+    }
+    .itinerario h3 {
+        margin: 0 0 0.5rem;
+        font: 400 2.2rem/1.2 var(--script);
+        color: var(--vino);
+    }
+    .itinerario-item {
+        display: grid;
+        grid-template-columns: 5.2rem 1fr;
+        gap: 0.6rem;
+        align-items: baseline;
+        padding: 0.4rem 0;
+        text-align: left;
+    }
+    .itinerario-item + .itinerario-item {
+        border-top: 1px dashed rgba(140, 101, 40, 0.4);
+    }
+    .itinerario-hora {
+        position: relative;
+        padding-left: 1rem;
+        font: 400 0.74rem/1.3 var(--romana);
+        letter-spacing: 0.1em;
+        color: var(--oro-oscuro);
+        white-space: nowrap;
+    }
+    /* cada momento es una perforación de la melodía */
+    .itinerario-hora::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0.2em;
+        width: 0.5rem;
+        height: 0.32rem;
+        border-radius: 0.2rem;
+        background: var(--vino);
+    }
+    .itinerario-evento {
+        font-size: 0.98rem;
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        border-radius: 999px;
+        background: var(--degradado-oro);
+        color: var(--vino-hondo);
+        text-decoration: none;
+        font: 400 0.76rem/1 var(--romana);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        box-shadow: 0 10px 18px -8px rgba(0, 0, 0, 0.6);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--oro-claro);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.3s;
+        margin: 0;
+        font-size: 0.9rem;
+        color: rgba(246, 238, 226, 0.8);
+    }
+    .nota-ninos::before {
+        content: "✦ ";
+        color: var(--oro);
+    }
+
+    /* --- Regalos con lista o lluvia de sobres (si los piden) --- */
+    .pantalla-regalos {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.6rem var(--margen) 4.8rem;
+        background: var(--terciopelo);
+    }
+    .pantalla-regalos .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .regalos-titulo {
+        margin: 0;
+        font: 400 2.8rem/1.2 var(--script);
+        color: var(--oro-claro);
+    }
+    .regalos-intro {
+        margin: 0;
+        color: rgba(246, 238, 226, 0.85);
+    }
+    .regalo-tarjeta {
+        padding: 1rem;
+        border-radius: 0.6rem;
+        background: var(--grano), linear-gradient(var(--vino-hondo), #4A0F1D);
+        box-shadow: var(--vivo-oro);
+    }
+    .regalo-icono {
+        display: none;   /* sin emojis: el oro ya decora */
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.5rem;
+        font: 400 0.72rem/1.4 var(--romana);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+    }
+    .mesas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .mesa-nombre {
+        font-size: 1.05rem;
+    }
+    .mesa-codigo {
+        font-size: 0.85rem;
+        color: rgba(246, 238, 226, 0.75);
+    }
+    .mesa-botones {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 0.55rem 0.9rem 0.5rem;
+        border: 1px solid var(--oro);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--marfil);
+        text-decoration: none;
+        font: 400 0.62rem/1 var(--romana);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+    .boton-copiar.copiado {
+        background: var(--oro);
+        color: var(--vino-hondo);
+    }
+
+    /* ============================================
+       GALERIA: relicarios de corazón
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.4rem 1rem;
+        align-content: center;
+        justify-items: center;
+        padding: 2.6rem max(var(--margen), (100% - 28rem) / 2) 4.8rem;
+        background: var(--terciopelo);
+    }
+    /* kicker + titulo con los dos pseudo-elementos; order los sube antes de las fotos */
+    .galeria::before {
+        content: "Guardados en mi joyero";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -1.2rem;
+        font: 400 0.7rem/1.4 var(--romana);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .galeria::after {
+        content: "Mis recuerdos";
+        order: -1;
+        grid-column: 1 / -1;
+        font: 400 clamp(2.6rem, 12vw, 3.2rem)/1.25 var(--script);
+        color: var(--oro-claro);
+    }
+    /* la foto con forma de corazón (sirve también sin JS) */
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 1 / 0.92;
+        object-fit: cover;
+        -webkit-mask: var(--corazon) center / 100% 100% no-repeat;
+        mask: var(--corazon) center / 100% 100% no-repeat;
+    }
+    /* con JS cada foto va en un relicario: orilla de oro, argolla y una tapa que se abre */
+    .relicario {
+        position: relative;
+        display: block;
+        width: 100%;
+        padding-top: 0.9rem;
+        perspective: 600px;
+        filter: drop-shadow(1.5px 0 0 var(--oro)) drop-shadow(-1.5px 0 0 var(--oro)) drop-shadow(0 1.5px 0 var(--oro))
+                drop-shadow(0 -1.5px 0 var(--oro)) drop-shadow(0 10px 10px rgba(0, 0, 0, 0.45));
+    }
+    /* la argolla de la que cuelga */
+    .relicario::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 50%;
+        width: 0.9rem;
+        height: 0.9rem;
+        translate: -50% 0;
+        border: 2px solid var(--oro);
+        border-radius: 50%;
+    }
+    .relicario-tapa {
+        position: absolute;
+        inset: 0.9rem 0 0;
+        background: radial-gradient(circle at 30% 25%, #F6E3B0, var(--oro) 50%, var(--oro-oscuro));
+        -webkit-mask: var(--corazon) center / 100% 100% no-repeat;
+        mask: var(--corazon) center / 100% 100% no-repeat;
+        transform-origin: 0% 50%;
+        transition: transform 1.3s cubic-bezier(0.5, 0, 0.25, 1) var(--retraso, 0s);
+        backface-visibility: hidden;
+    }
+    /* grabado de la tapa: un corazón de línea fina y otro de puntitos */
+    .relicario-tapa::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 92'%3E%3Cg fill='none' stroke='%236E4C1C' stroke-opacity='.6'%3E%3Cpath d='M50 76C30 61 16 49 16 32 16 21 24 14 33 14c7 0 13 4 17 11 4-7 10-11 17-11 9 0 17 7 17 18 0 17-14 29-34 44z' stroke-width='1.4'/%3E%3Cpath d='M50 66C36 55 27 46 27 35 27 28 32 24 38 24c5 0 9 3 12 8 3-5 7-8 12-8 6 0 11 4 11 11 0 11-9 20-23 31z' stroke-width='1.2' stroke-dasharray='.5 3.2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+    }
+    .relicario.abierto .relicario-tapa {
+        transform: rotateY(-115deg);
+    }
+    .galeria > :last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+        width: 50%;
+    }
+
+    /* ============================================
+       RSVP: ¿me acompañas?
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2.6rem var(--margen) 5rem;
+        background: var(--terciopelo);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "Confirma tu asistencia";
+        font: 400 0.7rem/1.4 var(--romana);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--oro);
+    }
+    .rsvp h2 {
+        margin: 0.1rem auto 0.3rem;
+        padding: 0 0.2em;
+        background: var(--degradado-oro);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        font: 400 clamp(2.6rem, 12vw, 3.3rem)/1.25 var(--script);
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: rgba(246, 238, 226, 0.82);
+    }
+    #total-confirmados {
+        font-size: 1.25rem;
+        color: var(--oro-claro);
+    }
+    /* Django escribe "10 de Abril": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-size: 0.88rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    /* la tarjeta del RSVP: laca marfil con doble vivo de oro */
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 0.95rem;
+        margin: 1.2rem auto 0;
+        padding: 1.4rem 1.2rem 1.3rem;
+        border-radius: 0.6rem;
+        background: linear-gradient(170deg, #FBF5EB, var(--marfil) 60%, var(--marfil-sombra));
+        color: var(--tinta);
+        text-align: left;
+        box-shadow: inset 0 0 0 1.5px var(--oro), inset 0 0 0 5px var(--marfil), inset 0 0 0 6px rgba(140, 101, 40, 0.5),
+                    0 18px 30px -16px rgba(0, 0, 0, 0.7);
+    }
+    /* renglones finos (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.5rem 0.1rem;
+        border: 0;
+        border-bottom: 1px solid rgba(140, 101, 40, 0.6);
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 400 1.02rem/1.4 var(--romana);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(58, 24, 32, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--vino);
+        box-shadow: 0 1px 0 var(--vino);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.8rem;
+        padding: 0.15rem 0.3rem 0;
+        border: 1px solid rgba(140, 101, 40, 0.6);
+        border-radius: 999px;
+        font: 400 0.66rem/1.15 var(--romana);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--vino);
+        background: var(--vino);
+        color: var(--oro-claro);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--oro);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 400 0.62rem/1.3 var(--romana);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--oro-oscuro);
+    }
+    .campo-con-label input {
+        max-width: 4rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.3rem;
+        padding-top: 0.15rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--grano), linear-gradient(var(--vino-claro), var(--vino));
+        color: var(--oro-claro);
+        font: 400 0.76rem/1 var(--romana);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: inset 0 0 0 1px var(--oro), 0 8px 14px -8px rgba(0, 0, 0, 0.6);
+    }
+    #form-rsvp button:hover {
+        background: var(--vino);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--oro);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: 400 1.9rem/1.2 var(--script);
+        color: var(--oro-claro);
+    }
+
+    /* --- El dije de oro con la inicial del invitado --- */
+    .dije-regalo {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.4rem;
+    }
+    .dije {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transform-origin: 50% 0;
+        animation: columpio 1.8s var(--curva) both;
+    }
+    .dije-argolla {
+        width: 1rem;
+        height: 1rem;
+        border: 2.5px solid var(--oro);
+        border-radius: 50%;
+        margin-bottom: -0.25rem;
+    }
+    .dije-corazon {
+        position: relative;
+        display: grid;
+        place-items: center;
+        width: 5.6rem;
+        height: 5.1rem;
+        background: radial-gradient(circle at 32% 28%, #FBEBC2, #D4AE66 45%, var(--oro-oscuro));
+        -webkit-mask: var(--corazon) center / 100% 100% no-repeat;
+        mask: var(--corazon) center / 100% 100% no-repeat;
+    }
+    /* un destello pasa por el dije */
+    .dije-corazon::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0) 40%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 60%);
+        animation: brillo-dije 2.4s ease-in-out 1.6s 2 both;
+    }
+    .dije-inicial {
+        margin-top: -0.6rem;
+        font: 400 2.8rem/1 var(--script);
+        color: #6E4C1C;
+        text-shadow: 0 1px 0 rgba(255, 245, 220, 0.8);
+    }
+    .rsvp .dije-texto {
+        margin-top: 0.6rem;
+        font-size: 0.92rem;
+        color: var(--oro-claro);
+    }
+
+    /* ============================================
+       COMPATIBILIDAD
+       ============================================ */
+    /* dvh no cuenta la barra del navegador del celular; los celulares viejos que no
+       lo entienden se quedan con vh (si no, la cajita se quedaría sin ancho) */
+    @supports (height: 1dvh) {
+        .cajita {
+            --ancho-caja: min(72vw, 23rem, 37dvh);
+        }
+    }
+
+    /* ============================================
+       PANTALLAS ANCHAS (compu / tablet acostada)
+       ============================================ */
+    @media (min-width: 40rem) {
+        .accion-icono {
+            flex-basis: calc(25% - 0.45rem);
+            flex-direction: column;
+            padding: 0.8rem 0.4rem;
+            border-radius: 1.2rem;
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual (con la cajita abierta desde el principio).
+    (function () {
+        const hero = document.querySelector('.hero');
+        const titulo = document.querySelector('.hero .nombres');
+
+        // --- 1. El mensaje de bienvenida se muda a "Mi gran noche" ---
+        const cita = document.querySelector('.cita');
+        const mensaje = document.querySelector('.hero .mensaje');
+        if (cita && mensaje) {
+            cita.appendChild(mensaje);
+            cita.hidden = false;
+        }
+
+        // --- 2. El nombre nunca se sale de la pantalla ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            let vueltas = 0;
+            while (titulo.scrollWidth > titulo.clientWidth + 1 && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 3. La cajita: se cierra al cargar y se abre al darle cuerda ---
+        // Si abren un link directo a una sección (#rsvp) se queda abierta.
+        const cajita = document.getElementById('cajita');
+        const boton = document.getElementById('dar-cuerda');
+        if (cajita && boton && hero && !location.hash) {
+            cajita.classList.add('cerrada');
+            boton.hidden = false;
+            let abierta = false;
+            const abrir = (animada) => {
+                if (abierta) return;
+                abierta = true;
+                if (!animada) {
+                    cajita.classList.remove('cerrada');
+                    return;
+                }
+                // este toque cuenta como la interacción que exige el navegador para el audio
+                const botonMusica = document.getElementById('boton-musica');
+                const musica = document.getElementById('musica-fondo');
+                if (botonMusica && musica && musica.paused) botonMusica.click();
+                cajita.classList.add('dando-cuerda');
+                setTimeout(() => {
+                    cajita.classList.remove('cerrada');
+                    cajita.classList.add('abriendo');
+                }, 900);
+            };
+            boton.addEventListener('click', () => abrir(true));
+            cajita.addEventListener('click', () => abrir(true));
+            // si bajan sin abrirla, al volver ya está abierta
+            const vigia = new IntersectionObserver(entradas => {
+                if (!entradas[0].isIntersecting) {
+                    abrir(false);
+                    vigia.disconnect();
+                }
+            });
+            vigia.observe(hero);
+        }
+
+        // --- 4. Galería: cada foto en un relicario que se abre al llegar a ella ---
+        const fotos = document.querySelectorAll('.galeria > img');
+        if (fotos.length && 'IntersectionObserver' in window) {
+            const observador = new IntersectionObserver(entradas => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting) return;
+                    entrada.target.classList.add('abierto');
+                    observador.unobserve(entrada.target);
+                });
+            }, { threshold: 0.4 });
+            fotos.forEach((img, i) => {
+                const relicario = document.createElement('span');
+                relicario.className = 'relicario';
+                relicario.style.setProperty('--retraso', (i % 2) * 0.2 + 's');
+                const tapa = document.createElement('span');
+                tapa.className = 'relicario-tapa';
+                img.before(relicario);
+                relicario.append(img, tapa);
+                observador.observe(relicario);
+            });
+        }
+
+        // --- 5. RSVP con la voz de la quinceañera ---
+        const encabezado = document.querySelector('.rsvp h2');
+        if (encabezado) encabezado.textContent = '¿Me acompañas?';
+        const form = document.getElementById('form-rsvp');
+        const enviar = form && form.querySelector('button[type="submit"]');
+        if (enviar) enviar.textContent = 'Confirmar asistencia';
+
+        // --- 6. Al confirmar con "Sí", el invitado recibe un dije con su inicial ---
+        // El motor borra el formulario antes de avisar, así que el nombre se
+        // guarda al enviar.
+        let nombreInvitado = '';
+        if (form) {
+            form.addEventListener('submit', () => {
+                const campo = form.querySelector('[name="nombre_invitado"]');
+                nombreInvitado = campo ? campo.value.trim() : '';
+            });
+        }
+        const status = document.getElementById('rsvp-status');
+        const plantillaDije = document.getElementById('plantilla-dije');
+        document.addEventListener('rsvp:enviado', e => {
+            document.querySelectorAll('.dije-regalo').forEach(el => el.remove());
+            if (!status || !plantillaDije || e.detail.asistencia !== 'si') return;
+            const copia = plantillaDije.content.cloneNode(true);
+            // textContent (no innerHTML): el nombre lo escribe el invitado
+            const inicial = nombreInvitado.charAt(0).toUpperCase();
+            copia.querySelector('.dije-inicial').textContent = inicial || '♥';
+            const primerNombre = nombreInvitado.split(/\s+/)[0];
+            copia.querySelector('.dije-texto').textContent = primerNombre
+                ? `${primerNombre}, tu dije ya está en mi joyero`
+                : 'Tu dije ya está en mi joyero';
+            status.after(copia);
+        });
+    })();
+</script>
+{% endblock %}

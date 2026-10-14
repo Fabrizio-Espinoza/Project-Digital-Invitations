@@ -96,7 +96,9 @@ EXTRAS_DEL_DISENO = {
 }
 
 # Diseños cuya portada es una foto de los festejados: el formulario la pide aparte de la galería
-DISENOS_CON_PORTADA = {"boda-velo-04"}
+DISENOS_CON_PORTADA = {"boda-velo-04", "xv-cajita-04"}
+# A quién se le pide la foto, según el evento
+FOTO_DE = {"boda": "ustedes", "xv": "la quinceañera"}
 
 # Tabla de pañales por inicial del apellido (la misma del demo); se ajusta después si piden otra.
 PANALES_POR_DEFECTO = [
@@ -168,7 +170,8 @@ class FormularioPedido(forms.Form):
 
         if self.con_portada:
             # el archivo se lee aparte, de request.FILES (como las fotos de la galería)
-            secciones.append(("Foto de portada", "Es lo primero que ven tus invitados: una foto de ustedes, "
+            quien = FOTO_DE.get(tipo, "los festejados")
+            secciones.append(("Foto de portada", f"Es lo primero que ven tus invitados: una foto de {quien}, "
                               "vertical, con buena luz, sin filtros ni textos encima.", [], []))
 
         if tipo == "baby_shower":

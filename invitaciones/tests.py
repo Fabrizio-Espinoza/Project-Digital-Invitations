@@ -631,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 16)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 17)
 
 
 # ---------------------------------------------------------------------------
@@ -1434,6 +1434,7 @@ class FotoPortadaTests(TestCase):
         pagina = self.client.get(url)
         self.assertContains(pagina, 'name="foto_portada"')
         self.assertContains(pagina, f'<img src="{self.inv.foto_portada.url}"')     # vista previa
+        self.assertContains(pagina, "«El Velo» y «Cajita Musical»")              # la ayuda sale del catálogo
 
         datos = datos_del_admin(pagina, self.inv)
         datos["foto_portada"] = foto_de_prueba("IMG_2041.jpg", 2400, 3600)
@@ -1495,3 +1496,48 @@ class PedidoConFotoDePortadaTests(TestCase):
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "no se pudo abrir")
         self.assertIsNone(Pedido.objects.get(pk=self.pedido.pk).invitacion)
+
+
+# ---------------------------------------------------------------------------
+# Cajita Musical: los XV con la foto de la quinceañera en el espejo
+# ---------------------------------------------------------------------------
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class DemoCajitaMusicalTests(TestCase):
+    def test_crear_demo_es_idempotente_y_la_foto_va_en_el_espejo(self):
+        call_command("crear_demo_xv_cajita", stdout=StringIO())
+        carpeta = Path(Invitacion.objects.get(slug="demo-xv-isabella").foto_portada.path).parent
+        fotos_antes = set(os.listdir(carpeta))
+        call_command("crear_demo_xv_cajita", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="xv-cajita-04").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-xv-isabella")
+        self.assertEqual(invitacion.plantilla.tipo_evento, "xv")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 18)
+        self.assertEqual(set(os.listdir(carpeta)), fotos_antes)    # la foto no se duplica
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/xv-cajita-04.html")
+        # la foto en el espejo, el botón para darle cuerda (nace oculto), la medalla, el dije
+        for fragmento in (f'<img src="{invitacion.foto_portada.url}" alt="Isabella"', 'id="dar-cuerda" hidden',
+                          "Dale cuerda", "NOVIEMBRE", 'id="plantilla-dije"', "rsvp:enviado",
+                          "Chambelán de honor", "Mi gran noche"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/xv-cajita-04-180.png")
+
+    def test_sin_foto_el_espejo_muestra_la_inicial(self):
+        call_command("crear_demo_xv_cajita", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-xv-isabella")
+        invitacion.foto_portada = ""
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertContains(respuesta, '<span class="espejo-inicial" aria-hidden="true">I</span>')
+        self.assertNotContains(respuesta, 'fetchpriority="high"')
+
+    def test_el_formulario_del_pedido_pide_la_foto_de_la_quinceanera(self):
+        call_command("crear_demo_xv_cajita", stdout=StringIO())
+        pedido = Pedido.objects.create(cliente="Mamá de Isabella", nivel="interactiva",
+                                       plantilla=Plantilla.objects.get(slug_tema="xv-cajita-04"))
+        respuesta = self.client.get(reverse("pedido", args=[pedido.token]))
+        self.assertContains(respuesta, 'name="foto_portada"')
+        self.assertContains(respuesta, "una foto de la quinceañera")

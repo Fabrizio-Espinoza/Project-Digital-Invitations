@@ -23,6 +23,7 @@ DEMOS = [
     ("crear_demo_xv", "demo-xv-valentina", "XV · Medianoche Dorada"),
     ("crear_demo_xv_carnet", "demo-xv-regina", "XV · Carnet de Baile"),
     ("crear_demo_xv_gira", "demo-xv-ximena", "XV · La Gira"),
+    ("crear_demo_xv_cajita", "demo-xv-isabella", "XV · Cajita Musical"),
     ("crear_demo_graduacion", "demo-graduacion-valeria-montes", "Graduación · Laurel de Oro"),
     ("crear_demo_graduacion_cuaderno", "demo-graduacion-diego", "Graduación · Tarea Cumplida"),
     ("crear_demo_graduacion_salida", "demo-graduacion-camila", "Graduación · Próxima Salida"),

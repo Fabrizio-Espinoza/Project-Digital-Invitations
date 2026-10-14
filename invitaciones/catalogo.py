@@ -79,6 +79,14 @@ DISENOS = [
         "frase": "Ella es la estrella pop: boleto de concierto, photocards y pulsera de la amistad.",
         "ideal": "Quinceañeras fans de los conciertos",
     },
+    {
+        "tipo": "xv",
+        "nombre": "Cajita Musical",
+        "slug_tema": "xv-cajita-04",
+        "demo": "demo-xv-isabella",
+        "frase": "Su foto en el espejo de una cajita musical: le das cuerda, se abre y suena su vals.",
+        "ideal": "XV elegantes con su foto de protagonista",
+    },
     # ----- Graduaciones -----
     {
         "tipo": "graduacion",
