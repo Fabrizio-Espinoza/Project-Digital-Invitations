@@ -3,9 +3,9 @@ Formulario que llena el CLIENTE para armar su invitación (/pedido/<token>/).
 
 La idea: que nadie escriba JSON a mano. El formulario pregunta según el tipo
 de evento (una boda pide ceremonia y recepción; un baby shower, la fecha de
-parto) y según el diseño (La Gira pide la ciudad, La Lotería el número de
-la carta), y al final lo convierte en una Invitacion con su contenido_extra
-armado con las mismas claves que ya usan las plantillas.
+parto) y según el diseño (La Gira pide la ciudad, Frente al Mar el destino,
+La Lotería el número de la carta), y al final lo convierte en una Invitacion
+con su contenido_extra armado con las mismas claves que ya usan las plantillas.
 
 Tres piezas:
 - FormularioPedido: campos sueltos (nombres, fecha, lugares…) con la
@@ -90,13 +90,14 @@ REPETIBLES = {
 # Datos propios de algunos diseños (las claves que lee cada plantilla).
 EXTRAS_DEL_DISENO = {
     "xv-gira-03": ["ciudad"],
+    "boda-mar-05": ["ciudad"],
     "fiesta-consola-03": ["nivel"],
     "fiesta-loteria-02": ["carta_numero", "carta_titulo", "carta_dibujo"],
     "baby-shower-lunas-01": ["paleta"],
 }
 
 # Diseños cuya portada es una foto de los festejados: el formulario la pide aparte de la galería
-DISENOS_CON_PORTADA = {"boda-velo-04", "xv-cajita-04", "baby-shower-latido-04"}
+DISENOS_CON_PORTADA = {"boda-velo-04", "boda-mar-05", "xv-cajita-04", "baby-shower-latido-04"}
 # Qué foto se pide para la portada, según el evento. El eco es un dato de salud y
 # su impresión trae el nombre de la mamá y la clínica: se pide recortarlo antes.
 AYUDA_PORTADA = {
@@ -106,6 +107,17 @@ AYUDA_PORTADA = {
           "sin filtros ni textos encima.",
     "baby_shower": "Es lo primero que ven tus invitados: la foto del ultrasonido. Antes de subirla, "
                    "recórtala para que no salgan tu nombre ni los datos de la clínica.",
+}
+
+# Si el diseño enseña la foto de otra forma, su ayuda manda sobre la del evento.
+AYUDA_PORTADA_DEL_DISENO = {
+    "boda-mar-05": "Es lo primero que ven tus invitados: una foto de ustedes que se verá en un círculo, "
+                   "como el sol del atardecer. Que salgan juntos y al centro, con buena luz, sin textos encima.",
+}
+# La ciudad sale distinto en cada diseño: (etiqueta, ejemplo, ayuda)
+CIUDAD_DEL_DISENO = {
+    "xv-gira-03": ("Ciudad", "Ej. Guadalajara, Jal.", "Sale en el boleto de la gira."),
+    "boda-mar-05": ("Destino", "Ej. Tulum, Quintana Roo", "Sale en la portada, bajo la fecha, sobre el mar."),
 }
 
 # Tabla de pañales por inicial del apellido (la misma del demo); se ajusta después si piden otra.
@@ -178,8 +190,9 @@ class FormularioPedido(forms.Form):
 
         if self.con_portada:
             # el archivo se lee aparte, de request.FILES (como las fotos de la galería)
-            ayuda = AYUDA_PORTADA.get(tipo, "Es lo primero que ven tus invitados: una foto de los festejados, "
-                                            "con buena luz, sin filtros ni textos encima.")
+            ayuda = AYUDA_PORTADA_DEL_DISENO.get(plantilla.slug_tema) or AYUDA_PORTADA.get(
+                tipo, "Es lo primero que ven tus invitados: una foto de los festejados, "
+                      "con buena luz, sin filtros ni textos encima.")
             secciones.append(("Foto de portada", ayuda, [], []))
 
         if tipo == "baby_shower":
@@ -264,7 +277,8 @@ class FormularioPedido(forms.Form):
         # --- Del diseño ---
         extras = EXTRAS_DEL_DISENO.get(plantilla.slug_tema, [])
         if "ciudad" in extras:
-            f["ciudad"] = _texto("Ciudad", "Ej. Guadalajara, Jal.", largo=60, ayuda="Sale en el boleto de la gira.")
+            etiqueta, ejemplo, ayuda = CIUDAD_DEL_DISENO.get(plantilla.slug_tema, CIUDAD_DEL_DISENO["xv-gira-03"])
+            f["ciudad"] = _texto(etiqueta, ejemplo, largo=60, ayuda=ayuda)
         if "nivel" in extras:
             f["nivel"] = _texto("¿Cuántos años cumple?", "Ej. 30", largo=3, ayuda="Sale como «Nivel 30 desbloqueado».")
         if "carta_numero" in extras:

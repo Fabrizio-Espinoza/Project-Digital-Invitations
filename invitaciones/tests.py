@@ -631,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 18)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 19)
 
 
 # ---------------------------------------------------------------------------
@@ -1434,7 +1434,7 @@ class FotoPortadaTests(TestCase):
         pagina = self.client.get(url)
         self.assertContains(pagina, 'name="foto_portada"')
         self.assertContains(pagina, f'<img src="{self.inv.foto_portada.url}"')     # vista previa
-        self.assertContains(pagina, "«El Velo», «Cajita Musical» y «Primer Latido»")   # la ayuda sale del catálogo
+        self.assertContains(pagina, "«El Velo», «Frente al Mar», «Cajita Musical» y «Primer Latido»")   # la ayuda sale del catálogo
 
         datos = datos_del_admin(pagina, self.inv)
         datos["foto_portada"] = foto_de_prueba("IMG_2041.jpg", 2400, 3600)
@@ -1592,3 +1592,67 @@ class DemoPrimerLatidoTests(TestCase):
         self.assertContains(respuesta, 'name="foto_portada"')
         self.assertContains(respuesta, "la foto del ultrasonido")
         self.assertContains(respuesta, "no salgan tu nombre ni los datos de la clínica")
+
+
+# ---------------------------------------------------------------------------
+# Frente al Mar: la boda en la playa, con la foto de los novios como el sol
+# ---------------------------------------------------------------------------
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class DemoFrenteAlMarTests(TestCase):
+    def test_crear_demo_es_idempotente_y_la_foto_es_el_sol_del_atardecer(self):
+        call_command("crear_demo_boda_mar", stdout=StringIO())
+        carpeta = Path(Invitacion.objects.get(slug="demo-boda-natalia-iker").foto_portada.path).parent
+        fotos_antes = set(os.listdir(carpeta))
+        call_command("crear_demo_boda_mar", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="boda-mar-05").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-boda-natalia-iker")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+        self.assertEqual(set(os.listdir(carpeta)), fotos_antes)    # la foto no se duplica
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-mar-05.html")
+        src = invitacion.foto_portada.url
+        # la foto como sol (con los nombres de alt) y como reflejo, el destino bajo la fecha,
+        # el mensaje en "El gran día", la sombra de palmera y la botella del RSVP
+        for fragmento in (f'<img src="{src}" alt="Natalia &amp; Iker"', f'--foto-sol: url("{src}")',
+                          'class="escena"', 'class="reflejo"', '<p class="portada-destino">Tulum, Quintana Roo</p>',
+                          '<blockquote class="cita">Nos conocimos', "boda-mar-palma.svg", 'id="plantilla-botella"',
+                          "te esperamos frente al mar", "rsvp:enviado", "Nos casamos frente al mar"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/boda-mar-05-180.png")
+
+    def test_sin_foto_el_sol_lleva_las_iniciales(self):
+        call_command("crear_demo_boda_mar", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-boda-natalia-iker")
+        invitacion.foto_portada = ""
+        invitacion.mensaje_bienvenida = ""
+        del invitacion.contenido_extra["ciudad"]
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertContains(respuesta, "sol-sin-foto")
+        self.assertContains(respuesta, 'class="sol-iniciales" data-iniciales')
+        self.assertNotContains(respuesta, "--foto-sol: url(")
+        self.assertNotContains(respuesta, 'class="portada-destino"')
+        self.assertNotContains(respuesta, 'class="cita"')
+
+    def test_el_formulario_pide_el_destino_y_una_foto_para_el_circulo(self):
+        plantilla = Plantilla.objects.create(nombre="Frente al Mar", tipo_evento="boda", slug_tema="boda-mar-05")
+        pedido = Pedido.objects.create(cliente="Natalia", plantilla=plantilla, nivel="interactiva")
+        url = reverse("pedido", args=[pedido.token])
+        respuesta = self.client.get(url)
+        self.assertContains(respuesta, 'name="foto_portada"')
+        self.assertContains(respuesta, "se verá en un círculo")
+        self.assertContains(respuesta, "Destino")
+        self.assertContains(respuesta, "Ej. Tulum, Quintana Roo")
+
+        self.client.post(url, {"anfitriones": "Natalia & Iker", "fecha": "2027-11-13", "hora": "17:00",
+                               "recepcion_nombre": "Casa Arena", "ciudad": "Tulum, Quintana Roo"})
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(inv.contenido_extra["ciudad"], "Tulum, Quintana Roo")
+
+        # La Gira sigue pidiendo la ciudad con su propio texto
+        gira = Pedido.objects.create(cliente="Ximena", nivel="interactiva", plantilla=Plantilla.objects.create(
+            nombre="La Gira", tipo_evento="xv", slug_tema="xv-gira-03"))
+        self.assertContains(self.client.get(reverse("pedido", args=[gira.token])), "Sale en el boleto de la gira.")
