@@ -28,6 +28,7 @@ DEMOS = [
     ("crear_demo_graduacion", "demo-graduacion-valeria-montes", "Graduación · Laurel de Oro"),
     ("crear_demo_graduacion_cuaderno", "demo-graduacion-diego", "Graduación · Tarea Cumplida"),
     ("crear_demo_graduacion_salida", "demo-graduacion-camila", "Graduación · Próxima Salida"),
+    ("crear_demo_graduacion_tesis", "demo-graduacion-fernando", "Graduación · Mención Honorífica"),
     ("crear_demo_fiesta", "demo-fiesta-sofia", "Fiesta · Noche Neón"),
     ("crear_demo_loteria", "demo-loteria-lupita", "Fiesta · La Lotería"),
     ("crear_demo_fiesta_consola", "demo-fiesta-rodrigo", "Fiesta · Nivel Desbloqueado"),

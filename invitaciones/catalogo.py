@@ -120,6 +120,14 @@ DISENOS = [
         "frase": "Graduarse es despegar: tablero de aeropuerto que gira y pase de abordar.",
         "ideal": "Cualquier graduación que abre una etapa nueva",
     },
+    {
+        "tipo": "graduacion",
+        "nombre": "Mención Honorífica",
+        "slug_tema": "graduacion-tesis-04",
+        "demo": "demo-graduacion-fernando",
+        "frase": "Tu tesis empastada en piel y oro: se abre, se lee como libro y cada invitado firma su voto aprobatorio.",
+        "ideal": "Graduaciones formales de universidad y posgrado",
+    },
     # ----- Fiestas -----
     {
         "tipo": "fiesta",

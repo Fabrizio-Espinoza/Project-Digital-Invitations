@@ -631,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 19)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 20)
 
 
 # ---------------------------------------------------------------------------
@@ -1656,3 +1656,57 @@ class DemoFrenteAlMarTests(TestCase):
         gira = Pedido.objects.create(cliente="Ximena", nivel="interactiva", plantilla=Plantilla.objects.create(
             nombre="La Gira", tipo_evento="xv", slug_tema="xv-gira-03"))
         self.assertContains(self.client.get(reverse("pedido", args=[gira.token])), "Sale en el boleto de la gira.")
+
+
+# ---------------------------------------------------------------------------
+# Mención Honorífica: la graduación como tesis empastada que se abre
+# ---------------------------------------------------------------------------
+class DemoMencionHonorificaTests(TestCase):
+    def test_crear_demo_es_idempotente_y_llega_como_tesis_cerrada(self):
+        call_command("crear_demo_graduacion_tesis", stdout=StringIO())
+        call_command("crear_demo_graduacion_tesis", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="graduacion-tesis-04").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-graduacion-fernando")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 18)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/graduacion-tesis-04.html")
+        # la tapa (nace oculta), el texto de tesis, el sello con la generación, el mensaje con
+        # capitular en el Capítulo I, la tabla y el voto aprobatorio del RSVP
+        for fragmento in ('id="tapa" hidden', "Abrir la tesis", "De las aulas al foro: memoria de un sueño cumplido",
+                          "que para concluir sus estudios de", "Licenciatura en Derecho",
+                          "Benemérita Universidad Autónoma de Puebla", 'href="#arco-tapa"', "Generación 2022 — 2027",
+                          '<p class="parrafo-inicial">Cinco años', "Tabla 1.", 'id="plantilla-voto"',
+                          "Voto aprobatorio", "rsvp:enviado", '--anio: "2027"'):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/graduacion-tesis-04-180.png")
+
+    def test_sin_titulo_ni_carrera_la_tesis_se_arma_igual(self):
+        call_command("crear_demo_graduacion_tesis", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-graduacion-fernando")
+        invitacion.contenido_extra = {}
+        invitacion.mensaje_bienvenida = ""
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertContains(respuesta, "Memoria de un sueño cumplido")
+        self.assertContains(respuesta, "Generación 2027")             # el sello usa el año
+        self.assertNotContains(respuesta, "que para concluir sus estudios de")
+        self.assertNotContains(respuesta, 'class="parrafo-inicial"')
+
+    def test_el_formulario_pide_el_titulo_de_la_tesis_solo_en_este_diseno(self):
+        plantilla = Plantilla.objects.create(nombre="Mención Honorífica", tipo_evento="graduacion",
+                                             slug_tema="graduacion-tesis-04")
+        pedido = Pedido.objects.create(cliente="Fernando", plantilla=plantilla, nivel="interactiva")
+        url = reverse("pedido", args=[pedido.token])
+        self.assertContains(self.client.get(url), "Título de tu «tesis»")
+        self.client.post(url, {"anfitriones": "Fernando Ibarra", "fecha": "2027-06-26", "hora": "18:00",
+                               "lugar_nombre": "Hacienda San Bartolo", "titulo_tesis": "De las aulas al foro"})
+        inv = Pedido.objects.get(pk=pedido.pk).invitacion
+        self.assertEqual(inv.contenido_extra["titulo_tesis"], "De las aulas al foro")
+        self.assertContains(self.client.get(url), 'value="De las aulas al foro"')    # al volver, ya está lleno
+
+        laurel = Pedido.objects.create(cliente="Valeria", nivel="interactiva", plantilla=Plantilla.objects.create(
+            nombre="Laurel de Oro", tipo_evento="graduacion", slug_tema="graduacion-editorial-01"))
+        self.assertNotContains(self.client.get(reverse("pedido", args=[laurel.token])), "Título de tu «tesis»")
