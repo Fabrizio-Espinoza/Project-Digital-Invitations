@@ -31,7 +31,10 @@ from .models import ImagenGaleria, Invitacion
 
 MAX_FOTOS = 12
 MAX_MB_FOTO = 15
-LADO_MAXIMO_FOTO = 2000    # px: se ve nítida en cualquier celular y pesa ~300 KB
+# px: un celular pinta la galería a ~390 px × 3 de densidad ≈ 1200 px; 1600 da margen
+# para ampliar y pesa ~40 % menos que 2000 (unos 180 KB por foto)
+LADO_MAXIMO_FOTO = 1600
+CALIDAD_JPEG = 82
 
 # ------------------------------------------------------------------
 # Textos que cambian según el tipo de evento
@@ -370,7 +373,7 @@ def preparar_foto(archivo):
     """
     Revisa que sea una foto de verdad y la deja lista para la galería:
     derecha (los celulares la guardan "acostada" con una etiqueta EXIF),
-    máximo 2000 px por lado y en JPEG. Al volver a guardarla se quitan los
+    máximo LADO_MAXIMO_FOTO px por lado y en JPEG. Al volver a guardarla se quitan los
     datos EXIF, que en fotos de celular incluyen la ubicación GPS de la casa.
     """
     if archivo.size > MAX_MB_FOTO * 1024 * 1024:
@@ -383,7 +386,7 @@ def preparar_foto(archivo):
             imagen = ImageOps.exif_transpose(imagen).convert("RGB")
             imagen.thumbnail((LADO_MAXIMO_FOTO, LADO_MAXIMO_FOTO), Image.LANCZOS)
             salida = BytesIO()
-            imagen.save(salida, "JPEG", quality=85, optimize=True, progressive=True)
+            imagen.save(salida, "JPEG", quality=CALIDAD_JPEG, optimize=True, progressive=True)
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError):
         raise ValidationError(f"«{archivo.name}» no se pudo abrir. Usa fotos JPG o PNG.")
     return ContentFile(salida.getvalue(), name=f"{uuid.uuid4().hex[:12]}.jpg")

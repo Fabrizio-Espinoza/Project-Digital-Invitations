@@ -954,6 +954,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from .models import ImagenGaleria, Pedido
+from .pedidos import LADO_MAXIMO_FOTO
 
 MEDIA_PRUEBAS = tempfile.mkdtemp(prefix="media-pruebas-")
 
@@ -1038,7 +1039,7 @@ class PedidoTests(TestCase):
         # la foto se achica, se guarda en JPEG y pierde los datos EXIF (GPS)
         foto = inv.galeria.get()
         with Image.open(foto.imagen.path) as guardada:
-            self.assertEqual(max(guardada.size), 2000)
+            self.assertEqual(max(guardada.size), LADO_MAXIMO_FOTO)
             self.assertNotIn(0x8825, guardada.getexif())
 
         # borrador: la vista pública no la enseña, la vista previa sí
@@ -1254,3 +1255,16 @@ class PanelAnfitrionTests(TestCase):
         panel = self.client.get(self.url)
         self.assertNotContains(panel, 'name="opcion"')      # ya no hay botones de revelar
         self.assertContains(panel, "¡Es niño!")
+
+
+
+class CargaLigeraTests(TestCase):
+    def test_fotos_y_musica_no_se_descargan_al_abrir(self):
+        call_command("crear_demo_hotel", stdout=StringIO())
+        inv = Invitacion.objects.get(slug="demo-hotel-amor")
+        ImagenGaleria.objects.create(invitacion=inv, imagen="invitaciones/galeria/x.jpg")
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[inv.slug]))
+        # la galería está pantallas más abajo: cada foto se baja al acercarse
+        self.assertContains(respuesta, 'src="/media/invitaciones/galeria/x.jpg" alt="" loading="lazy" decoding="async"')
+        # la canción pesa varios MB: solo se baja al tocar play
+        self.assertContains(respuesta, 'preload="none"')
