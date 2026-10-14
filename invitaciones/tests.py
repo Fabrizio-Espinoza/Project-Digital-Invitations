@@ -631,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 17)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 18)
 
 
 # ---------------------------------------------------------------------------
@@ -1434,7 +1434,7 @@ class FotoPortadaTests(TestCase):
         pagina = self.client.get(url)
         self.assertContains(pagina, 'name="foto_portada"')
         self.assertContains(pagina, f'<img src="{self.inv.foto_portada.url}"')     # vista previa
-        self.assertContains(pagina, "«El Velo» y «Cajita Musical»")              # la ayuda sale del catálogo
+        self.assertContains(pagina, "«El Velo», «Cajita Musical» y «Primer Latido»")   # la ayuda sale del catálogo
 
         datos = datos_del_admin(pagina, self.inv)
         datos["foto_portada"] = foto_de_prueba("IMG_2041.jpg", 2400, 3600)
@@ -1541,3 +1541,54 @@ class DemoCajitaMusicalTests(TestCase):
         respuesta = self.client.get(reverse("pedido", args=[pedido.token]))
         self.assertContains(respuesta, 'name="foto_portada"')
         self.assertContains(respuesta, "una foto de la quinceañera")
+
+
+# ---------------------------------------------------------------------------
+# Primer Latido: el baby shower con el ultrasonido en el monitor
+# ---------------------------------------------------------------------------
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class DemoPrimerLatidoTests(TestCase):
+    def test_crear_demo_es_idempotente_y_el_eco_va_en_el_monitor(self):
+        call_command("crear_demo_baby_latido", stdout=StringIO())
+        carpeta = Path(Invitacion.objects.get(slug="demo-baby-andrea-pablo").foto_portada.path).parent
+        fotos_antes = set(os.listdir(carpeta))
+        call_command("crear_demo_baby_latido", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        plantilla = Plantilla.objects.get(slug_tema="baby-shower-latido-04")
+        self.assertTrue(plantilla.soporta_votacion)
+        invitacion = Invitacion.objects.get(slug="demo-baby-andrea-pablo")
+        self.assertEqual(set(os.listdir(carpeta)), fotos_antes)    # el eco no se duplica
+        self.assertNotIn("bebe_nombre", invitacion.contenido_extra)  # hay votación: no se sabe si es niña o niño
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/baby-shower-latido-04.html")
+        # el eco, el botón del latido (nace oculto), la fecha de parto para la semana,
+        # la línea de latidos, la votación del motor y la pulsera del RSVP
+        for fragmento in (f'<img src="{invitacion.foto_portada.url}" alt="Ultrasonido del bebé"', 'id="escuchar" hidden',
+                          "Escuchar su corazón", f'data-fecha-parto="{invitacion.contenido_extra["fecha_probable_parto"]}"',
+                          'class="trayecto"', 'id="votacion"', 'id="plantilla-pulsera"', "rsvp:enviado",
+                          "Nuestro bebé viene en camino"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/baby-shower-latido-04-180.png")
+
+    def test_sin_eco_el_monitor_muestra_un_corazon_y_sale_el_nombre_del_bebe(self):
+        call_command("crear_demo_baby_latido", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-baby-andrea-pablo")
+        invitacion.foto_portada = ""
+        invitacion.contenido_extra["bebe_nombre"] = "Emilia"
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertContains(respuesta, 'class="eco-corazon"')
+        self.assertNotContains(respuesta, 'alt="Ultrasonido del bebé"')
+        self.assertContains(respuesta, "Emilia viene en camino")
+        self.assertContains(respuesta, "bebé Emilia")      # en la pulsera de visita
+
+    def test_el_formulario_pide_recortar_los_datos_de_la_clinica(self):
+        call_command("crear_demo_baby_latido", stdout=StringIO())
+        pedido = Pedido.objects.create(cliente="Andrea", nivel="premium",
+                                       plantilla=Plantilla.objects.get(slug_tema="baby-shower-latido-04"))
+        respuesta = self.client.get(reverse("pedido", args=[pedido.token]))
+        self.assertContains(respuesta, 'name="foto_portada"')
+        self.assertContains(respuesta, "la foto del ultrasonido")
+        self.assertContains(respuesta, "no salgan tu nombre ni los datos de la clínica")

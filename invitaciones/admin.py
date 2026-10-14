@@ -49,7 +49,8 @@ class FormularioInvitacion(forms.ModelForm):
         super().__init__(*args, **kwargs)
         # la ayuda nombra los diseños que hoy usan la foto (sale del catálogo, no se queda vieja)
         if "foto_portada" in self.fields:
-            nombres = " y ".join(f"«{d['nombre']}»" for d in DISENOS if d["slug_tema"] in DISENOS_CON_PORTADA)
+            lista = [f"«{d['nombre']}»" for d in DISENOS if d["slug_tema"] in DISENOS_CON_PORTADA]
+            nombres = ", ".join(lista[:-1]) + " y " + lista[-1] if len(lista) > 1 else "".join(lista)
             self.fields["foto_portada"].help_text = (
                 f"La usan los diseños con foto en la portada ({nombres}). Vertical se ve mejor. "
                 "Si no hay, se usa la primera foto de la galería.")

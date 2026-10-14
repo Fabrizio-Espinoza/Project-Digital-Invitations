@@ -33,6 +33,7 @@ DEMOS = [
     ("crear_demo_baby_shower", "demo-baby-mariana-diego", "Baby shower · Diez Lunas"),
     ("crear_demo_baby_entrega", "demo-baby-entrega", "Baby shower · Entrega Especial"),
     ("crear_demo_baby_pancito", "demo-baby-pancito", "Baby shower · Pancito en el Horno"),
+    ("crear_demo_baby_latido", "demo-baby-andrea-pablo", "Baby shower · Primer Latido"),
 ]
 
 

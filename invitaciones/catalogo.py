@@ -162,6 +162,14 @@ DISENOS = [
         "frase": "Hay un pancito en el horno: conchas, receta de la abuela y votación por sabor.",
         "ideal": "Baby showers cálidos y muy mexicanos",
     },
+    {
+        "tipo": "baby_shower",
+        "nombre": "Primer Latido",
+        "slug_tema": "baby-shower-latido-04",
+        "demo": "demo-baby-andrea-pablo",
+        "frase": "Su ultrasonido en el monitor: con un toque, tus invitados escuchan su corazón.",
+        "ideal": "Papás que quieren presumir el eco",
+    },
 ]
 
 

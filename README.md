@@ -14,7 +14,7 @@ Plataforma para vender invitaciones digitales en México (bodas, XV años, gradu
 
 | | |
 |---|---|
-| Catálogo con los 17 diseños | [invitavibra.pythonanywhere.com](https://invitavibra.pythonanywhere.com) |
+| Catálogo con los 18 diseños | [invitavibra.pythonanywhere.com](https://invitavibra.pythonanywhere.com) |
 | Boda · Hotel Amor | [/invitaciones/demo-hotel-amor/](https://invitavibra.pythonanywhere.com/invitaciones/demo-hotel-amor/) |
 | Boda con foto · El Velo | [/invitaciones/demo-boda-renata-tomas/](https://invitavibra.pythonanywhere.com/invitaciones/demo-boda-renata-tomas/) |
 | XV años · La Gira | [/invitaciones/demo-xv-ximena/](https://invitavibra.pythonanywhere.com/invitaciones/demo-xv-ximena/) |
@@ -22,13 +22,14 @@ Plataforma para vender invitaciones digitales en México (bodas, XV años, gradu
 | Graduación · Próxima Salida | [/invitaciones/demo-graduacion-camila/](https://invitavibra.pythonanywhere.com/invitaciones/demo-graduacion-camila/) |
 | Fiesta · Nivel Desbloqueado | [/invitaciones/demo-fiesta-rodrigo/](https://invitavibra.pythonanywhere.com/invitaciones/demo-fiesta-rodrigo/) |
 | Baby shower · Pancito en el Horno | [/invitaciones/demo-baby-pancito/](https://invitavibra.pythonanywhere.com/invitaciones/demo-baby-pancito/) |
+| Baby shower con eco · Primer Latido | [/invitaciones/demo-baby-andrea-pablo/](https://invitavibra.pythonanywhere.com/invitaciones/demo-baby-andrea-pablo/) |
 
 Se ven mejor en el celular. En los demos puedes confirmar asistencia, votar "¿niña o niño?" y agendar la fecha: todo funciona.
 
 ## Qué hace
 
 **Para el invitado**
-- 17 diseños con concepto propio (la foto de los novios bajo un velo que el invitado levanta, una cajita musical que se abre con la foto de la quinceañera en el espejo, un hotel boutique, un tablero de aeropuerto que gira, una consola retro con botones que sí funcionan, cartas de lotería…). Todo el arte es SVG/CSS propio y las tipografías son de licencia libre (OFL).
+- 18 diseños con concepto propio (la foto de los novios bajo un velo que el invitado levanta, una cajita musical que se abre con la foto de la quinceañera en el espejo, el ultrasonido del bebé en un monitor donde se escucha su corazón, un hotel boutique, un tablero de aeropuerto que gira, una consola retro con botones que sí funcionan, cartas de lotería…). Todo el arte es SVG/CSS propio y las tipografías son de licencia libre (OFL).
 - Confirmación de asistencia con conteo en vivo, cuenta regresiva, botón a Google Maps, archivo `.ics` para el calendario y música con un toque.
 - Juego en vivo "¿Niña o niño?" para baby showers: cuando los papás revelan el resultado, a todos los que tienen la invitación abierta les aparece con confeti.
 - PWA: se instala en la pantalla de inicio y abre sin señal (service worker propio).
@@ -43,7 +44,7 @@ Se ven mejor en el celular. En los demos puedes confirmar asistencia, votar "¿n
 ## Cómo está hecho
 
 - **Django 6.1 + Python 3.13**, SQLite, HTML/CSS/JavaScript vanilla (sin frameworks de frontend ni librerías de animación).
-- **Motor + plantillas:** `base_interactiva.html` tiene toda la lógica (RSVP por `fetch`, countdown, scroll por pantallas, votación). Cada diseño es un archivo que solo cambia estilos y decoración con `{% block %}`, así un arreglo en el motor lo heredan los 17.
+- **Motor + plantillas:** `base_interactiva.html` tiene toda la lógica (RSVP por `fetch`, countdown, scroll por pantallas, votación). Cada diseño es un archivo que solo cambia estilos y decoración con `{% block %}`, así un arreglo en el motor lo heredan los 18.
 - **Datos flexibles:** lo que cambia por tipo de evento (ceremonia, padrinos, fecha de parto, carrera…) vive en un `JSONField`; lo común, en columnas reales. Así un tipo de evento nuevo no necesita migraciones.
 - **Niveles de paquete:** la vista cruza lo que pagó el cliente con lo que soporta el diseño, para que nadie vea funciones que no compró.
 
@@ -86,7 +87,7 @@ cd Project-Digital-Invitations
 python3.13 -m venv venv && source venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py crear_todos_los_demos     # crea los 17 demos e imprime sus links
+python manage.py crear_todos_los_demos     # crea los 18 demos e imprime sus links
 python manage.py runserver
 ```
 
