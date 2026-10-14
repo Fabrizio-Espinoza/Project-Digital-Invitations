@@ -188,6 +188,11 @@
     .subir input { width: 100%; max-width: 16rem; font-size: 0.8rem; }
     .vista-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(4rem, 1fr)); gap: 0.4rem; margin-top: 0.6rem; }
     .vista-fotos img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; }
+    /* la portada se ve vertical, como va a salir en la invitación */
+    .foto-portada-actual { display: grid; grid-template-columns: 6rem 1fr; gap: 0.8rem; align-items: center; margin: 0 0 0.8rem; }
+    .foto-portada-actual img, .vista-portada img { aspect-ratio: 2 / 3; border-radius: 10px; }
+    .foto-portada-actual figcaption { font-size: 0.85rem; color: var(--tinta-suave); }
+    .vista-portada { grid-template-columns: 6rem; }
 
     /* ============================================
        ENVIAR (barra fija abajo)
@@ -341,6 +346,23 @@
             </div>
             {% endfor %}
 
+            {% if seccion.portada %}
+            <div class="fotos fotos-portada">
+                {% if portada %}
+                <figure class="foto foto-portada-actual">
+                    <img src="{{ portada.url }}" alt="Tu foto de portada">
+                    <figcaption>Tu foto actual. Si eliges otra, la reemplaza.</figcaption>
+                </figure>
+                {% endif %}
+                <label class="subir">
+                    <strong>{% if portada %}Cambiar la foto{% else %}Elegir foto{% endif %}</strong>
+                    <span>Una sola foto. Se ve mejor vertical.</span>
+                    <input type="file" name="foto_portada" accept="image/jpeg,image/png,image/webp">
+                </label>
+                <div class="vista-fotos vista-portada" aria-live="polite"></div>
+            </div>
+            {% endif %}
+
             {% if seccion.fotos %}
             <div class="fotos">
                 <p class="fotos-titulo">Tus fotos</p>
@@ -417,10 +439,11 @@
         mostrar();
     }
 
-    // --- Vista de las fotos elegidas (antes de subirlas) ---
-    var entrada = form.querySelector('input[name="fotos"]');
-    var vista = form.querySelector('.vista-fotos');
-    if (entrada && vista) {
+    // --- Vista de las fotos elegidas (antes de subirlas): galería y portada ---
+    [['fotos', '.fotos:not(.fotos-portada) .vista-fotos'], ['foto_portada', '.vista-portada']].forEach(function (par) {
+        var entrada = form.querySelector('input[name="' + par[0] + '"]');
+        var vista = form.querySelector(par[1]);
+        if (!entrada || !vista) return;
         entrada.addEventListener('change', function () {
             vista.textContent = '';
             Array.prototype.slice.call(entrada.files, 0, 24).forEach(function (archivo) {
@@ -430,7 +453,7 @@
                 vista.appendChild(img);
             });
         });
-    }
+    });
 
     // --- Enviar: evitar doble toque (las fotos pueden tardar en subir) ---
     form.addEventListener('submit', function () {

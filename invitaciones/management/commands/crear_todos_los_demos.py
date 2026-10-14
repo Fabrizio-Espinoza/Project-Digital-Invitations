@@ -19,6 +19,7 @@ DEMOS = [
     ("crear_demo_terracota", "demo-boda-daniela-andres", "Boda · Terracota Velada"),
     ("crear_demo_cobalto", "demo-cobalto-editorial", "Boda · Cobalto Editorial"),
     ("crear_demo_hotel", "demo-hotel-amor", "Boda · Hotel Amor"),
+    ("crear_demo_boda_velo", "demo-boda-renata-tomas", "Boda · El Velo"),
     ("crear_demo_xv", "demo-xv-valentina", "XV · Medianoche Dorada"),
     ("crear_demo_xv_carnet", "demo-xv-regina", "XV · Carnet de Baile"),
     ("crear_demo_xv_gira", "demo-xv-ximena", "XV · La Gira"),

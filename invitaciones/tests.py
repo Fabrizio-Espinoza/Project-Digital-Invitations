@@ -631,7 +631,7 @@ class MusicaYPruebaEnCelularTests(TestCase):
         salida = StringIO()
         call_command("crear_todos_los_demos", "--host", "192.168.100.18:8000", stdout=salida)
         self.assertIn("http://192.168.100.18:8000/invitaciones/demo-baby-pancito/", salida.getvalue())
-        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 15)
+        self.assertEqual(Invitacion.objects.filter(slug__startswith="demo-").count(), 16)
 
 
 # ---------------------------------------------------------------------------
@@ -954,7 +954,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 
 from .models import ImagenGaleria, Pedido
-from .pedidos import LADO_MAXIMO_FOTO
+from .fotos import LADO_MAXIMO_FOTO
 
 MEDIA_PRUEBAS = tempfile.mkdtemp(prefix="media-pruebas-")
 
@@ -1281,6 +1281,19 @@ MP3_FALSO = b"ID3\x04\x00\x00\x00\x00\x00\x00" + b"\x00" * 2000      # cabecera 
 M4A_FALSO = b"\x00\x00\x00\x20ftypM4A " + b"\x00" * 2000             # cabecera de un M4A
 
 
+def datos_del_admin(pagina, inv):
+    """Lo que manda el formulario de la invitación en el admin tal como está (sin archivos)."""
+    datos = {campo.html_name: campo.value() for campo in pagina.context["adminform"].form
+             if campo.value() is not None and campo.name not in Invitacion.ARCHIVOS_PROPIOS}
+    datos["contenido_extra"] = json.dumps(inv.contenido_extra)
+    datos["fecha_evento_0"], datos["fecha_evento_1"] = (
+        timezone.localtime(inv.fecha_evento).strftime("%Y-%m-%d"),
+        timezone.localtime(inv.fecha_evento).strftime("%H:%M:%S"))
+    for prefijo in ("galeria", "confirmaciones"):
+        datos.update({f"{prefijo}-TOTAL_FORMS": "0", f"{prefijo}-INITIAL_FORMS": "0"})
+    return datos
+
+
 @override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
 class CancionSubidaTests(TestCase):
     def setUp(self):
@@ -1334,14 +1347,7 @@ class CancionSubidaTests(TestCase):
         self.assertContains(pagina, 'name="musica_archivo"')
 
         # subir desde el formulario del admin: todos los campos + el archivo
-        datos = {campo.html_name: campo.value() for campo in pagina.context["adminform"].form
-                 if campo.value() is not None and campo.name != "musica_archivo"}
-        datos["contenido_extra"] = json.dumps(self.inv.contenido_extra)
-        datos["fecha_evento_0"], datos["fecha_evento_1"] = (
-            timezone.localtime(self.inv.fecha_evento).strftime("%Y-%m-%d"),
-            timezone.localtime(self.inv.fecha_evento).strftime("%H:%M:%S"))
-        for prefijo in ("galeria", "confirmaciones"):
-            datos.update({f"{prefijo}-TOTAL_FORMS": "0", f"{prefijo}-INITIAL_FORMS": "0"})
+        datos = datos_del_admin(pagina, self.inv)
         datos["musica_archivo"] = SimpleUploadedFile("cancion.mp3", MP3_FALSO)
         respuesta = self.client.post(url, datos)
         self.assertEqual(respuesta.status_code, 302, getattr(respuesta, "context", None)
@@ -1349,3 +1355,143 @@ class CancionSubidaTests(TestCase):
         self.inv.refresh_from_db()
         self.assertTrue(self.inv.musica_archivo.name.endswith(".mp3"))
         self.assertContains(self.client.get(url), "<audio controls")
+
+
+# ---------------------------------------------------------------------------
+# El Velo: la boda con foto de los novios en la portada
+# ---------------------------------------------------------------------------
+from .fotos import LADO_MAXIMO_PORTADA
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class DemoElVeloTests(TestCase):
+    def test_crear_demo_es_idempotente_y_la_portada_es_la_foto_bajo_el_velo(self):
+        call_command("crear_demo_boda_velo", stdout=StringIO())
+        carpeta = Path(Invitacion.objects.get(slug="demo-boda-renata-tomas").foto_portada.path).parent
+        fotos_antes = set(os.listdir(carpeta))
+        call_command("crear_demo_boda_velo", "--host", "http://192.168.1.50:8000", stdout=StringIO())
+
+        self.assertEqual(Plantilla.objects.filter(slug_tema="boda-velo-04").count(), 1)
+        invitacion = Invitacion.objects.get(slug="demo-boda-renata-tomas")
+        self.assertEqual(timezone.localtime(invitacion.fecha_evento).hour, 17)
+        # la foto se copió una sola vez (la segunda corrida no la duplica)
+        self.assertRegex(invitacion.foto_portada.name, r"^invitaciones/portadas/[0-9a-f]{12}\.jpg$")
+        self.assertEqual(set(os.listdir(carpeta)), fotos_antes)
+
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTemplateUsed(respuesta, "invitaciones/temas/boda-velo-04.html")
+        src = invitacion.foto_portada.url
+        # la foto (con los nombres de alt), el velo que nace oculto, la foto del fondo y el recuerdo
+        for fragmento in (f'class="portada-foto" src="{src}" alt="Renata &amp; Tomás"', 'id="velo" hidden',
+                          "Levantar el velo", f'--foto-fondo: url("{src}")', 'id="plantilla-recuerdo"',
+                          "rsvp:enviado", "Padrinos de velación", "El gran día"):
+            self.assertContains(respuesta, fragmento)
+        self.assertContains(respuesta, "/static/invitaciones/pwa/boda-velo-04-180.png")
+
+    def test_sin_foto_la_portada_es_el_monograma_y_no_hay_velo(self):
+        call_command("crear_demo_boda_velo", stdout=StringIO())
+        invitacion = Invitacion.objects.get(slug="demo-boda-renata-tomas")
+        invitacion.foto_portada = ""
+        invitacion.save()
+        respuesta = self.client.get(reverse("invitaciones:detalle", args=[invitacion.slug]))
+        self.assertContains(respuesta, 'class="portada-sin-foto"')
+        self.assertNotContains(respuesta, 'id="velo"')
+        self.assertNotContains(respuesta, "--foto-fondo: url(")
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class FotoPortadaTests(TestCase):
+    def setUp(self):
+        call_command("crear_demo_boda_velo", stdout=StringIO())
+        self.inv = Invitacion.objects.get(slug="demo-boda-renata-tomas")
+
+    def test_si_no_hay_portada_se_usa_la_primera_foto_de_la_galeria(self):
+        self.inv.foto_portada = ""
+        self.inv.save()
+        self.assertEqual(self.inv.foto_portada_src, "")
+        segunda = ImagenGaleria.objects.create(invitacion=self.inv, imagen=foto_de_prueba("b.jpg", 40, 40), orden=2)
+        primera = ImagenGaleria.objects.create(invitacion=self.inv, imagen=foto_de_prueba("a.jpg", 40, 40), orden=1)
+        self.assertEqual(Invitacion.objects.get(pk=self.inv.pk).foto_portada_src, primera.imagen.url)
+        self.assertNotEqual(primera.imagen.url, segunda.imagen.url)
+        # la que se sube para la portada manda sobre la galería
+        self.inv.foto_portada = foto_de_prueba("portada.jpg", 40, 60)
+        self.inv.save()
+        self.assertEqual(self.inv.foto_portada_src, self.inv.foto_portada.url)
+
+    def test_cambiar_la_portada_borra_la_foto_vieja(self):
+        vieja = Path(self.inv.foto_portada.path)
+        self.assertTrue(vieja.exists())
+        self.inv.foto_portada = foto_de_prueba("nueva.jpg", 40, 60)
+        self.inv.save()
+        self.assertFalse(vieja.exists())
+        self.assertTrue(Path(self.inv.foto_portada.path).exists())
+
+    def test_el_admin_achica_la_portada_y_le_quita_el_gps(self):
+        admin = User.objects.create_superuser("dueno", "d@ejemplo.mx", "clave-larga-123")
+        self.client.force_login(admin)
+        url = reverse("admin:invitaciones_invitacion_change", args=[self.inv.pk])
+        pagina = self.client.get(url)
+        self.assertContains(pagina, 'name="foto_portada"')
+        self.assertContains(pagina, f'<img src="{self.inv.foto_portada.url}"')     # vista previa
+
+        datos = datos_del_admin(pagina, self.inv)
+        datos["foto_portada"] = foto_de_prueba("IMG_2041.jpg", 2400, 3600)
+        respuesta = self.client.post(url, datos)
+        self.assertEqual(respuesta.status_code, 302, getattr(respuesta, "context", None)
+                         and respuesta.context["adminform"].form.errors)
+        self.inv.refresh_from_db()
+        self.assertNotIn("IMG_2041", self.inv.foto_portada.name)
+        with Image.open(self.inv.foto_portada.path) as guardada:
+            self.assertEqual(max(guardada.size), LADO_MAXIMO_PORTADA)
+            self.assertNotIn(0x8825, guardada.getexif())
+
+
+@override_settings(MEDIA_ROOT=MEDIA_PRUEBAS)
+class PedidoConFotoDePortadaTests(TestCase):
+    def setUp(self):
+        self.velo = Plantilla.objects.create(nombre="El Velo", tipo_evento="boda", slug_tema="boda-velo-04")
+        self.pedido = Pedido.objects.create(cliente="Renata", plantilla=self.velo, nivel="interactiva")
+        self.url = reverse("pedido", args=[self.pedido.token])
+
+    def datos(self, **cambios):
+        return {"anfitriones": "Renata & Tomás", "fecha": "2027-10-16", "hora": "17:30",
+                "recepcion_nombre": "Hacienda Las Jacarandas", **cambios}
+
+    def test_el_formulario_pide_la_foto_de_portada_solo_en_los_disenos_con_foto(self):
+        respuesta = self.client.get(self.url)
+        self.assertContains(respuesta, "Foto de portada")
+        self.assertContains(respuesta, 'name="foto_portada"')
+        otra = Pedido.objects.create(cliente="Sofía", nivel="interactiva", plantilla=Plantilla.objects.create(
+            nombre="Hotel Amor", tipo_evento="boda", slug_tema="boda-hotel-03"))
+        self.assertNotContains(self.client.get(reverse("pedido", args=[otra.token])), 'name="foto_portada"')
+
+    def test_la_portada_se_guarda_procesada_y_se_puede_cambiar(self):
+        respuesta = self.client.post(self.url, self.datos(foto_portada=foto_de_prueba("boda.jpg", 3000, 4500)))
+        self.assertRedirects(respuesta, f"{self.url}?listo=1")
+        inv = Pedido.objects.get(pk=self.pedido.pk).invitacion
+        primera = Path(inv.foto_portada.path)
+        with Image.open(primera) as guardada:
+            self.assertEqual(max(guardada.size), LADO_MAXIMO_PORTADA)
+            self.assertNotIn(0x8825, guardada.getexif())
+        self.assertEqual(inv.galeria.count(), 0)        # la portada no se mezcla con la galería
+        # la vista previa ya la enseña bajo el velo
+        self.assertContains(self.client.get(reverse("pedido_vista_previa", args=[self.pedido.token])),
+                            f'class="portada-foto" src="{inv.foto_portada.url}"')
+
+        # al volver al link la ve; corregir sin elegir otra la conserva; elegir otra reemplaza a la vieja
+        self.assertContains(self.client.get(self.url), "Tu foto actual")
+        self.client.post(self.url, self.datos(mensaje="Te esperamos"))
+        inv.refresh_from_db()
+        self.assertEqual(Path(inv.foto_portada.path), primera)
+        self.client.post(self.url, self.datos(foto_portada=foto_de_prueba("otra.jpg", 800, 1200)))
+        inv.refresh_from_db()
+        self.assertFalse(primera.exists())
+        self.assertTrue(Path(inv.foto_portada.path).exists())
+
+    def test_un_archivo_que_no_es_foto_no_se_guarda(self):
+        falso = SimpleUploadedFile("boda.jpg", b"no soy una foto", content_type="image/jpeg")
+        respuesta = self.client.post(self.url, self.datos(foto_portada=falso))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "no se pudo abrir")
+        self.assertIsNone(Pedido.objects.get(pk=self.pedido.pk).invitacion)

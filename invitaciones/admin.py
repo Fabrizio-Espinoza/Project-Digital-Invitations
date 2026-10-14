@@ -1,8 +1,11 @@
+from django import forms
 from django.contrib import admin, messages
+from django.core.files.uploadedfile import UploadedFile
 from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
 
+from .fotos import LADO_MAXIMO_PORTADA, preparar_foto
 from .models import Confirmacion, ImagenGaleria, Invitacion, Pedido, Plantilla
 
 
@@ -35,6 +38,20 @@ class PlantillaAdmin(admin.ModelAdmin):
     list_filter = ("tipo_evento",)
 
 
+class FormularioInvitacion(forms.ModelForm):
+    class Meta:
+        model = Invitacion
+        fields = "__all__"
+
+    def clean_foto_portada(self):
+        # la foto que subes aquí pasa por lo mismo que las del cliente:
+        # derecha, achicada y sin EXIF (las fotos de celular traen el GPS)
+        foto = self.cleaned_data.get("foto_portada")
+        if isinstance(foto, UploadedFile):
+            return preparar_foto(foto, LADO_MAXIMO_PORTADA)
+        return foto
+
+
 @admin.register(Invitacion)
 class InvitacionAdmin(admin.ModelAdmin):
     # list_display es lo que ves de un vistazo en la tabla general:
@@ -43,19 +60,29 @@ class InvitacionAdmin(admin.ModelAdmin):
     list_display = ("titulo_evento", "plantilla", "nivel", "fecha_evento", "activa", "total_confirmados")
     list_filter = ("nivel", "plantilla__tipo_evento", "activa")
     search_fields = ("titulo_evento", "anfitriones", "slug")
+    form = FormularioInvitacion
     readonly_fields = ("id", "slug", "creada_en", "panel_del_anfitrion", "resumen_votacion",
-                       "cancion_pedida", "escuchar_cancion")
+                       "cancion_pedida", "escuchar_cancion", "ver_portada")
     inlines = [ImagenGaleriaInline, ConfirmacionInline]
     # Secciones en el orden en que se atiende un pedido; lo técnico va al final y plegado
     fieldsets = (
         (None, {"fields": ("plantilla", "nivel", "activa", "slug", "panel_del_anfitrion")}),
         ("Evento", {"fields": ("titulo_evento", "anfitriones", "fecha_evento", "lugar_nombre",
                                "lugar_mapa_url", "mensaje_bienvenida", "fecha_limite_rsvp")}),
+        ("Foto de portada", {"fields": ("foto_portada", "ver_portada")}),
         ("Música", {"fields": ("cancion_pedida", "musica_archivo", "escuchar_cancion", "musica_url")}),
         ("Votación", {"fields": ("resumen_votacion",)}),
         ("Detalles del tipo de evento (avanzado)", {"classes": ("collapse",), "fields": ("contenido_extra",)}),
         ("Registro", {"classes": ("collapse",), "fields": ("id", "creada_en")}),
     )
+
+    @admin.display(description="Así se ve")
+    def ver_portada(self, obj):
+        src = obj.foto_portada_src if obj and not obj._state.adding else ""
+        if not src:
+            return "Sin foto todavía."
+        nota = "" if obj.foto_portada else " (es la primera de la galería)"
+        return format_html('<img src="{}" alt="" style="max-height: 220px; border-radius: 8px">{}', src, nota)
 
     @admin.display(description="Canción que pidió el cliente")
     def cancion_pedida(self, obj):

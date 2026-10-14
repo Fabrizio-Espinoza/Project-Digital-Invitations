@@ -1,0 +1,1532 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  EL VELO — cuarta plantilla de boda. La primera con foto de los novios en la portada.
+
+  Concepto: el velo es el símbolo más emotivo de una boda. Está el momento en que
+  el novio levanta el velo de la novia, y en la boda católica mexicana está la
+  velación, cuando los padrinos cubren a los dos con el mismo velo. Aquí la
+  invitación llega con la foto de la pareja detrás de un velo de tul; el invitado
+  lo levanta con un toque y los descubre.
+
+    Portada ....... la foto de los novios a pantalla completa bajo un velo de tul
+                    (desenfoque + red de tul + pliegues que respiran + orilla de
+                    encaje). "Levantar el velo" lo sube, la foto se enfoca y
+                    arranca la música: ese toque es la interacción que el
+                    navegador exige para el audio. El velo nace con hidden: sin
+                    JS se ve la foto directo.
+    Fondo ......... la misma foto, fija y muy desenfocada detrás de toda la
+                    invitación, como vista a través del tul: cada invitación toma
+                    los colores de su propia foto.
+    El gran día ... la fecha en la composición clásica de boda
+                    (SÁBADO | 12 | 5:30 PM), lugares, vestimenta como muestra de
+                    tela con orilla picada, countdown y botones.
+    Programa ...... familia y padrinos, itinerario como línea del tiempo de hilo.
+    Galería ....... fotos en arcos de parroquia; cada una se descubre de su
+                    propio velo al llegar a ella.
+    RSVP .......... "¿Nos acompañas?"; al confirmar con "Sí", el invitado recibe
+                    un recuerdo: una foto instantánea de los novios con su nombre
+                    que se revela poco a poco, como las de verdad.
+    Música ........ un disco de tul que ondea mientras suena.
+
+  Distinta de Terracota (marco floral ilustrado, durazno), de Cobalto (revista,
+  azul, tipográfica) y de Hotel Amor (verde botella, hotel): aquí la protagonista
+  es la foto. Estética de fotografía fine art: marfil · tinta cálida · malva (60-30-10).
+  Tipografía: Newsreader (serif de libro con eje óptico; la itálica ligera para los
+  nombres) + Tenor Sans (mayúsculas espaciadas, de papelería fina). Ambas OFL.
+  Todo el arte (tul, encaje, arcos, recuerdo) es CSS/SVG propio. Sin foto, la
+  portada se arma con el monograma de la pareja y no hay velo que levantar.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Nos casamos{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+{% if foto_portada %}
+<img class="portada-foto" src="{{ foto_portada }}" alt="{{ invitacion.anfitriones }}" fetchpriority="high" decoding="async">
+<div class="portada-sombra" aria-hidden="true"></div>
+
+<!-- El velo: nace oculto (sin JS la foto se ve directo); el JS lo muestra y lo levanta al tocarlo -->
+<div class="velo" id="velo" hidden>
+    <div class="velo-contenido">
+        <p class="velo-kicker">Tienes una invitación</p>
+        <p class="velo-iniciales" data-iniciales aria-hidden="true">{{ invitacion.anfitriones|slice:":1" }}</p>
+        <p class="velo-fecha">{{ invitacion.fecha_evento|date:"d · m · Y" }}</p>
+        <button type="button" class="velo-boton">Levantar el velo</button>
+    </div>
+</div>
+{% else %}
+<!-- sin foto: el monograma de la pareja sobre tul marfil -->
+<div class="portada-sin-foto" aria-hidden="true">
+    <span class="sin-foto-iniciales" data-iniciales>{{ invitacion.anfitriones|slice:":1" }}</span>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block hero_extra %}
+<p class="fecha-portada"><span>{{ invitacion.fecha_evento|date:"l" }}</span>{{ invitacion.fecha_evento|date:"d · m · Y" }}</p>
+<span class="desliza" aria-hidden="true">Desliza</span>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="info-cabecera">
+    <p class="kicker">Guarda la fecha</p>
+    <h2 class="titulo">El gran día</h2>
+</header>
+<!-- aquí el JS acomoda el mensaje de bienvenida (sin JS se queda en la portada) -->
+<blockquote class="cita" hidden></blockquote>
+<!-- la composición clásica de fecha de boda: SÁBADO | 12 | 5:30 PM -->
+<div class="fecha-grande">
+    <span class="fecha-lado">{{ invitacion.fecha_evento|date:"l" }}</span>
+    <span class="fecha-dia">{{ invitacion.fecha_evento|date:"j" }}</span>
+    <span class="fecha-lado">{{ invitacion.fecha_evento|date:"g:i A" }}</span>
+    <span class="fecha-mes">{{ invitacion.fecha_evento|date:"F" }} · {{ invitacion.fecha_evento|date:"Y" }}</span>
+</div>
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- el recuerdo que recibe quien confirma con "Sí" (el JS lo copia y le pone el nombre) -->
+<template id="plantilla-recuerdo">
+    <figure class="recuerdo">
+        <div class="recuerdo-foto">
+            {% if foto_portada %}<img src="{{ foto_portada }}" alt="">{% else %}<span class="recuerdo-iniciales" data-iniciales>{{ invitacion.anfitriones|slice:":1" }}</span>{% endif %}
+        </div>
+        <figcaption>
+            <span class="recuerdo-para"></span>
+            <span class="recuerdo-pie">{{ invitacion.anfitriones }} · {{ invitacion.fecha_evento|date:"d.m.Y" }}</span>
+        </figcaption>
+    </figure>
+    <p class="recuerdo-nota" aria-live="polite">Tu recuerdo se está revelando…</p>
+</template>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300..500;1,6..72,300..500&family=Tenor+Sans&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 marfil · 30 tinta cálida · 10 malva */
+        --marfil: #F7F3EE;
+        --papel: #FCFAF7;
+        --tinta: #2A2421;
+        --tinta-suave: rgba(42, 36, 33, 0.68);
+        --linea: rgba(42, 36, 33, 0.16);
+        --malva: #A27E86;
+        --malva-oscuro: #7F5F67;
+        --malva-claro: #E4D3D5;
+        --noche: #231D1B;
+
+        --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+        --sans: 'Tenor Sans', 'Optima', 'Gill Sans', sans-serif;
+
+        --margen: clamp(1.4rem, 6vw, 2.5rem);
+        --ancho: 28rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+        /* la foto de fondo (si hay); el <style> de abajo la llena */
+        --foto-fondo: none;
+        /* red de tul: dos tramas finas a ±60° dibujan los hexágonos del tul */
+        --tul: repeating-linear-gradient(60deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 6px),
+               repeating-linear-gradient(-60deg, rgba(255, 255, 255, 0.2) 0 1px, transparent 1px 6px);
+        /* orilla de encaje bordada en hilo malva: festón, ojal y piquitos */
+        --encaje: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='14' viewBox='0 0 24 14'%3E%3Cg fill='none' stroke='%23A27E86' stroke-opacity='.75' stroke-width='.8'%3E%3Cpath d='M0 1.2H24'/%3E%3Cpath d='M0 1.2C3 12.5 21 12.5 24 1.2' fill='%23A27E86' fill-opacity='.08'/%3E%3Ccircle cx='12' cy='5' r='1.9'/%3E%3C/g%3E%3Cg fill='%23A27E86' fill-opacity='.75'%3E%3Ccircle cx='0' cy='3.6' r='.8'/%3E%3Ccircle cx='24' cy='3.6' r='.8'/%3E%3Ccircle cx='12' cy='10.7' r='.7'/%3E%3C/g%3E%3C/svg%3E");
+        /* la misma orilla en blanco, para el velo */
+        --encaje-blanco: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='26' viewBox='0 0 56 26'%3E%3Cg fill='%23fff' fill-opacity='.2' stroke='%23fff' stroke-opacity='.8' stroke-width='.7'%3E%3Ccircle cx='14' cy='9.5' r='3'/%3E%3Ccircle cx='17.8' cy='12.3' r='3'/%3E%3Ccircle cx='16.4' cy='16.7' r='3'/%3E%3Ccircle cx='11.6' cy='16.7' r='3'/%3E%3Ccircle cx='10.2' cy='12.3' r='3'/%3E%3Cellipse cx='34' cy='11.5' rx='4.6' ry='2' transform='rotate(-25 34 11.5)'/%3E%3Cellipse cx='43' cy='15' rx='4.6' ry='2' transform='rotate(25 43 15)'/%3E%3C/g%3E%3Ccircle cx='14' cy='13.5' r='1.5' fill='%23fff' fill-opacity='.9'/%3E%3Cpath d='M23 14Q38.5 4 54 14' fill='none' stroke='%23fff' stroke-opacity='.6' stroke-width='.6'/%3E%3Cg fill='%23fff' fill-opacity='.85'%3E%3Ccircle cx='2' cy='24' r='.9'/%3E%3Ccircle cx='28' cy='24' r='.9'/%3E%3Ccircle cx='54' cy='24' r='.9'/%3E%3C/g%3E%3C/svg%3E");
+        /* las pantallas claras: marfil translúcido sobre la foto desenfocada */
+        --pantalla-clara: var(--encaje) top center / 1.5rem auto repeat-x, var(--tul),
+                          linear-gradient(rgba(247, 243, 238, 0.8), rgba(247, 243, 238, 0.88));
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    html {
+        scroll-snap-type: y mandatory;
+        background: var(--marfil);
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        color: var(--tinta);
+        font: 400 1.05rem/1.55 var(--serif);
+        font-optical-sizing: auto;
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(162, 126, 134, 0.2);
+    }
+    /* la foto de los novios, fija y desenfocada detrás de toda la invitación,
+       como vista a través del tul (fixed: background-attachment no sirve en iPhone) */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: -3rem;
+        z-index: -1;
+        background: var(--foto-fondo) center 35% / cover no-repeat, var(--marfil);
+        filter: blur(28px) saturate(0.8) brightness(1.04);
+    }
+    ::selection {
+        background: var(--malva-claro);
+        color: var(--tinta);
+    }
+    .kicker {
+        margin: 0;
+        font: 400 0.7rem/1.4 var(--sans);
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .titulo {
+        margin: 0.15rem 0 0;
+        font: italic 300 clamp(2.4rem, 11vw, 3.1rem)/1.05 var(--serif);
+        letter-spacing: -0.01em;
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-regalos,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (un disco de tul que ondea)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        display: grid;
+        place-items: center;
+        width: 3.1rem;
+        height: 3.1rem;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.85);
+        border-radius: 50%;
+        background: var(--tul), rgba(247, 243, 238, 0.62);
+        color: var(--tinta);
+        cursor: pointer;
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        box-shadow: 0 8px 20px -8px rgba(42, 36, 33, 0.45);
+        transition: opacity 0.6s ease;
+    }
+    .boton-musica svg {
+        grid-area: 1 / 1;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    /* mientras suena, dos ondas de tul salen del disco */
+    .boton-musica::before,
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .boton-musica.sonando::before {
+        animation: onda 2.6s ease-out infinite;
+    }
+    .boton-musica.sonando::after {
+        animation: onda 2.6s ease-out 1.3s infinite;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--malva);
+        outline-offset: 4px;
+    }
+    /* con el velo puesto, el botón espera: levantar el velo ya arranca la música */
+    body:has(.hero.con-velo:not(.descubierta)) .boton-musica {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada:not(.hero) {
+        opacity: 0;
+        transition: opacity 0.9s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.info-cabecera, .cita, .fecha-grande, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos) {
+        animation: aparecer 0.9s var(--curva) var(--retraso, 0s) both;
+    }
+    /* el texto de la portada aparece al cargar o, si hay velo, al levantarlo */
+    .hero.visible:not(.con-velo) .hero-contenido > *,
+    .hero.descubierta .hero-contenido > * {
+        animation: aparecer 1.1s var(--curva) var(--retraso, 0s) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.9rem; }
+    }
+    @keyframes onda {
+        from { opacity: 0.9; scale: 1; }
+        to { opacity: 0; scale: 1.7; }
+    }
+    /* los pliegues del tul se mecen despacio, como si respirara */
+    @keyframes pliegues {
+        to { background-position: 0 0, 0 0, 2.8rem 0, 0 0; }
+    }
+    /* se toma el velo (un tirón suave hacia abajo) y se levanta */
+    @keyframes levantar {
+        0% { translate: 0 0; }
+        16% { translate: 0 1.4%; }
+        75% { opacity: 1; }
+        100% { translate: 0 -104%; opacity: 0; }
+    }
+    @keyframes halo {
+        0% { box-shadow: 0 0 0 0 rgba(42, 36, 33, 0.28); }
+        70%, 100% { box-shadow: 0 0 0 0.9rem rgba(42, 36, 33, 0); }
+    }
+    @keyframes bajar {
+        0%, 100% { scale: 1 0.35; opacity: 0.4; transform-origin: top; }
+        50% { scale: 1 1; opacity: 1; }
+    }
+    /* la foto instantánea se revela: de un blanco lechoso a los colores */
+    @keyframes revelar {
+        from { filter: brightness(2.1) contrast(0.35) saturate(0) sepia(0.3) blur(1.5px); }
+        to { filter: none; }
+    }
+    @keyframes caer {
+        from { opacity: 0; translate: 0 -1.6rem; rotate: 5deg; }
+    }
+
+    /* ============================================
+       PORTADA: la foto de los novios
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        align-items: center;
+        padding: 3rem var(--margen) calc(4.6rem + env(safe-area-inset-bottom));
+        color: var(--marfil);
+        overflow: hidden;
+        isolation: isolate;
+    }
+    .portada-foto {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 35%;
+        transition: scale 2.6s var(--curva), filter 2.2s ease;
+    }
+    /* sombra abajo para que los nombres se lean sobre cualquier foto */
+    .portada-sombra {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+            linear-gradient(to top, rgba(26, 20, 18, 0.82), rgba(26, 20, 18, 0.45) 30%, rgba(26, 20, 18, 0) 58%),
+            linear-gradient(rgba(26, 20, 18, 0.25), rgba(26, 20, 18, 0) 18%);
+    }
+    .hero-contenido {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .hero .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 0;
+        font: 400 0.72rem/1.4 var(--sans);
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        text-shadow: 0 1px 10px rgba(0, 0, 0, 0.35);
+    }
+    .hero .eyebrow::before,
+    .hero .eyebrow::after {
+        content: "";
+        width: 1.6rem;
+        height: 1px;
+        background: currentColor;
+        opacity: 0.7;
+    }
+    .nombres {
+        --retraso: 0.15s;
+        width: 100%;
+        margin: 0.5rem 0 0.7rem;
+        font: italic 300 clamp(3rem, 15vw, 4.4rem)/0.98 var(--serif);
+        font-variation-settings: "opsz" 72;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        text-shadow: 0 2px 24px rgba(0, 0, 0, 0.3);
+    }
+    /* el JS separa los nombres en renglones: Renata / & / Tomás */
+    .nombres .nombre {
+        display: block;
+        white-space: nowrap;
+    }
+    .nombres .amp {
+        display: block;
+        margin: 0.08em 0 0.02em;
+        font: 400 0.42em/1 var(--sans);
+        letter-spacing: 0.3em;
+        color: var(--malva-claro);
+    }
+    /* sin JS el mensaje se queda aquí (con JS se muda a "El gran día") */
+    .hero .mensaje {
+        --retraso: 0.25s;
+        max-width: 30ch;
+        margin: 0 0 0.8rem;
+        font: italic 400 1rem/1.5 var(--serif);
+        opacity: 0.9;
+    }
+    .fecha-portada {
+        --retraso: 0.3s;
+        display: flex;
+        gap: 0.7rem;
+        margin: 0;
+        font: 400 0.78rem/1.4 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+    }
+    .fecha-portada span::after {
+        content: "·";
+        margin-left: 0.7rem;
+        opacity: 0.6;
+    }
+    .desliza {
+        --retraso: 0.6s;
+        position: absolute;
+        left: 50%;
+        bottom: calc(-3.6rem - env(safe-area-inset-bottom) / 2);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        translate: -50% 0;
+        font: 400 0.58rem/1 var(--sans);
+        letter-spacing: 0.35em;
+        text-transform: uppercase;
+        opacity: 0.8;
+    }
+    .desliza::after {
+        content: "";
+        width: 1px;
+        height: 1.4rem;
+        background: currentColor;
+        animation: bajar 2.2s ease-in-out infinite;
+    }
+
+    /* --- Sin foto: monograma sobre tul marfil ---
+       el monograma va en el flujo (no encima): queda arriba de los nombres
+       sin importar qué tan largos sean */
+    .hero:has(.portada-sin-foto) {
+        justify-content: center;
+        gap: 1.6rem;
+        padding-top: 4rem;
+        background: var(--pantalla-clara);
+        color: var(--tinta);
+    }
+    .hero:has(.portada-sin-foto) .eyebrow,
+    .hero:has(.portada-sin-foto) .nombres,
+    .hero:has(.portada-sin-foto) .fecha-portada {
+        text-shadow: none;
+    }
+    .hero:has(.portada-sin-foto) .nombres .amp {
+        color: var(--malva);
+    }
+    .sin-foto-iniciales {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 7.4rem;
+        aspect-ratio: 3 / 4;
+        border: 1px solid var(--malva);
+        border-radius: 999px;
+        outline: 1px solid var(--linea);
+        outline-offset: 6px;
+        font: italic 300 2.9rem/1 var(--serif);
+        font-variation-settings: "opsz" 72;
+        color: var(--tinta);
+    }
+    [data-iniciales] i {
+        margin: 0 0.08em;
+        font-size: 0.6em;
+        color: var(--malva);
+    }
+
+    /* --- El velo de tul sobre la foto --- */
+    .hero.con-velo .portada-foto {
+        scale: 1.07;
+        filter: saturate(0.85);
+    }
+    .hero.descubierta .portada-foto {
+        scale: 1;
+        filter: none;
+    }
+    .hero.con-velo:not(.descubierta) .hero-contenido > * {
+        opacity: 0;
+    }
+    .velo {
+        --feston: 1.7rem;
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        display: grid;
+        place-items: center;
+        padding: 2rem var(--margen) 4rem;
+        color: var(--tinta);
+        cursor: pointer;
+        /* tul + pliegues de luz + velo marfil; el desenfoque es de lo que hay detrás */
+        background:
+            var(--tul),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.3) 17%, rgba(255, 255, 255, 0.06) 32%,
+                            rgba(255, 255, 255, 0.34) 51%, rgba(255, 255, 255, 0.05) 69%, rgba(255, 255, 255, 0.28) 87%, rgba(255, 255, 255, 0.08)),
+            rgba(247, 243, 238, 0.4);
+        background-size: auto, auto, 120% 100%, auto;
+        -webkit-backdrop-filter: blur(9px) saturate(0.9) brightness(1.05);
+        backdrop-filter: blur(9px) saturate(0.9) brightness(1.05);
+        /* la orilla de abajo termina en festón, como el encaje del velo */
+        -webkit-mask:
+            radial-gradient(circle at 50% 0, #000 calc(var(--feston) / 2 - 0.5px), transparent calc(var(--feston) / 2)) bottom / var(--feston) calc(var(--feston) / 2) repeat-x,
+            linear-gradient(#000 0 0) top / 100% calc(100% - var(--feston) / 2 + 1px) no-repeat;
+        mask:
+            radial-gradient(circle at 50% 0, #000 calc(var(--feston) / 2 - 0.5px), transparent calc(var(--feston) / 2)) bottom / var(--feston) calc(var(--feston) / 2) repeat-x,
+            linear-gradient(#000 0 0) top / 100% calc(100% - var(--feston) / 2 + 1px) no-repeat;
+        animation: pliegues 9s ease-in-out infinite alternate;
+    }
+    /* la cenefa de encaje bordado justo arriba del festón */
+    .velo::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(var(--feston) / 2 - 2px);
+        height: 1.75rem;
+        background: var(--encaje-blanco) left bottom / auto 100% repeat-x;
+        pointer-events: none;
+    }
+    .velo-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 3rem 2.6rem;
+        /* un claro de luz detrás del texto: se lee aunque la foto sea oscura */
+        background: radial-gradient(closest-side, rgba(247, 243, 238, 0.78), rgba(247, 243, 238, 0.4) 60%, rgba(247, 243, 238, 0));
+        transition: opacity 0.4s ease;
+    }
+    .velo-kicker,
+    .velo-fecha {
+        margin: 0;
+        font: 400 0.7rem/1.4 var(--sans);
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+    }
+    .velo-iniciales {
+        margin: 0.7rem 0 0.4rem;
+        font: italic 300 4.6rem/1 var(--serif);
+        font-variation-settings: "opsz" 72;
+    }
+    .velo-boton {
+        margin-top: 1.6rem;
+        padding: 0.95rem 1.6rem 0.85rem;
+        border: 1px solid var(--tinta);
+        border-radius: 999px;
+        background: rgba(252, 250, 247, 0.55);
+        color: var(--tinta);
+        font: 400 0.72rem/1 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        cursor: pointer;
+        animation: halo 2.6s ease-out 1.2s infinite;
+    }
+    .velo-boton:focus-visible {
+        outline: 2px solid var(--malva);
+        outline-offset: 4px;
+    }
+    .velo.levantandose {
+        pointer-events: none;
+        animation: levantar 1.8s cubic-bezier(0.55, 0, 0.25, 1) forwards;
+    }
+    .velo.levantandose .velo-contenido {
+        opacity: 0;
+    }
+
+    /* ============================================
+       PANTALLA INFO: el gran día
+       ============================================ */
+    .pantalla-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.15rem;
+        padding: 3rem var(--margen) 4.8rem;
+        background: var(--pantalla-clara);
+    }
+    .marco-decorativo-info,
+    .pantalla-info .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.15rem;
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .cita {
+        --retraso: 0.1s;
+        position: relative;
+        margin: 0;
+        padding-top: 1.4rem;
+    }
+    .cita::before {
+        content: "“";
+        position: absolute;
+        top: -0.9rem;
+        left: 50%;
+        translate: -50% 0;
+        font: italic 300 3.6rem/1 var(--serif);
+        color: var(--malva);
+    }
+    .cita .mensaje {
+        margin: 0;
+        font: italic 400 1.08rem/1.55 var(--serif);
+        color: var(--tinta-suave);
+        text-wrap: pretty;
+    }
+    /* SÁBADO | 12 | 5:30 PM, con JUNIO · 2027 abajo */
+    .fecha-grande {
+        --retraso: 0.2s;
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        width: 100%;
+        max-width: 21rem;
+    }
+    .fecha-lado {
+        padding: 0.5rem 0 0.4rem;
+        border-block: 1px solid var(--tinta);
+        font: 400 0.74rem/1.2 var(--sans);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .fecha-dia {
+        padding: 0 1rem;
+        font: 300 4.6rem/1 var(--serif);
+        font-variation-settings: "opsz" 72;
+        font-variant-numeric: lining-nums;
+    }
+    .fecha-mes {
+        grid-column: 1 / -1;
+        margin-top: 0.3rem;
+        font: 400 0.8rem/1.4 var(--sans);
+        letter-spacing: 0.4em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    /* la fecha del motor se reemplaza por la composición de arriba */
+    .pantalla-info .detalles {
+        display: none;
+    }
+    .lugares {
+        --retraso: 0.3s;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        gap: 1rem;
+        width: 100%;
+    }
+    .lugar-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .lugar-item + .lugar-item {
+        border-left: 1px solid var(--linea);
+        padding-left: 1rem;
+    }
+    .detalle-label {
+        font: 400 0.64rem/1.4 var(--sans);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .detalle-valor {
+        font: italic 400 1.15rem/1.3 var(--serif);
+        text-wrap: balance;
+    }
+    .lugar-direccion {
+        font-size: 0.88rem;
+        color: var(--tinta-suave);
+    }
+    .vestimenta {
+        --retraso: 0.35s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+    }
+    /* muestra de tela: orillas picadas arriba y abajo (tijera zigzag) y pespunte */
+    .vestimenta-color {
+        width: 2.1rem;
+        height: 2.3rem;
+        outline: 1px dashed rgba(255, 255, 255, 0.85);
+        outline-offset: -5px;
+        rotate: -4deg;
+        -webkit-mask:
+            conic-gradient(from 135deg at top, #000 90deg, transparent 0) top / 0.5rem 0.25rem repeat-x,
+            conic-gradient(from -45deg at bottom, #000 90deg, transparent 0) bottom / 0.5rem 0.25rem repeat-x,
+            linear-gradient(#000 0 0) center / 100% calc(100% - 0.5rem) no-repeat;
+        mask:
+            conic-gradient(from 135deg at top, #000 90deg, transparent 0) top / 0.5rem 0.25rem repeat-x,
+            conic-gradient(from -45deg at bottom, #000 90deg, transparent 0) bottom / 0.5rem 0.25rem repeat-x,
+            linear-gradient(#000 0 0) center / 100% calc(100% - 0.5rem) no-repeat;
+    }
+    .vestimenta-color:nth-child(even) {
+        rotate: 5deg;
+    }
+    .countdown {
+        --retraso: 0.4s;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        width: 100%;
+        max-width: 21rem;
+    }
+    .countdown::before {
+        content: "Faltan";
+        grid-column: 1 / -1;
+        margin-bottom: 0.2rem;
+        font: italic 400 1rem/1.3 var(--serif);
+        color: var(--tinta-suave);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .countdown div + div {
+        border-left: 1px solid var(--linea);
+    }
+    .countdown span {
+        font: 300 2.3rem/1.1 var(--serif);
+        font-variant-numeric: lining-nums tabular-nums;
+    }
+    .countdown label {
+        font: 400 0.58rem/1.4 var(--sans);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .acciones-rapidas {
+        --retraso: 0.5s;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.6rem;
+        width: 100%;
+        margin-top: 0.3rem;
+    }
+    .accion-icono {
+        flex: 0 1 calc(50% - 0.3rem);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        min-height: 2.9rem;
+        padding: 0.45rem 0.9rem 0.4rem 0.5rem;
+        border: 1px solid rgba(42, 36, 33, 0.3);
+        border-radius: 999px;
+        background: rgba(252, 250, 247, 0.55);
+        color: var(--tinta);
+        text-decoration: none;
+        font: 400 0.66rem/1.2 var(--sans);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        transition: background 0.25s ease, border-color 0.25s ease;
+    }
+    .accion-icono:hover {
+        border-color: var(--tinta);
+        background: var(--papel);
+    }
+    .accion-icono:focus-visible {
+        outline: 2px solid var(--malva);
+        outline-offset: 3px;
+    }
+    .icono-circulo {
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: 50%;
+        background: var(--malva-claro);
+    }
+    .icono-svg {
+        width: 1.05rem;
+        height: 1.05rem;
+    }
+
+    /* ============================================
+       PANTALLA EXTRA: familia, programa y regalos
+       ============================================ */
+    .pantalla-extra {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 1.6rem;
+        padding: 3rem var(--margen) 4.8rem;
+        background: var(--pantalla-clara);
+    }
+    .pantalla-extra > * {
+        width: 100%;
+        max-width: var(--ancho);
+    }
+    .familia {
+        --retraso: 0.05s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.85rem;
+    }
+    .familia::before {
+        content: "Con la bendición de";
+        font: italic 400 1.05rem/1.3 var(--serif);
+        color: var(--tinta-suave);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+    }
+    /* entre grupo y grupo, una puntada de hilo */
+    .familia-grupo + .familia-grupo::before {
+        content: "";
+        width: 1.6rem;
+        height: 1px;
+        margin: 0 auto 0.85rem;
+        background: var(--malva);
+    }
+    .familia-rol {
+        font: 400 0.62rem/1.4 var(--sans);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .familia-nombres {
+        font: italic 400 1.18rem/1.3 var(--serif);
+        text-wrap: balance;
+    }
+    /* el itinerario como un hilo con puntadas: hora | puntada | momento */
+    .itinerario {
+        --retraso: 0.15s;
+    }
+    .itinerario h3 {
+        margin: 0 0 0.6rem;
+        font: italic 300 2.2rem/1.1 var(--serif);
+    }
+    .itinerario-item {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr 1.6rem 1.3fr;
+        align-items: center;
+        min-height: 2.6rem;
+    }
+    .itinerario-item::before {
+        content: "";
+        grid-area: 1 / 2;
+        justify-self: center;
+        width: 1px;
+        height: 100%;
+        background: var(--malva);
+        opacity: 0.6;
+    }
+    .itinerario-item:first-of-type::before {
+        height: 50%;
+        align-self: end;
+    }
+    .itinerario-item:last-of-type::before {
+        height: 50%;
+        align-self: start;
+    }
+    .itinerario-item::after {
+        content: "";
+        grid-area: 1 / 2;
+        justify-self: center;
+        width: 0.5rem;
+        height: 0.5rem;
+        border: 1px solid var(--malva-oscuro);
+        border-radius: 50%;
+        background: var(--marfil);
+    }
+    .itinerario-hora {
+        grid-area: 1 / 1;
+        padding-right: 0.3rem;
+        text-align: right;
+        font: 400 0.74rem/1.3 var(--sans);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        grid-area: 1 / 3;
+        padding: 0.35rem 0 0.35rem 0.3rem;
+        text-align: left;
+        font: italic 400 1.08rem/1.3 var(--serif);
+    }
+    .boton-mesa-regalos {
+        --retraso: 0.25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 3rem;
+        border: 1px solid var(--tinta);
+        border-radius: 999px;
+        color: var(--tinta);
+        text-decoration: none;
+        font: 400 0.72rem/1 var(--sans);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        transition: background 0.25s ease, color 0.25s ease;
+    }
+    .boton-mesa-regalos:hover {
+        background: var(--tinta);
+        color: var(--marfil);
+    }
+    .boton-mesa-regalos:focus-visible {
+        outline: 2px solid var(--malva);
+        outline-offset: 3px;
+    }
+    .nota-ninos {
+        --retraso: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 0;
+        font: italic 400 0.98rem/1.4 var(--serif);
+        color: var(--tinta-suave);
+    }
+    .nota-ninos::before,
+    .nota-ninos::after {
+        content: "";
+        flex: 1;
+        min-width: 1.2rem;
+        height: 1px;
+        background: var(--linea);
+    }
+
+    /* --- Regalos con lista o lluvia de sobres (si los piden) --- */
+    .pantalla-regalos {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem var(--margen) 4.8rem;
+        background: var(--pantalla-clara);
+    }
+    .pantalla-regalos .pantalla-contenido {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .regalos-titulo {
+        margin: 0;
+        font: italic 300 2.4rem/1.1 var(--serif);
+    }
+    .regalos-intro {
+        margin: 0;
+        font-style: italic;
+        color: var(--tinta-suave);
+    }
+    .regalo-tarjeta {
+        padding: 1.1rem 1rem;
+        border: 1px solid var(--linea);
+        background: rgba(252, 250, 247, 0.6);
+    }
+    .regalo-icono {
+        display: none;   /* sin emojis: el encaje ya decora */
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.5rem;
+        font: 400 0.72rem/1.4 var(--sans);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+    }
+    .mesas-lista {
+        display: flex;
+        flex-direction: column;
+        gap: 0.8rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .mesa-nombre {
+        font: italic 400 1.15rem/1.3 var(--serif);
+    }
+    .mesa-codigo {
+        font-size: 0.9rem;
+        color: var(--tinta-suave);
+    }
+    .mesa-botones {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 0.55rem 0.9rem 0.5rem;
+        border: 1px solid var(--tinta);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--tinta);
+        text-decoration: none;
+        font: 400 0.62rem/1 var(--sans);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+    .boton-copiar.copiado {
+        background: var(--tinta);
+        color: var(--marfil);
+    }
+
+    /* ============================================
+       GALERIA: arcos de parroquia
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.1rem 0.9rem;
+        align-content: center;
+        padding: 3rem max(var(--margen), (100% - 30rem) / 2) 4.8rem;
+        background: var(--tul), linear-gradient(rgba(35, 29, 27, 0.84), rgba(35, 29, 27, 0.9));
+        color: var(--marfil);
+    }
+    /* kicker + titulo con los dos pseudo-elementos; order los sube antes de las fotos */
+    .galeria::before {
+        content: "Antes del sí";
+        order: -2;
+        grid-column: 1 / -1;
+        margin-bottom: -0.9rem;
+        font: 400 0.7rem/1.4 var(--sans);
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--malva-claro);
+    }
+    .galeria::after {
+        content: "Nuestra historia";
+        order: -1;
+        grid-column: 1 / -1;
+        margin-bottom: 0.3rem;
+        font: italic 300 clamp(2.4rem, 11vw, 3rem)/1.1 var(--serif);
+    }
+    /* el arco: medio círculo arriba (999px se ajusta solo al ancho) y orilla doble */
+    .galeria img,
+    .arco {
+        display: block;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        border-radius: 999px 999px 0 0;
+        outline: 1px solid rgba(247, 243, 238, 0.45);
+        outline-offset: 4px;
+    }
+    .galeria img {
+        object-fit: cover;
+        background: rgba(247, 243, 238, 0.08);
+    }
+    .galeria > :first-child {
+        grid-column: 1 / -1;
+        width: 78%;
+        justify-self: center;
+    }
+    /* si sobra una foto al final, va sola y al centro */
+    .galeria > :last-child:nth-child(even) {
+        grid-column: 1 / -1;
+        width: 60%;
+        justify-self: center;
+    }
+    /* con JS cada foto trae su propio velo, que se levanta al llegar a ella */
+    .arco {
+        position: relative;
+        overflow: hidden;
+    }
+    .arco img {
+        height: 100%;
+        border-radius: 0;
+        outline: 0;
+    }
+    .arco::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--tul), rgba(247, 243, 238, 0.55);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        transition: translate 1.5s cubic-bezier(0.55, 0, 0.25, 1) var(--retraso, 0s);
+    }
+    .arco.descubierta::after {
+        translate: 0 -101%;
+    }
+
+    /* ============================================
+       RSVP: ¿nos acompañas?
+       ============================================ */
+    .rsvp {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 3rem var(--margen) 5rem;
+        background: var(--pantalla-clara);
+    }
+    .rsvp > * {
+        width: 100%;
+        max-width: var(--ancho);
+        margin-inline: auto;
+    }
+    .rsvp::before {
+        content: "R. S. V. P.";
+        font: 400 0.7rem/1.4 var(--sans);
+        letter-spacing: 0.32em;
+        color: var(--malva-oscuro);
+    }
+    .rsvp h2 {
+        margin: 0.2rem auto 0.5rem;
+        font: italic 300 clamp(2.4rem, 11vw, 3.1rem)/1.05 var(--serif);
+        text-wrap: balance;
+    }
+    .rsvp p {
+        margin: 0 auto;
+        color: var(--tinta-suave);
+    }
+    #total-confirmados {
+        font: italic 400 1.3rem/1 var(--serif);
+        color: var(--tinta);
+    }
+    /* Django escribe "10 de Abril": todo a minuscula y solo la primera en mayuscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.2rem;
+        font-size: 0.92rem;
+        font-style: italic;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin: 1.3rem auto 0;
+        padding: 1.4rem 1.2rem 1.3rem;
+        border: 1px solid rgba(162, 126, 134, 0.45);
+        background: rgba(252, 250, 247, 0.82);
+        text-align: left;
+        box-shadow: 0 18px 30px -22px rgba(42, 36, 33, 0.5);
+    }
+    /* renglones finos (16px o mas: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.5rem 0.1rem;
+        border: 0;
+        border-bottom: 1px solid rgba(42, 36, 33, 0.35);
+        border-radius: 0;
+        background: transparent;
+        color: var(--tinta);
+        font: 400 1.05rem/1.4 var(--serif);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(42, 36, 33, 0.45);
+        font-style: italic;
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--malva-oscuro);
+        box-shadow: 0 1px 0 var(--malva-oscuro);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.8rem;
+        padding: 0.15rem 0.3rem 0;
+        border: 1px solid rgba(42, 36, 33, 0.3);
+        border-radius: 999px;
+        font: 400 0.68rem/1.15 var(--sans);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--tinta);
+        background: var(--tinta);
+        color: var(--marfil);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--malva);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 400 0.64rem/1.3 var(--sans);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--malva-oscuro);
+    }
+    .campo-con-label input {
+        max-width: 4rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.3rem;
+        padding-top: 0.15rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--tinta);
+        color: var(--marfil);
+        font: 400 0.74rem/1 var(--sans);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        background: var(--malva-oscuro);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--malva);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 1rem;
+        font: italic 400 1.3rem/1.25 var(--serif);
+        color: var(--tinta);
+    }
+
+    /* --- El recuerdo: foto instantánea que se revela con el nombre del invitado --- */
+    .recuerdo {
+        width: 12.5rem;
+        margin: 0.8rem auto 0;
+        padding: 0.65rem 0.65rem 0;
+        background: #FDFCFA;
+        rotate: -3deg;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 18px 28px -14px rgba(42, 36, 33, 0.55);
+        animation: caer 1.1s var(--curva) both;
+    }
+    .recuerdo-foto {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        background: #EDE6DF;
+    }
+    .recuerdo-foto img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 35%;
+        animation: revelar 5s ease-out 0.6s both;
+    }
+    .recuerdo-iniciales {
+        font: italic 300 2.8rem/1 var(--serif);
+    }
+    .recuerdo figcaption {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        padding: 0.7rem 0.2rem 0.9rem;
+    }
+    .recuerdo-para {
+        font: italic 400 1.15rem/1.2 var(--serif);
+    }
+    .recuerdo-pie {
+        font: 400 0.52rem/1.4 var(--sans);
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--tinta-suave);
+    }
+    .rsvp .recuerdo-nota {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        font-style: italic;
+    }
+
+    /* ============================================
+       PANTALLAS ANCHAS (compu / tablet acostada)
+       ============================================ */
+    /* la foto vertical no se estira: queda al centro y a los lados se ve su
+       propio reflejo desenfocado (el fondo fijo) */
+    @media (min-aspect-ratio: 4 / 5) {
+        .portada-foto {
+            left: 50%;
+            width: min(100%, 68dvh);
+            translate: -50% 0;
+            box-shadow: 0 0 80px rgba(26, 20, 18, 0.35);
+        }
+    }
+    @media (min-width: 40rem) {
+        .accion-icono {
+            flex-basis: calc(25% - 0.45rem);
+            flex-direction: column;
+            padding: 0.8rem 0.4rem;
+            border-radius: 1.4rem;
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO (accesibilidad)
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% if foto_portada %}
+<style>
+    /* la foto de esta invitación para el fondo desenfocado */
+    :root { --foto-fondo: url("{{ foto_portada }}"); }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoracion progresiva del tema: si este script falla, la invitacion
+    // se ve y funciona igual (sin velo y con los nombres en un renglon).
+    (function () {
+        const hero = document.querySelector('.hero');
+        const titulo = document.querySelector('.hero .nombres');
+
+        // --- 1. Nombres en renglones (Renata / & / Tomás) y monograma "R & T" ---
+        // Se separa por el conector que escribio el cliente (&, y, e).
+        const texto = titulo ? titulo.textContent.trim() : '';
+        const partes = texto.split(/\s+(&|y|e)\s+/i);
+        let iniciales = [texto.charAt(0).toUpperCase()];
+        if (partes.length === 3) {
+            titulo.textContent = '';
+            [['nombre', partes[0]], ['amp', partes[1]], ['nombre', partes[2]]].forEach(([clase, parte]) => {
+                const span = document.createElement('span');
+                span.className = clase;
+                span.textContent = parte;
+                titulo.appendChild(span);
+            });
+            iniciales = [partes[0].charAt(0).toUpperCase(), partes[2].charAt(0).toUpperCase()];
+        }
+        function pintarIniciales(el) {
+            el.textContent = iniciales[0];
+            if (iniciales.length === 2) {
+                const amp = document.createElement('i');
+                amp.textContent = '&';
+                el.append(amp, iniciales[1]);
+            }
+        }
+        document.querySelectorAll('[data-iniciales]').forEach(pintarIniciales);
+
+        // --- 2. El mensaje de bienvenida se muda a "El gran día" como cita ---
+        // (la portada queda limpia: solo la foto y los nombres)
+        const cita = document.querySelector('.cita');
+        const mensaje = document.querySelector('.hero .mensaje');
+        if (cita && mensaje) {
+            cita.appendChild(mensaje);
+            cita.hidden = false;
+        }
+
+        // --- 3. Los nombres nunca se salen de la pantalla ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            let vueltas = 0;
+            while (titulo.scrollWidth > titulo.clientWidth + 1 && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let pendiente = false;
+        window.addEventListener('resize', () => {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(() => { pendiente = false; ajustarNombre(); });
+        });
+
+        // --- 4. El velo: al tocarlo se levanta, la foto se enfoca y suena la música ---
+        // Si abren un link directo a una sección (#rsvp) no se pone el velo.
+        const velo = document.getElementById('velo');
+        if (velo && hero && !location.hash) {
+            velo.hidden = false;
+            hero.classList.add('con-velo');
+            let levantado = false;
+            const descubrir = (animado) => {
+                if (levantado) return;
+                levantado = true;
+                hero.classList.add('descubierta');
+                if (!animado) {
+                    velo.hidden = true;
+                    return;
+                }
+                velo.classList.add('levantandose');
+                velo.addEventListener('animationend', e => {
+                    if (e.target === velo) velo.hidden = true;
+                });
+                setTimeout(() => { velo.hidden = true; }, 2600);   // respaldo si no hay animación
+            };
+            velo.addEventListener('click', () => {
+                // este toque cuenta como la interacción que exige el navegador para el audio
+                const botonMusica = document.getElementById('boton-musica');
+                const musica = document.getElementById('musica-fondo');
+                if (botonMusica && musica && musica.paused) botonMusica.click();
+                descubrir(true);
+            });
+            // si bajan sin levantarlo, al volver la portada ya está descubierta
+            const vigia = new IntersectionObserver(entradas => {
+                if (!entradas[0].isIntersecting) {
+                    descubrir(false);
+                    vigia.disconnect();
+                }
+            });
+            vigia.observe(hero);
+        }
+
+        // --- 5. Galería: cada foto en su arco, con un velo que se levanta al llegar ---
+        const fotos = document.querySelectorAll('.galeria > img');
+        if (fotos.length && 'IntersectionObserver' in window) {
+            const observador = new IntersectionObserver(entradas => {
+                entradas.forEach(entrada => {
+                    if (!entrada.isIntersecting) return;
+                    entrada.target.classList.add('descubierta');
+                    observador.unobserve(entrada.target);
+                });
+            }, { threshold: 0.3 });
+            fotos.forEach((img, i) => {
+                const arco = document.createElement('span');
+                arco.className = 'arco';
+                arco.style.setProperty('--retraso', (i % 2) * 0.18 + 's');
+                img.before(arco);
+                arco.appendChild(img);
+                observador.observe(arco);
+            });
+        }
+
+        // --- 6. RSVP con voz de boda ---
+        const encabezado = document.querySelector('.rsvp h2');
+        if (encabezado) encabezado.textContent = '¿Nos acompañas?';
+        const form = document.getElementById('form-rsvp');
+        const enviar = form && form.querySelector('button[type="submit"]');
+        if (enviar) enviar.textContent = 'Confirmar asistencia';
+
+        // --- 7. El recuerdo: quien confirma con "Sí" recibe una foto instantánea ---
+        // El motor borra el formulario antes de avisar, así que el nombre se
+        // guarda al enviar. Solo el primer nombre: "Te esperamos, Ana".
+        let nombreInvitado = '';
+        if (form) {
+            form.addEventListener('submit', () => {
+                const campo = form.querySelector('[name="nombre_invitado"]');
+                nombreInvitado = campo ? campo.value.trim().split(/\s+/)[0] : '';
+            });
+        }
+        const status = document.getElementById('rsvp-status');
+        const plantillaRecuerdo = document.getElementById('plantilla-recuerdo');
+        document.addEventListener('rsvp:enviado', e => {
+            document.querySelectorAll('.recuerdo, .recuerdo-nota').forEach(el => el.remove());
+            if (!status || !plantillaRecuerdo || e.detail.asistencia !== 'si') return;
+            const copia = plantillaRecuerdo.content.cloneNode(true);
+            copia.querySelectorAll('[data-iniciales]').forEach(pintarIniciales);
+            // textContent (no innerHTML): el nombre lo escribe el invitado
+            copia.querySelector('.recuerdo-para').textContent =
+                nombreInvitado ? `Te esperamos, ${nombreInvitado}` : 'Te esperamos';
+            const nota = copia.querySelector('.recuerdo-nota');
+            status.after(copia);
+            setTimeout(() => {
+                if (nota.isConnected) nota.textContent = 'Guárdalo con una captura de pantalla.';
+            }, 5600);
+        });
+    })();
+</script>
+{% endblock %}

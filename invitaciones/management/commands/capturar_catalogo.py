@@ -70,6 +70,10 @@ class Command(BaseCommand):
                 if not respuesta or respuesta.status != 200:
                     raise CommandError(f"{diseno['demo']} no abrió (¿corriste crear_todos_los_demos?).")
                 pagina.evaluate("document.fonts.ready.then(() => true)")
+                # El Velo abre con la foto bajo un velo: en el catálogo se enseña ya descubierta
+                if pagina.evaluate("Boolean(document.querySelector('#velo:not([hidden])'))"):
+                    pagina.click("#velo")
+                    time.sleep(3)
                 time.sleep(opciones["espera"])
                 png = pagina.screenshot()
                 pagina.close()

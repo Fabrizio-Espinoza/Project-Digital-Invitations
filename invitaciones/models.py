@@ -19,6 +19,11 @@ def _ruta_cancion(instancia, nombre):
     return f"invitaciones/musica/{uuid.uuid4().hex[:12]}{Path(nombre).suffix.lower()}"
 
 
+def _ruta_portada(instancia, nombre):
+    # igual que la canción: nombre al azar (la foto ya llega procesada como JPEG)
+    return f"invitaciones/portadas/{uuid.uuid4().hex[:12]}{Path(nombre).suffix.lower() or '.jpg'}"
+
+
 def validar_cancion(archivo):
     """
     Que sea de verdad un audio y no muy pesado. Se revisan los primeros
@@ -119,6 +124,14 @@ class Invitacion(models.Model):
         help_text=f"MP3 o M4A, máximo {MAX_MB_CANCION} MB. Suena con el botón de música (solo paquete Premium).",
     )
     fecha_limite_rsvp = models.DateField(null=True, blank=True)
+    # La foto de los novios / festejados que abre la invitación en los diseños
+    # con foto en la portada (ej. El Velo). Se sube ya derecha, achicada y sin
+    # EXIF (ver fotos.preparar_foto, la usan el formulario del cliente y el admin).
+    foto_portada = models.ImageField(
+        "Foto de portada", upload_to=_ruta_portada, blank=True,
+        help_text="La usan los diseños con foto en la portada (El Velo). Vertical se ve mejor. "
+                  "Si no hay, se usa la primera foto de la galería.",
+    )
 
     # contenido_extra: aquí va todo lo que cambia según el TIPO de evento
     # (padrinos en una boda, mesa de regalos, código de vestimenta, etc.)
@@ -132,18 +145,23 @@ class Invitacion(models.Model):
     # confirmó y descarga la lista. Distinto del slug público a propósito.
     token_panel = models.CharField(max_length=24, unique=True, default=_token_privado, editable=False)
 
+    # archivos que son solo de esta invitación: al reemplazarlos se borra el viejo
+    ARCHIVOS_PROPIOS = ("musica_archivo", "foto_portada")
+
     def save(self, *args, **kwargs):
         if not self.slug:
             base = slugify(self.titulo_evento)[:60]
             self.slug = f"{base}-{uuid.uuid4().hex[:6]}"
-        # si cambiaron o quitaron la canción, el archivo viejo se borra del disco
-        # (Django no lo hace solo y cada MP3 pesa varios MB)
-        anterior = None
+        # si cambiaron o quitaron la canción o la foto de portada, el archivo
+        # viejo se borra del disco (Django no lo hace solo y cada MP3 pesa varios MB)
+        anteriores = {}
         if not self._state.adding:
-            anterior = Invitacion.objects.filter(pk=self.pk).values_list("musica_archivo", flat=True).first()
+            anteriores = Invitacion.objects.filter(pk=self.pk).values(*self.ARCHIVOS_PROPIOS).first() or {}
         super().save(*args, **kwargs)
-        if anterior and anterior != self.musica_archivo.name:
-            self.musica_archivo.storage.delete(anterior)
+        for campo in self.ARCHIVOS_PROPIOS:
+            archivo = getattr(self, campo)
+            if anteriores.get(campo) and anteriores[campo] != archivo.name:
+                archivo.storage.delete(anteriores[campo])
 
     def __str__(self):
         return f"{self.titulo_evento} ({self.slug})"
@@ -166,6 +184,18 @@ class Invitacion(models.Model):
         if partes.path.startswith(ruta_static):
             return partes.path
         return self.musica_url
+
+    @property
+    def foto_portada_src(self):
+        """
+        La foto de la portada: la que subieron para eso o, si no hay, la
+        primera de la galería (con prefetch_related("galeria") no cuesta
+        otra consulta). Vacío si no hay ninguna: la plantilla usa su portada sin foto.
+        """
+        if self.foto_portada:
+            return self.foto_portada.url
+        fotos = list(self.galeria.all()[:1]) if self.pk else []
+        return fotos[0].imagen.url if fotos else ""
 
 
 class ImagenGaleria(models.Model):
