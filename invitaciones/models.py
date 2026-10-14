@@ -1,10 +1,39 @@
 import secrets
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.text import slugify
 import uuid
+
+# Canción de la invitación: formatos que suenan en iPhone y Android
+FORMATOS_CANCION = ["mp3", "m4a", "aac"]
+MAX_MB_CANCION = 15
+
+
+def _ruta_cancion(instancia, nombre):
+    # nombre al azar: sin espacios, acentos ni el nombre del cliente en la URL pública
+    return f"invitaciones/musica/{uuid.uuid4().hex[:12]}{Path(nombre).suffix.lower()}"
+
+
+def validar_cancion(archivo):
+    """
+    Que sea de verdad un audio y no muy pesado. Se revisan los primeros
+    bytes (no basta con que el nombre termine en .mp3): MP3 empieza con
+    "ID3" o con la marca de cuadro 0xFFE…, y M4A/AAC lleva "ftyp" en el byte 4.
+    """
+    if archivo.size > MAX_MB_CANCION * 1024 * 1024:
+        raise ValidationError(f"La canción pesa más de {MAX_MB_CANCION} MB. Usa un MP3 normal (128–192 kbps).")
+    archivo.seek(0)
+    inicio = archivo.read(12)
+    archivo.seek(0)
+    es_mp3 = inicio[:3] == b"ID3" or (len(inicio) > 1 and inicio[0] == 0xFF and inicio[1] & 0xE0 == 0xE0)
+    es_m4a = inicio[4:8] == b"ftyp"
+    if not (es_mp3 or es_m4a):
+        raise ValidationError("Ese archivo no parece una canción. Sube un MP3 o M4A.")
 
 
 class Plantilla(models.Model):
@@ -80,7 +109,15 @@ class Invitacion(models.Model):
     mensaje_bienvenida = models.TextField(blank=True)
 
     # Features opcionales (solo aplican si nivel/plantilla las soporta)
-    musica_url = models.URLField(blank=True)
+    musica_url = models.URLField(
+        "Música (link)", blank=True,
+        help_text="Solo si la canción ya está en internet (link directo a un .mp3). Si subes el archivo, se usa el archivo.",
+    )
+    musica_archivo = models.FileField(
+        "Canción", upload_to=_ruta_cancion, blank=True,
+        validators=[FileExtensionValidator(FORMATOS_CANCION), validar_cancion],
+        help_text=f"MP3 o M4A, máximo {MAX_MB_CANCION} MB. Suena con el botón de música (solo paquete Premium).",
+    )
     fecha_limite_rsvp = models.DateField(null=True, blank=True)
 
     # contenido_extra: aquí va todo lo que cambia según el TIPO de evento
@@ -99,7 +136,14 @@ class Invitacion(models.Model):
         if not self.slug:
             base = slugify(self.titulo_evento)[:60]
             self.slug = f"{base}-{uuid.uuid4().hex[:6]}"
+        # si cambiaron o quitaron la canción, el archivo viejo se borra del disco
+        # (Django no lo hace solo y cada MP3 pesa varios MB)
+        anterior = None
+        if not self._state.adding:
+            anterior = Invitacion.objects.filter(pk=self.pk).values_list("musica_archivo", flat=True).first()
         super().save(*args, **kwargs)
+        if anterior and anterior != self.musica_archivo.name:
+            self.musica_archivo.storage.delete(anterior)
 
     def __str__(self):
         return f"{self.titulo_evento} ({self.slug})"
@@ -107,13 +151,16 @@ class Invitacion(models.Model):
     @property
     def musica_src(self):
         """
-        La URL que usa el <audio>. Si la canción vive en nuestro propio
+        La URL que usa el <audio>. Si subieron el archivo, ese manda.
+        Si no, el link: si la canción vive en nuestro propio
         /static/ (ej. http://192.168.1.50:8000/static/.../cancion.mp3), se
         devuelve solo la ruta: así suena igual abierta por la IP de la compu,
         por localhost, por un túnel HTTPS o en el servidor final, sin tener
         que volver a capturar la URL cuando cambia la IP o el dominio.
         Una canción de otro sitio (https://...) se deja tal cual.
         """
+        if self.musica_archivo:
+            return self.musica_archivo.url
         partes = urlsplit(self.musica_url or "")
         ruta_static = "/" + settings.STATIC_URL.lstrip("/")
         if partes.path.startswith(ruta_static):
