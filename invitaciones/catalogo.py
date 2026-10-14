@@ -54,6 +54,14 @@ DISENOS = [
         "frase": "Su foto bajo un velo de tul: cada invitado lo levanta con un toque y los descubre.",
         "ideal": "Parejas que quieren su foto como protagonista",
     },
+    {
+        "tipo": "boda",
+        "nombre": "Frente al Mar",
+        "slug_tema": "boda-mar-05",
+        "demo": "demo-boda-natalia-iker",
+        "frase": "Su foto es el sol del atardecer: se refleja en el mar y se mete mientras bajas, hasta la noche.",
+        "ideal": "Bodas en la playa y de destino",
+    },
     # ----- XV años -----
     {
         "tipo": "xv",

@@ -1,0 +1,1869 @@
+{% extends "invitaciones/temas/base_interactiva.html" %}
+{% load static %}
+
+{% comment %}
+  FRENTE AL MAR — quinta plantilla de boda. Para bodas en la playa (Tulum, Los Cabos,
+  Vallarta, Huatulco…), con la foto de los novios en círculo en la portada.
+
+  Concepto: en la playa la ceremonia se programa con la puesta de sol. La invitación
+  ES ese atardecer: la foto de los novios es el sol, redonda, con su resplandor, y se
+  refleja en el mar en franjas que ondulan. Conforme el invitado baja, el sol se mete
+  en el mar y el cielo pasa de dorado a rosa, a lila y a noche estrellada, con luna y
+  todo, igual que la boda (ceremonia al atardecer, fiesta de noche).
+
+    Escena ........ una sola escena fija detrás de toda la invitación: cielo (cuatro
+                    capas que se funden según el scroll), sol con la foto, mar con el
+                    reflejo de la foto (desenfocado y en rayitas de agua), destellos,
+                    un velero en el horizonte (de noche prende su farol), gaviotas y
+                    luna. El JS solo escribe
+                    dos números (--t = cuánto has bajado, --puesta = cuánto se ha
+                    metido el sol); todo lo demás lo calcula el CSS.
+    Portada ....... los nombres sobre el cielo, el sol-foto que sale del mar al abrir,
+                    y la fecha y el destino sobre el agua.
+    El gran día ... tarjeta de papel con la sombra de una palmera que se mece encima;
+                    el mensaje como cita, Día | (sol poniéndose) | Hora, lugares,
+                    colores de vestimenta como vidrio de mar, countdown y botones.
+    Programa ...... familia, itinerario sobre la línea de una ola con una concha
+                    distinta en cada hora, mesa de regalos y la nota de niños como
+                    letrero de madera de playa.
+    Galería ....... ya de noche: las fotos cuelgan con pinzas de una guirnalda de focos
+                    que titilan, como en la fiesta en la arena.
+    RSVP .......... tarjeta iluminada por la guirnalda; al confirmar con "Sí" llega
+                    una botella con un mensaje para el invitado: se le bota el
+                    corcho y se desenrolla "Ana: te esperamos frente al mar".
+    Música ........ una caracola ("acércala al oído"); mientras suena salen ondas.
+
+  Distinta de Terracota (floral), Cobalto (revista), Hotel Amor (hotel boutique) y
+  El Velo (foto a pantalla completa bajo tul, iglesia): aquí la foto es un círculo y la
+  protagonista es la luz del atardecer. Paleta arena · mar profundo · coral (60-30-10).
+  Tipografía: Italiana (romana fina de moda, nombres y datos) + Beau Rivage ("bella
+  orilla", caligráfica, títulos) + Outfit (sans geométrica ligera). Las tres OFL.
+  Todo el arte (escena, conchas, letrero, focos, botella, caracola, palmera) es CSS/SVG
+  propio. Sin foto, el sol es un sol de verdad con las iniciales de la pareja.
+{% endcomment %}
+
+{% block eyebrow %}{% if invitacion.contenido_extra.frase_superior %}{{ invitacion.contenido_extra.frase_superior }}{% else %}Nos casamos frente al mar{% endif %}{% endblock %}
+
+{% block decoracion_superior %}
+<!-- La escena del atardecer: fija detrás de toda la invitación (el JS la mueve con el scroll) -->
+<div class="escena">
+    <div class="cielo cielo-dorado" aria-hidden="true"></div>
+    <div class="cielo cielo-rosa" aria-hidden="true"></div>
+    <div class="cielo cielo-lila" aria-hidden="true"></div>
+    <div class="cielo cielo-noche" aria-hidden="true"></div>
+    <div class="estrellas" aria-hidden="true"></div>
+    <div class="luna" aria-hidden="true"></div>
+    <div class="gaviotas" aria-hidden="true"><i></i><i></i></div>
+
+    <!-- el sol: la foto de los novios en círculo (se recorta en el horizonte) -->
+    <div class="cielo-sol">
+        <div class="sol-baja">
+            <div class="sol-sube">
+                <span class="sol-resplandor" aria-hidden="true"></span>
+                <span class="sol-rayos" aria-hidden="true"></span>
+                <div class="sol{% if not foto_portada %} sol-sin-foto{% endif %}">
+                    {% if foto_portada %}
+                    <img src="{{ foto_portada }}" alt="{{ invitacion.anfitriones }}" fetchpriority="high" decoding="async">
+                    {% else %}
+                    <span class="sol-iniciales" data-iniciales aria-hidden="true">{{ invitacion.anfitriones|slice:":1" }}</span>
+                    {% endif %}
+                    <span class="sol-tinte" aria-hidden="true"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bruma" aria-hidden="true"></div>
+
+    <div class="mar" aria-hidden="true">
+        <div class="oleaje oleaje-lejos"></div>
+        <div class="oleaje oleaje-cerca"></div>
+        <!-- el reflejo del sol: la misma foto, volteada, desenfocada y cortada en rayitas de agua -->
+        <div class="reflejo-baja">
+            <div class="reflejo-sube">
+                <div class="reflejo"><i></i></div>
+            </div>
+        </div>
+        <div class="destellos destellos-sol"></div>
+        <div class="destellos destellos-luna"></div>
+    </div>
+    <div class="velero" aria-hidden="true"></div>
+</div>
+{% endblock %}
+
+{% block hero_extra %}
+<div class="portada-pie">
+    <p class="portada-fecha">{{ invitacion.fecha_evento|date:"l" }} · {{ invitacion.fecha_evento|date:"j \d\e F" }} · {{ invitacion.fecha_evento|date:"Y" }}</p>
+    {% if invitacion.contenido_extra.ciudad %}<p class="portada-destino">{{ invitacion.contenido_extra.ciudad }}</p>{% endif %}
+    <span class="desliza" aria-hidden="true">Desliza</span>
+</div>
+{% endblock %}
+
+{% block decoracion_info %}
+<header class="info-cabecera">
+    <p class="kicker">Guarda la fecha</p>
+    <h2 class="titulo">El gran día</h2>
+</header>
+{% if invitacion.mensaje_bienvenida %}
+<!-- el mensaje se lee aquí (en la portada se esconde para dejar libre el atardecer) -->
+<blockquote class="cita">{{ invitacion.mensaje_bienvenida }}</blockquote>
+{% endif %}
+{% endblock %}
+
+{% block decoracion_inferior %}
+<!-- la botella que recibe quien confirma con "Sí" (el JS la copia y le pone el nombre) -->
+<template id="plantilla-botella">
+    <div class="botella-mar" aria-hidden="true">
+        <svg class="botella" viewBox="0 0 132 60">
+            <path class="botella-vidrio" d="M18 13H64C75 13 80 19 87 23H101C103 23 104 24.5 104 26.5V33.5C104 35.5 103 37 101 37H87C80 41 75 47 64 47H18C10 47 5 41 5 30S10 13 18 13Z"/>
+            <rect class="botella-papel" x="20" y="21" width="50" height="18" rx="9"/>
+            <path class="botella-papel-linea" d="M30 26H60M28 30H62M30 34H56"/>
+            <rect class="botella-lazo" x="42" y="20" width="5" height="20" rx="1.5"/>
+            <path class="botella-brillo" d="M17 18H60M90 26.5H100"/>
+            <g class="botella-corcho"><rect x="103" y="24.5" width="13" height="11" rx="2.5"/><path d="M107 25V35M111 25V35"/></g>
+        </svg>
+        <span class="botella-ola"></span>
+    </div>
+    <div class="mensaje-botella">
+        <p class="mensaje-para"></p>
+        <p class="mensaje-texto">te esperamos frente al mar</p>
+        <p class="mensaje-firma">{{ invitacion.anfitriones }} · {{ invitacion.fecha_evento|date:"d.m.Y" }}</p>
+    </div>
+    <p class="mensaje-nota" aria-live="polite">Te llegó un mensaje en una botella…</p>
+</template>
+{% endblock %}
+
+{% block estilos %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Beau+Rivage&family=Italiana&family=Outfit:wght@300..600&display=swap" rel="stylesheet">
+
+<style>
+    /* ============================================
+       VARIABLES: PALETA, TIPOGRAFIA Y MEDIDAS
+       ============================================ */
+    :root {
+        /* 60 arena · 30 mar profundo · 10 coral */
+        --arena: #F6EEE3;
+        --papel: #FCF8F2;
+        --mar: #18414B;
+        --mar-suave: rgba(24, 65, 75, 0.7);
+        --linea: rgba(24, 65, 75, 0.16);
+        --coral: #E07258;
+        --coral-oscuro: #B9523D;
+        --oro: #F2C27E;
+        --espuma: #FFF6EA;
+
+        --romana: 'Italiana', 'Didot', 'Bodoni 72', Georgia, serif;
+        --caligrafica: 'Beau Rivage', 'Snell Roundhand', 'Apple Chancery', cursive;
+        --sans: 'Outfit', 'Avenir Next', 'Segoe UI', sans-serif;
+
+        --margen: clamp(1.2rem, 5.5vw, 2.5rem);
+        --ancho: 27rem;
+        --curva: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+        /* la escena: tamaño del sol y altura del horizonte (60 % de la pantalla) */
+        --sol: min(60vw, 31vh, 20rem);
+        --horizonte: 60%;
+        --separacion: 3vh;           /* del sol al agua */
+        /* el JS escribe estos dos al hacer scroll (sin JS: hora dorada) */
+        --t: 0;
+        --puesta: 0;
+        /* y con ellos el CSS saca la noche y la luna */
+        --noche: clamp(0, calc((var(--t) - 0.45) / 0.4), 1);
+        --luna: clamp(0, calc((var(--t) - 0.62) / 0.3), 1);
+
+        /* la foto de los novios para el reflejo (el <style> de abajo la llena) */
+        --foto-sol: radial-gradient(circle, #FFFBEA 0 30%, #FFE3A6 55%, #F6B06F 80%, #EE8C5C);
+
+        /* grano de papel de algodón */
+        --grano: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .35 0 0 0 0 .25 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+        /* la guirnalda: el cable cuelga en curva entre foco y foco */
+        --cable: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'%3E%3Cpath d='M0 3Q50 30 100 3' fill='none' stroke='%23231f1c' stroke-width='1.4' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+        /* el mismo cable con medio foco en cada punta: al repetirse se juntan en focos enteros */
+        --guirnalda: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 34' preserveAspectRatio='none'%3E%3Cdefs%3E%3CradialGradient id='l'%3E%3Cstop offset='0' stop-color='%23FFD68A' stop-opacity='.7'/%3E%3Cstop offset='1' stop-color='%23FFD68A' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath d='M0 5Q50 30 100 5' fill='none' stroke='%23231f1c' stroke-width='1.4' vector-effect='non-scaling-stroke'/%3E%3Cg%3E%3Ccircle cx='0' cy='13' r='11' fill='url(%23l)'/%3E%3Ccircle cx='100' cy='13' r='11' fill='url(%23l)'/%3E%3Crect x='-2.5' y='4' width='5' height='3.5' fill='%232A2421'/%3E%3Crect x='97.5' y='4' width='5' height='3.5' fill='%232A2421'/%3E%3Cellipse cx='0' cy='12.5' rx='3.2' ry='5' fill='%23FFE3A3'/%3E%3Cellipse cx='100' cy='12.5' rx='3.2' ry='5' fill='%23FFE3A3'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* ============================================
+       BASE / GENERAL
+       ============================================ */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+    /* el fondo va en html (no en body): así la escena fija con z-index -1 queda visible */
+    html {
+        scroll-snap-type: y mandatory;
+        background: #F3C9A6;
+        -webkit-text-size-adjust: 100%;
+    }
+    body {
+        margin: 0;
+        color: var(--mar);
+        font: 300 1rem/1.55 var(--sans);
+        text-align: center;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: rgba(224, 114, 88, 0.2);
+    }
+    ::selection {
+        background: rgba(224, 114, 88, 0.3);
+        color: var(--mar);
+    }
+    .kicker {
+        margin: 0;
+        font: 400 0.68rem/1.4 var(--sans);
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .titulo {
+        margin: 0.1rem 0 0;
+        font: 400 clamp(2.9rem, 13vw, 3.7rem)/1.1 var(--caligrafica);
+        color: var(--mar);
+    }
+
+    /* ============================================
+       SCROLL "PAGINA POR PAGINA"
+       ============================================ */
+    .hero,
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-regalos,
+    .galeria,
+    .rsvp {
+        position: relative;
+        scroll-snap-align: start;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    /* ============================================
+       BOTON DE MUSICA (una caracola: acércala al oído)
+       ============================================ */
+    .boton-musica {
+        position: fixed;
+        right: max(1rem, env(safe-area-inset-right));
+        bottom: max(1rem, env(safe-area-inset-bottom));
+        z-index: 20;
+        width: 3.3rem;
+        height: 3.3rem;
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48' fill='none' stroke='%2318414B' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 31C7 20 15 12 26 12C35 12 41 18 41 25C41 31 36 36 30 36C24.5 36 20.5 32 20.5 27C20.5 23 23.5 20 27.5 20C31 20 33.5 22.5 33.5 25.5C33.5 28 31.5 30 29 30' fill='%23F8DCCB'/%3E%3Cpath d='M7 31 5 37H30'/%3E%3C/svg%3E") 46% 45% / 68% no-repeat,
+                    radial-gradient(circle at 35% 30%, #FFFDF8, var(--arena));
+        color: var(--mar);
+        cursor: pointer;
+        box-shadow: 0 10px 22px -10px rgba(10, 30, 40, 0.55);
+        animation: llamar 5s ease-in-out 3s infinite;
+    }
+    /* los íconos del motor quedan como insignia chiquita: play o pausa */
+    .boton-musica svg {
+        position: absolute;
+        right: -0.15rem;
+        bottom: -0.15rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        padding: 0.2rem;
+        border-radius: 50%;
+        background: var(--coral);
+        color: #fff;
+        stroke-width: 2.2;
+    }
+    .boton-musica .icono-pausa,
+    .boton-musica.sonando .icono-play {
+        display: none;
+    }
+    .boton-musica.sonando .icono-pausa {
+        display: block;
+    }
+    /* mientras suena: la caracola se mece y salen ondas de sonido */
+    .boton-musica.sonando {
+        animation: mecer 2.4s ease-in-out infinite;
+    }
+    .boton-musica::before,
+    .boton-musica::after {
+        content: "";
+        position: absolute;
+        inset: -1px;
+        border: 1px solid rgba(255, 246, 234, 0.9);
+        border-radius: 50%;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .boton-musica.sonando::before,
+    .boton-musica.sonando::after {
+        animation: onda 2.2s ease-out infinite;
+    }
+    .boton-musica.sonando::after {
+        animation-delay: 1.1s;
+    }
+    .boton-musica:focus-visible {
+        outline: 2px solid var(--coral);
+        outline-offset: 3px;
+    }
+
+    /* ============================================
+       LA ESCENA: CIELO, SOL, MAR (fija detrás de todo)
+       ============================================ */
+    .escena {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: -1;
+        height: 100vh;
+        height: 100lvh;              /* la pantalla grande: no brinca cuando el iPhone esconde la barra */
+        overflow: hidden;
+        pointer-events: none;
+    }
+    .cielo,
+    .estrellas,
+    .cielo-sol,
+    .mar,
+    .bruma {
+        position: absolute;
+        left: 0;
+        right: 0;
+    }
+    /* cuatro cielos encimados: el de abajo siempre está; los demás se funden con --t */
+    .cielo {
+        top: 0;
+        bottom: 0;
+    }
+    .cielo-dorado {
+        background: linear-gradient(#EBA79A 0%, #F4C19E 28%, #FBDDAE 50%, #FFF0CD 60%, #F2C8A2 76%, #E2AE90 100%);
+    }
+    .cielo-rosa {
+        background: linear-gradient(#C487A8 0%, #E79C9E 30%, #F6B08A 50%, #FFD19C 60%, #E3A28C 80%, #C08583 100%);
+        opacity: clamp(0, calc(var(--t) / 0.28), 1);
+    }
+    .cielo-lila {
+        background: linear-gradient(#45467C 0%, #7E6598 34%, #CF8A90 54%, #EFA683 60%, #8A6C8A 80%, #4A4868 100%);
+        opacity: clamp(0, calc((var(--t) - 0.22) / 0.3), 1);
+    }
+    .cielo-noche {
+        background: linear-gradient(#0A132E 0%, #142349 40%, #273663 57%, #34436F 60%, #182447 80%, #0B142E 100%);
+        opacity: clamp(0, calc((var(--t) - 0.5) / 0.35), 1);
+    }
+    /* estrellas: puntitos en dos tamaños de mosaico (para que no se note el patrón) que titilan */
+    .estrellas {
+        top: 0;
+        height: var(--horizonte);
+        background-image:
+            radial-gradient(1.2px 1.2px at 12% 18%, #fff 50%, transparent 51%),
+            radial-gradient(1px 1px at 38% 62%, #fff 50%, transparent 51%),
+            radial-gradient(1.5px 1.5px at 71% 33%, #fff 50%, transparent 51%),
+            radial-gradient(1px 1px at 88% 78%, #fff 50%, transparent 51%),
+            radial-gradient(1px 1px at 55% 9%, #fff 50%, transparent 51%),
+            radial-gradient(1px 1px at 20% 40%, #fff 50%, transparent 51%),
+            radial-gradient(1.3px 1.3px at 64% 82%, #fff 50%, transparent 51%),
+            radial-gradient(1px 1px at 90% 15%, #fff 50%, transparent 51%);
+        background-size: 210px 170px, 210px 170px, 210px 170px, 210px 170px, 210px 170px, 330px 260px, 330px 260px, 330px 260px;
+        mask-image: linear-gradient(#000 40%, transparent);
+        -webkit-mask-image: linear-gradient(#000 40%, transparent);
+        opacity: clamp(0, calc((var(--t) - 0.55) / 0.3), 1);
+    }
+    .estrellas::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background-image:
+            radial-gradient(1.6px 1.6px at 30% 25%, #FFF6DA 50%, transparent 51%),
+            radial-gradient(1.2px 1.2px at 78% 55%, #fff 50%, transparent 51%),
+            radial-gradient(1.8px 1.8px at 8% 70%, #FFF6DA 50%, transparent 51%);
+        background-size: 270px 220px;
+        animation: titilar 3.2s ease-in-out infinite alternate;
+    }
+    /* la luna sale del mar al final (RSVP) */
+    .luna {
+        position: absolute;
+        top: 3.5vh;
+        left: 10%;
+        width: min(13vw, 7vh, 4rem);
+        aspect-ratio: 1;
+        border-radius: 50%;
+        background:
+            radial-gradient(circle at 62% 40%, rgba(196, 186, 160, 0.45) 0 9%, transparent 10%),
+            radial-gradient(circle at 38% 66%, rgba(196, 186, 160, 0.35) 0 13%, transparent 14%),
+            radial-gradient(circle at 40% 36%, #FFFDF4, #F1E9D3 62%, #D9CFB6);
+        box-shadow: 0 0 24px 6px rgba(255, 247, 222, 0.35), 0 0 90px 30px rgba(255, 247, 222, 0.12);
+        opacity: var(--luna);
+        transform: translateY(calc((1 - var(--luna)) * 30vh));
+    }
+    /* dos gaviotas que planean (solo con el sol) */
+    .gaviotas {
+        position: absolute;
+        top: 30%;
+        right: 12%;
+        width: 4.5rem;
+        height: 2rem;
+        opacity: calc(0.75 - var(--puesta));
+        animation: planear 26s ease-in-out infinite alternate;
+    }
+    .gaviotas i {
+        position: absolute;
+        width: 1.3rem;
+        height: 0.5rem;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 26 10'%3E%3Cpath d='M1 8C5 2 9 2 13 7C17 2 21 2 25 8' fill='none' stroke='%233a3236' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        animation: aletear 0.9s ease-in-out infinite alternate;
+    }
+    .gaviotas i:nth-child(2) {
+        top: 1.1rem;
+        left: 2.6rem;
+        scale: 0.75;
+        animation-delay: -0.4s;
+    }
+
+    /* --- El sol: la foto en círculo. Su caja termina en el horizonte (ahí se recorta) --- */
+    .cielo-sol {
+        top: 0;
+        height: var(--horizonte);
+        overflow: hidden;
+    }
+    .sol-baja {
+        position: absolute;
+        left: 50%;
+        bottom: var(--separacion);
+        width: var(--sol);
+        height: var(--sol);
+        margin-left: calc(var(--sol) / -2);
+        /* se mete en el mar conforme bajas */
+        transform: translateY(calc(var(--puesta) * (var(--sol) + var(--separacion) + 1rem)));
+    }
+    .sol-sube {
+        position: absolute;
+        inset: 0;
+        animation: amanecer 2.6s var(--curva) 0.2s both;
+    }
+    .sol-resplandor {
+        position: absolute;
+        inset: -55%;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 244, 214, 0.95) 0 33%, rgba(255, 222, 160, 0.55) 40%, rgba(255, 196, 136, 0.2) 55%, transparent 70%);
+        animation: respirar 6s ease-in-out infinite alternate;
+    }
+    /* rayos finos que giran despacio alrededor del sol */
+    .sol-rayos {
+        position: absolute;
+        inset: -16%;
+        border-radius: 50%;
+        background: repeating-conic-gradient(rgba(255, 246, 222, 0.75) 0 0.8deg, transparent 0.8deg 7.5deg);
+        mask-image: radial-gradient(circle, transparent 60%, #000 64%, #000 68%, transparent 74%);
+        -webkit-mask-image: radial-gradient(circle, transparent 60%, #000 64%, #000 68%, transparent 74%);
+        opacity: calc(0.8 - var(--puesta));
+        animation: girar 90s linear infinite;
+    }
+    .sol {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border: 3px solid rgba(255, 249, 234, 0.95);
+        border-radius: 50%;
+        background: var(--foto-sol);
+        box-shadow: 0 0 0 1px rgba(255, 220, 170, 0.6), 0 0 40px 6px rgba(255, 226, 170, 0.75);
+    }
+    .sol img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: 50% 42%;
+    }
+    /* flex (no grid): con grid cada letra suelta sería un renglón aparte */
+    .sol-iniciales {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        font: 400 calc(var(--sol) * 0.27)/1 var(--romana);
+        /* coral translúcido: como grabado en el sol (el blanco no se lee en el centro claro) */
+        color: rgba(185, 82, 61, 0.78);
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+    .sol-iniciales i {
+        margin: 0 0.06em;
+        font: 400 0.8em/1 var(--caligrafica);
+    }
+    /* al meterse, el sol se pone naranja-rojizo */
+    .sol-tinte {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(rgba(255, 170, 90, 0.2), rgba(226, 84, 52, 0.6));
+        mix-blend-mode: multiply;
+        opacity: var(--puesta);
+    }
+    .bruma {
+        top: calc(var(--horizonte) - 5vh);
+        height: 7vh;
+        background: linear-gradient(transparent, rgba(255, 236, 210, 0.45) 70%, transparent);
+        opacity: calc(1 - var(--t) * 1.6);
+    }
+
+    /* --- El mar: translúcido, así toma el color del cielo que tiene detrás --- */
+    .mar {
+        top: var(--horizonte);
+        bottom: 0;
+        overflow: hidden;
+        background: linear-gradient(rgba(44, 112, 124, 0.38), rgba(22, 74, 90, 0.78) 28%, rgba(10, 44, 60, 0.94));
+    }
+    /* la línea del horizonte, encendida por el sol */
+    .mar::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        z-index: 2;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, rgba(255, 238, 205, 0.85) 25% 75%, transparent);
+        opacity: calc(1 - var(--t) * 1.4);
+    }
+    /* de noche el agua se oscurece */
+    .mar::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background: rgba(4, 14, 30, 0.5);
+        opacity: var(--noche);
+    }
+    /* oleaje: rayitas que se mueven despacio (chicas a lo lejos, grandes cerca) */
+    .oleaje {
+        position: absolute;
+        left: 0;
+        width: calc(100% + 360px);
+        background-repeat: repeat;
+        animation: deriva 46s linear infinite;
+    }
+    .oleaje-lejos {
+        top: 0;
+        height: 34%;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='18'%3E%3Cpath d='M6 6q9-2 18 0M60 13q12-2.5 24 0M98 4q7-1.5 14 0' fill='none' stroke='%23ffffff' stroke-opacity='.22' stroke-width='1'/%3E%3C/svg%3E");
+        background-size: 120px 18px;
+    }
+    .oleaje-cerca {
+        top: 34%;
+        bottom: 0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='70'%3E%3Cpath d='M14 18q26-6 52 0M170 44q34-7 68 0M290 12q22-5 44 0M84 62q30-6 60 0' fill='none' stroke='%23ffffff' stroke-opacity='.16' stroke-width='1.6'/%3E%3C/svg%3E");
+        background-size: 360px 70px;
+        animation-duration: 30s;
+    }
+    /* el reflejo: arriba en el agua, a la misma distancia del horizonte que el sol */
+    .reflejo-baja {
+        position: absolute;
+        top: var(--separacion);
+        left: 50%;
+        width: var(--sol);
+        height: calc(var(--sol) * 1.05);
+        margin-left: calc(var(--sol) / -2);
+        transform: translateY(calc(var(--puesta) * -1 * (var(--sol) * 1.05 + var(--separacion) + 1rem)));
+        mix-blend-mode: screen;
+        opacity: calc(0.7 - var(--puesta) * 0.4);
+    }
+    .reflejo-sube {
+        position: absolute;
+        inset: 0;
+        animation: reflejar 2.6s var(--curva) 0.2s both;
+    }
+    /* volteado (espejo) y desvanecido en óvalo: más brillante junto al horizonte
+       (que aquí, por el volteo, es el borde de abajo de la caja) */
+    .reflejo {
+        position: absolute;
+        inset: 0;
+        transform: scaleY(-1);
+        mask-image: radial-gradient(62% 100% at 50% 100%, #000 30%, transparent 78%);
+        -webkit-mask-image: radial-gradient(62% 100% at 50% 100%, #000 30%, transparent 78%);
+    }
+    /* la foto muy desenfocada y cortada en rayitas finas: así se ve la luz sobre el agua;
+       se mece de lado a lado como el oleaje */
+    .reflejo i {
+        position: absolute;
+        inset: 0 -12%;
+        background: var(--foto-sol) center / cover no-repeat;
+        filter: blur(7px) saturate(1.25) brightness(1.15);
+        mask: repeating-linear-gradient(#000 0 2px, transparent 2px 5px);
+        -webkit-mask: repeating-linear-gradient(#000 0 2px, transparent 2px 5px);
+        animation: ondular 3.4s ease-in-out infinite alternate;
+    }
+    /* destellos: rayitas de luz que titilan bajo el sol (y luego bajo la luna) */
+    .destellos {
+        position: absolute;
+        z-index: 4;
+        top: 1.5vh;
+        height: 36vh;
+        mask-image: radial-gradient(50% 100% at 50% 0, #000 30%, transparent);
+        -webkit-mask-image: radial-gradient(50% 100% at 50% 0, #000 30%, transparent);
+    }
+    .destellos::before,
+    .destellos::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='120'%3E%3Cg stroke='%23fff8e6' stroke-width='1.6' stroke-linecap='round'%3E%3Cpath d='M20 10h9M70 22h14M118 8h7M40 40h16M96 46h11M8 66h12M60 72h18M130 64h10M28 98h15M84 104h20M140 92h9'/%3E%3C/g%3E%3C/svg%3E") 0 0 / 160px 120px;
+        animation: titilar 1.7s ease-in-out infinite alternate;
+    }
+    .destellos::after {
+        background-position: 80px 60px;
+        animation-delay: -0.85s;
+    }
+    .destellos-sol {
+        left: calc(50% - var(--sol));
+        width: calc(var(--sol) * 2);
+        opacity: calc(0.9 - var(--puesta));
+    }
+    .destellos-luna {
+        left: calc(10% + min(6.5vw, 3.5vh, 2rem) - 4rem);
+        width: 8rem;
+        opacity: calc(var(--luna) * 0.8);
+    }
+    /* un velero chiquito en el horizonte; de noche prende su farol */
+    .velero {
+        position: absolute;
+        top: calc(var(--horizonte) - 1.55rem);
+        left: 74%;
+        width: 1.35rem;
+        height: 1.6rem;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 27 32'%3E%3Cg fill='%232b2a33'%3E%3Cpath d='M13 2v22H2Z'/%3E%3Cpath d='M15 6c6 5 9 11 9 18h-9Z' opacity='.85'/%3E%3Cpath d='M1 26h25l-3 5H5Z'/%3E%3C/g%3E%3C/svg%3E") center / contain no-repeat;
+        opacity: 0.8;
+        animation: navegar 70s ease-in-out infinite alternate;
+    }
+    .velero::after {
+        content: "";
+        position: absolute;
+        top: 58%;
+        left: 50%;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #FFD98A;
+        box-shadow: 0 0 6px 2px rgba(255, 210, 120, 0.8);
+        opacity: var(--noche);
+    }
+
+    /* ============================================
+       PORTADA
+       ============================================ */
+    .hero {
+        display: flex;
+        flex-direction: column;
+    }
+    .hero-contenido {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: max(7.5vh, 2.6rem) var(--margen) max(4.5vh, 1.4rem);
+    }
+    .hero .eyebrow {
+        margin: 0;
+        font: 400 0.68rem/1.5 var(--sans);
+        letter-spacing: 0.36em;
+        text-transform: uppercase;
+        color: rgba(24, 65, 75, 0.82);
+        animation: aparecer 1.2s var(--curva) 1.2s both;
+    }
+    .nombres {
+        width: 100%;
+        margin: 0.35rem 0 0;
+        font: 400 clamp(2.5rem, min(12.5vw, 7.4vh), 4.6rem)/1.08 var(--romana);
+        letter-spacing: 0.015em;
+        color: var(--mar);
+        text-wrap: balance;
+        animation: aparecer 1.3s var(--curva) 1.45s both;
+    }
+    .nombres .amp {
+        display: inline-block;
+        margin: 0 0.12em;
+        font: 400 1.1em/0.8 var(--caligrafica);
+        color: var(--coral-oscuro);
+        translate: 0 0.08em;
+    }
+    .nombres .nombre {
+        white-space: nowrap;
+    }
+    /* el mensaje se lee en "El gran día": la portada es del atardecer */
+    .hero .mensaje {
+        display: none;
+    }
+    .portada-pie {
+        margin-top: auto;
+        color: var(--espuma);
+        text-shadow: 0 1px 12px rgba(6, 30, 40, 0.55);
+        animation: aparecer 1.3s var(--curva) 1.9s both;
+    }
+    .portada-fecha {
+        margin: 0;
+        font: 400 0.74rem/1.5 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+    }
+    .portada-destino {
+        margin: 0.2rem 0 0;
+        font: 400 1.35rem/1.3 var(--romana);
+        letter-spacing: 0.06em;
+    }
+    .desliza {
+        display: inline-block;
+        margin-top: 1.4rem;
+        padding-bottom: 0.9rem;
+        font: 400 0.6rem/1 var(--sans);
+        letter-spacing: 0.36em;
+        text-transform: uppercase;
+        opacity: 0.85;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 8'%3E%3Cpath d='M1 4q4.75-4 9.5 0t9.5 0 9.5 0 9.5 0' fill='none' stroke='%23FFF6EA' stroke-width='1.2'/%3E%3C/svg%3E") center bottom / 2.4rem auto no-repeat;
+        animation: olita 2.4s ease-in-out infinite;
+    }
+
+    /* ============================================
+       TARJETAS (papel de algodón sobre el atardecer)
+       La tarjeta es un ::before absoluto anclado al área de TODAS las filas del
+       grid (12 filas auto; las vacías miden 0): así abraza al contenido, sea poco
+       o mucho, y el cielo se ve arriba y abajo. Por ser absoluto no le quita
+       celdas a los hijos en la colocación automática.
+       ============================================ */
+    .pantalla-info,
+    .pantalla-extra,
+    .pantalla-regalos,
+    .rsvp {
+        display: grid;
+        grid-template-columns: minmax(0, var(--ancho));
+        grid-template-rows: repeat(12, auto);
+        align-content: center;
+        justify-content: center;
+        padding: 2.7rem calc(var(--margen) + 1.2rem) 3.6rem;
+    }
+    .pantalla-info::before,
+    .pantalla-extra::before,
+    .pantalla-regalos::before,
+    .rsvp::before {
+        content: "";
+        position: absolute;
+        grid-area: 1 / 1 / -1 / -1;
+        inset: -1.6rem -1.2rem;
+        z-index: 0;
+        border-radius: 1.4rem;
+        background: var(--grano), linear-gradient(var(--papel), var(--arena));
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset, 0 34px 60px -30px rgba(8, 26, 36, 0.6), 0 10px 22px -12px rgba(8, 26, 36, 0.35);
+    }
+    .pantalla-info > *,
+    .pantalla-extra > *,
+    .pantalla-regalos > *,
+    .rsvp > * {
+        position: relative;
+        z-index: 2;
+        grid-column: 1;
+        min-width: 0;
+    }
+
+    /* ============================================
+       EL GRAN DIA
+       ============================================ */
+    .pantalla-info > .marco-decorativo-info {
+        grid-row: 1;
+    }
+    .pantalla-info > .pantalla-contenido {
+        grid-row: 2;
+    }
+    /* la sombra de una palmera que se mece sobre la tarjeta (la luz de la tarde) */
+    .pantalla-info::after {
+        content: "";
+        position: absolute;
+        grid-area: 1 / 1 / -1 / -1;
+        inset: -1.6rem -1.2rem;
+        z-index: 1;
+        border-radius: 1.4rem;
+        background: url("{% static 'invitaciones/img/boda-mar-palma.svg' %}") right -2.5rem top -2.5rem / 21rem auto no-repeat;
+        mix-blend-mode: multiply;
+        opacity: 0.16;
+        pointer-events: none;
+        animation: palmera 9s ease-in-out infinite alternate;
+    }
+    .info-cabecera .titulo {
+        margin-bottom: 0.2rem;
+    }
+    .cita {
+        max-width: 23rem;
+        margin: 0.25rem auto 0.9rem;
+        font: 400 1.08rem/1.5 var(--romana);
+        letter-spacing: 0.01em;
+        color: var(--mar-suave);
+        text-wrap: pretty;
+    }
+    .detalles {
+        display: grid;
+        grid-template-columns: 1.35fr auto 1fr;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+        border-block: 1px solid var(--linea);
+    }
+    .detalle-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .detalle-label {
+        font: 400 0.62rem/1.3 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .detalle-valor {
+        font: 400 1.18rem/1.25 var(--romana);
+        color: var(--mar);
+    }
+    /* "13 de noviembre, 2027": los meses van con minúscula en español */
+    .detalle-item:first-child .detalle-valor {
+        text-transform: lowercase;
+        text-wrap: balance;
+    }
+    /* entre el día y la hora: un solecito que se mete en el mar */
+    .detalle-divisor {
+        width: 2.6rem;
+        height: 1.6rem;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 32' fill='none' stroke='%23E07258' stroke-width='1.4' stroke-linecap='round'%3E%3Cpath d='M15 20a11 11 0 0 1 22 0' fill='%23F9D9C6'/%3E%3Cpath d='M26 3v4M14 7.5l2.6 3M38 7.5l-2.6 3M7 14l3.4 1.6M45 14l-3.4 1.6'/%3E%3Cpath d='M3 20h46' stroke='%2318414B'/%3E%3Cpath d='M12 25q3.5-2 7 0t7 0 7 0 7 0M18 29.5q2.7-1.5 5.3 0t5.3 0 5.3 0' stroke='%2318414B' stroke-opacity='.5'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .lugares {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        padding: 0.85rem 0 0;
+    }
+    .lugar-item {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.2rem;
+    }
+    /* ícono de cada lugar: arco de ceremonia en la playa / copas de la recepción */
+    .lugar-item::before {
+        content: "";
+        width: 1.9rem;
+        height: 1.9rem;
+        margin-bottom: 0.15rem;
+        background: var(--coral);
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 29V12a9 9 0 0 1 18 0v17'/%3E%3Cpath d='M7 12c3 4 6 5 9 5s6-1 9-5'/%3E%3Cpath d='M4 29h24'/%3E%3Ccircle cx='9.5' cy='15.5' r='1.6'/%3E%3Ccircle cx='22.5' cy='15.5' r='1.6'/%3E%3C/svg%3E") center / contain no-repeat;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 29V12a9 9 0 0 1 18 0v17'/%3E%3Cpath d='M7 12c3 4 6 5 9 5s6-1 9-5'/%3E%3Cpath d='M4 29h24'/%3E%3Ccircle cx='9.5' cy='15.5' r='1.6'/%3E%3Ccircle cx='22.5' cy='15.5' r='1.6'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .lugar-item + .lugar-item::before {
+        mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 4h7l-.6 7a3 3 0 0 1-5.8 0Z'/%3E%3Cpath d='M11.5 14v11M8 25.5h7'/%3E%3Cpath d='M17 6h7l-.6 7a3 3 0 0 1-5.8 0Z'/%3E%3Cpath d='M20.5 16v11M17 27.5h7'/%3E%3Cpath d='M9 7.5h5.4M18 9.5h5.4' stroke-opacity='.6'/%3E%3C/svg%3E");
+        -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none' stroke='%23000' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 4h7l-.6 7a3 3 0 0 1-5.8 0Z'/%3E%3Cpath d='M11.5 14v11M8 25.5h7'/%3E%3Cpath d='M17 6h7l-.6 7a3 3 0 0 1-5.8 0Z'/%3E%3Cpath d='M20.5 16v11M17 27.5h7'/%3E%3Cpath d='M9 7.5h5.4M18 9.5h5.4' stroke-opacity='.6'/%3E%3C/svg%3E");
+    }
+    .lugar-item .detalle-valor {
+        font-size: 1.08rem;
+        text-wrap: balance;
+    }
+    .lugar-direccion {
+        font-size: 0.84rem;
+        color: var(--mar-suave);
+    }
+    .vestimenta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        margin-top: 0.8rem;
+    }
+    .vestimenta-valor {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    .vestimenta-valor .detalle-valor {
+        font-size: 1.05rem;
+    }
+    /* cada color, como un vidrio de mar pulido por las olas */
+    .vestimenta-color {
+        width: 1.55rem;
+        height: 1.3rem;
+        border-radius: 58% 42% 52% 48% / 55% 48% 52% 45%;
+        box-shadow: inset 0 -3px 5px rgba(0, 0, 0, 0.16), inset 0 2px 3px rgba(255, 255, 255, 0.55), 0 2px 5px -2px rgba(8, 26, 36, 0.45);
+        rotate: -12deg;
+    }
+    .vestimenta-color:nth-child(even) {
+        border-radius: 45% 55% 40% 60% / 50% 60% 40% 50%;
+        rotate: 18deg;
+    }
+    .countdown {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        margin: 0.95rem 0 0;
+        padding: 0.75rem 0 0.6rem;
+        border-block: 1px solid var(--linea);
+    }
+    .countdown div {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .countdown div + div {
+        border-left: 1px solid var(--linea);
+    }
+    .countdown span {
+        font: 400 2rem/1 var(--romana);
+        font-variant-numeric: lining-nums tabular-nums;
+        color: var(--mar);
+    }
+    .countdown label {
+        font: 400 0.58rem/1.2 var(--sans);
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--mar-suave);
+    }
+    /* hasta cuatro botones en un renglón (el texto largo se parte en dos) */
+    .acciones-rapidas {
+        display: flex;
+        justify-content: center;
+        gap: 0.4rem;
+        margin-top: 1rem;
+    }
+    .accion-icono {
+        flex: 0 1 4.6rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.35rem;
+        min-width: 0;
+        font: 400 0.56rem/1.25 var(--sans);
+        letter-spacing: 0.12em;
+        text-wrap: balance;
+        text-transform: uppercase;
+        color: var(--mar);
+        text-decoration: none;
+    }
+    .icono-circulo {
+        display: grid;
+        place-items: center;
+        width: 2.9rem;
+        height: 2.9rem;
+        border: 1px solid rgba(24, 65, 75, 0.35);
+        border-radius: 50%;
+        color: var(--coral);
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .icono-svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    .accion-icono:hover .icono-circulo,
+    .accion-icono:focus-visible .icono-circulo {
+        background: var(--mar);
+        color: var(--espuma);
+    }
+    .accion-icono:focus-visible {
+        outline: none;
+    }
+
+    /* ============================================
+       PROGRAMA: FAMILIA, ITINERARIO, REGALOS Y NIÑOS
+       ============================================ */
+    .familia {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.4rem;
+    }
+    .familia::before {
+        content: "Con la bendición de";
+        font: 400 0.66rem/1.4 var(--sans);
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .familia-grupo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+    .familia-rol {
+        font: 400 0.6rem/1.3 var(--sans);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--mar-suave);
+    }
+    .familia-nombres {
+        font: 400 1.12rem/1.3 var(--romana);
+        text-wrap: balance;
+    }
+    .itinerario {
+        display: grid;
+        grid-template-columns: 1fr 2.6rem 1fr;
+    }
+    .itinerario h3 {
+        grid-column: 1 / -1;
+        margin: 0 0 0.7rem;
+        font: 400 clamp(2.5rem, 11vw, 3.1rem)/1.05 var(--caligrafica);
+        color: var(--mar);
+    }
+    .itinerario h3::before {
+        content: "Al caer el sol";
+        display: block;
+        margin-bottom: 0.15rem;
+        font: 400 0.66rem/1.4 var(--sans);
+        letter-spacing: 0.32em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    /* cada hora sobre la línea de una ola, con su concha */
+    .itinerario-item {
+        display: contents;
+    }
+    .itinerario-hora,
+    .itinerario-evento {
+        position: relative;
+        padding: 0.55rem 0;
+        align-self: stretch;
+        display: flex;
+        align-items: center;
+    }
+    .itinerario-hora {
+        grid-column: 1;
+        justify-content: flex-end;
+        padding-right: 0.3rem;
+        font: 400 1.1rem/1.2 var(--romana);
+        text-align: right;
+        white-space: nowrap;
+    }
+    .itinerario-evento {
+        grid-column: 3;
+        justify-content: flex-start;
+        padding-left: 0.3rem;
+        font: 400 0.95rem/1.3 var(--sans);
+        text-align: left;
+        text-wrap: balance;
+    }
+    .itinerario-hora::after {
+        content: "";
+        position: absolute;
+        right: -2.6rem;
+        top: 50%;
+        width: 2.6rem;
+        height: 1.9rem;
+        translate: 0 -50%;
+        background: var(--coral);
+        mask: var(--concha, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linejoin='round'%3E%3Cpath d='M12 20.5 4 9.8C3.6 6.2 7.4 3.5 12 3.5s8.4 2.7 8 6.3Z'/%3E%3Cpath d='M12 20.5 8.2 4.2M12 20.5V3.5M12 20.5l3.8-16.3M12 20.5 5.1 6.8M12 20.5l6.9-13.7M9.6 20.5h4.8'/%3E%3C/svg%3E")) center / 1.5rem no-repeat;
+        -webkit-mask: var(--concha, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linejoin='round'%3E%3Cpath d='M12 20.5 4 9.8C3.6 6.2 7.4 3.5 12 3.5s8.4 2.7 8 6.3Z'/%3E%3Cpath d='M12 20.5 8.2 4.2M12 20.5V3.5M12 20.5l3.8-16.3M12 20.5 5.1 6.8M12 20.5l6.9-13.7M9.6 20.5h4.8'/%3E%3C/svg%3E")) center / 1.5rem no-repeat;
+    }
+    /* la ola: un trazo ondulado vertical que une las conchas (se corta en cada concha) */
+    .itinerario-evento::before {
+        content: "";
+        position: absolute;
+        left: -1.6rem;
+        top: 0;
+        bottom: 0;
+        width: 0.6rem;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 24'%3E%3Cpath d='M6 0q4 6 0 12t0 12' fill='none' stroke='%2318414B' stroke-opacity='.35' stroke-width='1.2'/%3E%3C/svg%3E") center / 0.6rem 1.2rem repeat-y;
+        mask-image: linear-gradient(#000 0 calc(50% - 1rem), transparent calc(50% - 1rem) calc(50% + 1rem), #000 calc(50% + 1rem));
+        -webkit-mask-image: linear-gradient(#000 0 calc(50% - 1rem), transparent calc(50% - 1rem) calc(50% + 1rem), #000 calc(50% + 1rem));
+    }
+    /* la ola empieza en la primera concha y termina en la última */
+    .itinerario-item:first-of-type .itinerario-evento::before {
+        mask-image: linear-gradient(transparent 0 calc(50% + 1rem), #000 calc(50% + 1rem));
+        -webkit-mask-image: linear-gradient(transparent 0 calc(50% + 1rem), #000 calc(50% + 1rem));
+    }
+    .itinerario-item:last-of-type .itinerario-evento::before {
+        mask-image: linear-gradient(#000 0 calc(50% - 1rem), transparent calc(50% - 1rem));
+        -webkit-mask-image: linear-gradient(#000 0 calc(50% - 1rem), transparent calc(50% - 1rem));
+    }
+    .itinerario-item:only-of-type .itinerario-evento::before {
+        content: none;
+    }
+    .itinerario-item:nth-of-type(5n + 2) {
+        /* estrella de mar */
+        --concha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linejoin='round'%3E%3Cpath d='M12 3c.9 0 1.5 3.7 2.4 5.4 1.9.3 5.7.5 6 1.4.3.9-2.8 3.1-4.1 4.5.4 1.9 1.4 5.5.6 6.1-.8.5-3.5-1.8-4.9-2.7-1.6.9-4.2 3.2-5 2.7-.8-.6.2-4.2.6-6.1-1.3-1.4-4.4-3.6-4.1-4.5.3-.9 4.1-1.1 6-1.4C10.5 6.7 11.1 3 12 3Z'/%3E%3Ccircle cx='12' cy='12' r='1' fill='%23000'/%3E%3C/svg%3E");
+    }
+    .itinerario-item:nth-of-type(5n + 3) {
+        /* caracol */
+        --concha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 17.5c0-6 4.5-11 10-11 4.4 0 7.5 3.1 7.5 6.8 0 3.3-2.6 5.7-5.7 5.7-2.8 0-4.9-2-4.9-4.6 0-2.2 1.7-3.9 3.8-3.9 1.8 0 3.1 1.3 3.1 2.9 0 1.4-1 2.4-2.3 2.4'/%3E%3Cpath d='M3 17.5 2 20.5h13'/%3E%3C/svg%3E");
+    }
+    .itinerario-item:nth-of-type(5n + 4) {
+        /* galleta de mar */
+        --concha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3'%3E%3Ccircle cx='12' cy='12' r='8.6'/%3E%3Cg stroke-width='1.1'%3E%3Cellipse cx='12' cy='8' rx='1.1' ry='2.5'/%3E%3Cellipse cx='12' cy='8' rx='1.1' ry='2.5' transform='rotate(72 12 12)'/%3E%3Cellipse cx='12' cy='8' rx='1.1' ry='2.5' transform='rotate(144 12 12)'/%3E%3Cellipse cx='12' cy='8' rx='1.1' ry='2.5' transform='rotate(216 12 12)'/%3E%3Cellipse cx='12' cy='8' rx='1.1' ry='2.5' transform='rotate(288 12 12)'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .itinerario-item:nth-of-type(5n) {
+        /* almeja */
+        --concha: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 14c.5-5 4.3-8.5 9-8.5s8.5 3.5 9 8.5c-2.2 3.3-5.4 5-9 5s-6.8-1.7-9-5Z'/%3E%3Cpath d='M7 15.3c1.6.8 3.3 1.2 5 1.2s3.4-.4 5-1.2M8.5 9.5c1-.6 2.2-.9 3.5-.9s2.5.3 3.5.9'/%3E%3C/svg%3E");
+    }
+    .boton-mesa-regalos {
+        justify-self: center;
+        margin-top: 1.4rem;
+        padding: 0.95rem 1.6rem 0.9rem;
+        border: 1px solid var(--mar);
+        border-radius: 999px;
+        font: 400 0.7rem/1 var(--sans);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        color: var(--mar);
+        text-decoration: none;
+        transition: background 0.2s ease, color 0.2s ease;
+    }
+    .boton-mesa-regalos:hover,
+    .boton-mesa-regalos:focus-visible {
+        background: var(--mar);
+        color: var(--espuma);
+        outline: none;
+    }
+    /* la nota de niños: un letrero de madera clavado en la arena */
+    .nota-ninos {
+        justify-self: center;
+        max-width: 17rem;
+        margin: 1.5rem 0 2.1rem;
+        padding: 0.6rem 1.1rem 0.55rem;
+        border-radius: 0.4rem;
+        background:
+            repeating-linear-gradient(176deg, transparent 0 7px, rgba(90, 52, 26, 0.12) 7px 8px, transparent 8px 15px),
+            linear-gradient(#C99A6B, #B28457);
+        box-shadow: inset 0 1px 0 rgba(255, 236, 205, 0.5), inset 0 -2px 0 rgba(70, 40, 18, 0.25), 0 6px 10px -6px rgba(40, 22, 10, 0.6);
+        font: 500 0.72rem/1.35 var(--sans);
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #FFF6EA;
+        text-shadow: 0 1px 0 rgba(70, 40, 18, 0.45);
+        rotate: -2deg;
+    }
+    .nota-ninos::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        z-index: -1;
+        width: 0.55rem;
+        height: 2rem;
+        margin-left: -0.275rem;
+        border-radius: 0 0 2px 2px;
+        background: linear-gradient(90deg, #9B6F45, #B88A5C 50%, #8F653D);
+    }
+    .nota-ninos strong {
+        display: block;
+        font: 400 1.25rem/1.15 var(--romana);
+        letter-spacing: 0.08em;
+    }
+
+    /* --- Regalos con lista y lluvia de sobres (si el cliente las pide) --- */
+    .pantalla-regalos > .pantalla-contenido {
+        grid-row: 1;
+    }
+    .regalos-titulo {
+        margin: 0;
+        font: 400 clamp(2.6rem, 12vw, 3.3rem)/1.1 var(--caligrafica);
+    }
+    .regalos-intro {
+        margin: 0.3rem auto 1rem;
+        max-width: 22rem;
+        color: var(--mar-suave);
+    }
+    .regalo-tarjeta {
+        padding: 1rem 0;
+        border-top: 1px solid var(--linea);
+    }
+    .regalo-icono {
+        display: none;
+    }
+    .regalo-tarjeta h3 {
+        margin: 0 0 0.4rem;
+        font: 400 0.66rem/1.4 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .regalo-tarjeta p {
+        margin: 0;
+        font: 400 1.05rem/1.45 var(--romana);
+    }
+    .mesas-lista {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    .mesa-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.5rem 0;
+    }
+    .mesa-nombre {
+        font: 400 1.2rem/1.2 var(--romana);
+    }
+    .mesa-codigo {
+        font-size: 0.85rem;
+        color: var(--mar-suave);
+    }
+    .mesa-botones {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .boton-copiar,
+    .mesa-enlace {
+        padding: 0.55rem 1rem 0.5rem;
+        border: 1px solid rgba(24, 65, 75, 0.4);
+        border-radius: 999px;
+        background: transparent;
+        font: 400 0.62rem/1 var(--sans);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--mar);
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .boton-copiar.copiado {
+        border-color: var(--coral);
+        background: var(--coral);
+        color: #fff;
+    }
+
+    /* ============================================
+       GALERIA: fotos colgadas de una guirnalda de focos (ya es de noche)
+       ============================================ */
+    .galeria {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        align-content: center;
+        gap: 1rem;
+        padding: 3rem var(--margen);
+    }
+    .galeria img {
+        display: block;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        object-fit: cover;
+        border: 5px solid #FFFDF8;
+        border-bottom-width: 18px;
+        box-shadow: 0 14px 24px -12px rgba(0, 0, 0, 0.6);
+    }
+    /* con JS: encabezado + tendedero de focos */
+    .galeria.con-guirnalda {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 0;
+        padding-inline: 0;
+    }
+    .galeria-cabecera .kicker {
+        color: var(--oro);
+    }
+    .galeria-cabecera .titulo {
+        color: var(--espuma);
+        text-shadow: 0 2px 18px rgba(255, 200, 120, 0.35);
+    }
+    .guirnalda {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        row-gap: 1.6rem;
+        margin-top: 1.7rem;
+    }
+    .foto-colgada {
+        position: relative;
+        margin: 0;
+        padding-top: 1.35rem;
+    }
+    /* el cable de la guirnalda, de foco a foco, colgado en curva */
+    .foto-colgada::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        height: 1.9rem;
+        background: var(--cable) 0 0 / 100% 100% no-repeat;
+    }
+    /* el foco: vidrio cálido con su socket, titilando cada uno a su ritmo */
+    .foto-colgada::after {
+        content: "";
+        position: absolute;
+        top: 0.05rem;
+        left: -0.32rem;
+        z-index: 1;
+        width: 0.64rem;
+        height: 0.95rem;
+        border-top: 3px solid #2A2421;
+        border-radius: 3px 3px 50% 50% / 3px 3px 60% 60%;
+        background: radial-gradient(circle at 50% 62%, #FFFBEA, #FFD88A 55%, #F2A54A);
+        box-shadow: 0 0 10px 3px rgba(255, 200, 112, 0.6), 0 0 28px 9px rgba(255, 186, 100, 0.22);
+        animation: foco 3s ease-in-out calc(var(--i, 0) * -0.7s) infinite alternate;
+    }
+    .foto-colgada img {
+        width: min(74%, 15rem);
+        margin: 0 auto;
+        transform-origin: 50% -0.5rem;
+        animation: columpio 4.6s ease-in-out calc(var(--i, 0) * -1.3s) infinite alternate;
+    }
+    /* la pinza de madera que sostiene cada foto */
+    .pinza {
+        position: absolute;
+        top: 0.85rem;
+        left: 50%;
+        z-index: 1;
+        width: 0.5rem;
+        height: 1.25rem;
+        margin-left: -0.25rem;
+        border-radius: 2px;
+        background: linear-gradient(90deg, #A9805A, #D2AC80 45%, #A47A52);
+        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+    }
+    .galeria-ayuda {
+        margin: 1.6rem 0 0;
+        font: 400 0.62rem/1.4 var(--sans);
+        letter-spacing: 0.3em;
+        text-transform: uppercase;
+        color: rgba(255, 246, 234, 0.7);
+    }
+
+    /* ============================================
+       RSVP: tarjeta iluminada por la guirnalda
+       ============================================ */
+    .rsvp {
+        text-align: center;
+    }
+    /* la luz cálida de los focos sobre la tarjeta (de noche) */
+    .rsvp::after {
+        content: "";
+        position: absolute;
+        grid-area: 1 / 1 / -1 / -1;
+        inset: -1.6rem -1.2rem;
+        z-index: 1;
+        border-radius: 1.4rem;
+        background:
+            var(--guirnalda) 0 -0.55rem / 25% 2.1rem repeat-x,
+            radial-gradient(120% 45% at 50% 0, rgba(255, 196, 110, 0.24), transparent 70%);
+        pointer-events: none;
+    }
+    .rsvp h2 {
+        margin: 0.6rem 0 0.4rem;
+        font: 400 clamp(2.8rem, 13vw, 3.6rem)/1.1 var(--caligrafica);
+        color: var(--mar);
+    }
+    .rsvp h2::before {
+        content: "R · S · V · P";
+        display: block;
+        margin-bottom: 0.1rem;
+        font: 400 0.66rem/1.4 var(--sans);
+        letter-spacing: 0.34em;
+        color: var(--coral-oscuro);
+    }
+    .rsvp p {
+        margin: 0;
+        color: var(--mar-suave);
+    }
+    #total-confirmados {
+        font: 400 1.35rem/1 var(--romana);
+        color: var(--mar);
+    }
+    /* Django escribe "10 de Abril": todo a minúscula y solo la primera en mayúscula */
+    .rsvp .fecha-limite {
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+        text-transform: lowercase;
+    }
+    .rsvp .fecha-limite::first-letter {
+        text-transform: uppercase;
+    }
+    #form-rsvp {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1.3rem;
+        text-align: left;
+    }
+    /* renglones finos (16px o más: el iPhone no hace zoom) */
+    #form-rsvp input[type="text"],
+    #form-rsvp input[type="number"],
+    #form-rsvp textarea {
+        width: 100%;
+        padding: 0.5rem 0.1rem;
+        border: 0;
+        border-bottom: 1px solid rgba(24, 65, 75, 0.35);
+        border-radius: 0;
+        background: transparent;
+        color: var(--mar);
+        font: 300 1.05rem/1.4 var(--sans);
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    #form-rsvp input[type="number"]::-webkit-inner-spin-button,
+    #form-rsvp input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    #form-rsvp ::placeholder {
+        color: rgba(24, 65, 75, 0.45);
+    }
+    #form-rsvp input:focus,
+    #form-rsvp textarea:focus {
+        outline: none;
+        border-bottom-color: var(--coral);
+        box-shadow: 0 1px 0 var(--coral);
+    }
+    #form-rsvp textarea {
+        min-height: 4rem;
+        resize: vertical;
+    }
+    .opciones-asistencia {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.4rem;
+    }
+    .opciones-asistencia input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .opciones-asistencia label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.8rem;
+        padding: 0.1rem 0.3rem 0;
+        border: 1px solid rgba(24, 65, 75, 0.3);
+        border-radius: 999px;
+        font: 400 0.66rem/1.15 var(--sans);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-align: center;
+        cursor: pointer;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+    }
+    .opciones-asistencia input[type="radio"]:checked + label {
+        border-color: var(--mar);
+        background: var(--mar);
+        color: var(--espuma);
+    }
+    .opciones-asistencia input[type="radio"]:focus-visible + label {
+        outline: 2px solid var(--coral);
+        outline-offset: 2px;
+    }
+    .campo-con-label {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+    .campo-con-label label {
+        font: 400 0.62rem/1.3 var(--sans);
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .campo-con-label input {
+        max-width: 4rem;
+        text-align: center;
+    }
+    #form-rsvp button {
+        min-height: 3.1rem;
+        margin-top: 0.3rem;
+        padding-top: 0.1rem;
+        border: 0;
+        border-radius: 999px;
+        background: var(--coral);
+        color: #fff;
+        font: 500 0.72rem/1 var(--sans);
+        letter-spacing: 0.28em;
+        text-transform: uppercase;
+        cursor: pointer;
+        box-shadow: 0 10px 18px -10px rgba(185, 82, 61, 0.8);
+        transition: background 0.2s ease;
+    }
+    #form-rsvp button:hover {
+        background: var(--coral-oscuro);
+    }
+    #form-rsvp button:focus-visible {
+        outline: 2px solid var(--mar);
+        outline-offset: 3px;
+    }
+    #rsvp-status {
+        min-height: 1.4em;
+        margin-top: 0.9rem;
+        font: 400 1.6rem/1.2 var(--caligrafica);
+        color: var(--mar);
+    }
+
+    /* --- La botella con un mensaje para quien confirma con "Sí" --- */
+    .botella-mar {
+        position: relative;
+        height: 4.6rem;
+        margin-top: 0.4rem;
+        overflow: hidden;
+    }
+    .botella {
+        position: absolute;
+        left: 50%;
+        top: 0.5rem;
+        width: 8.2rem;
+        margin-left: -4.1rem;
+        overflow: visible;
+        animation: llegar 2s var(--curva) both, flotar 3.2s ease-in-out 2s infinite;
+    }
+    .botella-vidrio {
+        fill: rgba(170, 222, 214, 0.5);
+        stroke: #5E9A93;
+        stroke-width: 1.3;
+    }
+    .botella-papel {
+        fill: #F4E7CC;
+        stroke: #CDB48B;
+        stroke-width: 0.8;
+    }
+    .botella-papel-linea {
+        fill: none;
+        stroke: #B79C73;
+        stroke-width: 0.7;
+        stroke-linecap: round;
+        opacity: 0.6;
+    }
+    .botella-lazo {
+        fill: var(--coral);
+    }
+    .botella-brillo {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        opacity: 0.75;
+    }
+    .botella-corcho {
+        fill: #C99A68;
+        stroke: #8E6741;
+        stroke-width: 0.6;
+        transform-box: fill-box;
+        transform-origin: 0 50%;
+        animation: corcho 0.9s var(--curva) 2.1s both;
+    }
+    /* la olita sobre la que flota (mitad de la botella, bajo el agua) */
+    .botella-ola {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1.9rem;
+        background:
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 20' preserveAspectRatio='none'%3E%3Cpath d='M0 8q10-6 20 0t20 0 20 0 20 0V20H0Z' fill='%232B6F7C' fill-opacity='.55'/%3E%3Cpath d='M0 8q10-6 20 0t20 0 20 0 20 0' fill='none' stroke='%23FFF6EA' stroke-width='1.2'/%3E%3C/svg%3E") 0 0 / 5rem 100% repeat-x;
+        mask-image: linear-gradient(90deg, transparent, #000 25% 75%, transparent);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 25% 75%, transparent);
+        animation: deriva-ola 4s linear infinite;
+    }
+    /* el papel que sale de la botella y se desenrolla */
+    .mensaje-botella {
+        width: min(100%, 17rem);
+        margin: 0.3rem auto 0;
+        padding: 1.1rem 1.2rem 1rem;
+        background:
+            linear-gradient(rgba(160, 120, 70, 0.22), transparent 0.6rem, transparent calc(100% - 0.6rem), rgba(160, 120, 70, 0.22)),
+            var(--grano), #F6EAD2;
+        border-radius: 0.3rem;
+        box-shadow: 0 12px 20px -12px rgba(60, 40, 20, 0.6);
+        rotate: -1.5deg;
+        animation: desenrollar 1.3s var(--curva) 2.6s both;
+    }
+    .mensaje-botella p {
+        margin: 0;
+    }
+    .mensaje-para {
+        font: 400 1.9rem/1.1 var(--caligrafica);
+        color: var(--mar);
+    }
+    .mensaje-texto {
+        font: 400 1.15rem/1.3 var(--romana);
+        color: var(--mar);
+    }
+    .rsvp .mensaje-firma {
+        margin-top: 0.5rem;
+        font: 400 0.58rem/1.3 var(--sans);
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--coral-oscuro);
+    }
+    .rsvp .mensaje-nota {
+        margin-top: 0.7rem;
+        font-size: 0.85rem;
+    }
+    .rsvp .aviso-privacidad {
+        margin-top: 1.1rem;
+    }
+
+    /* ============================================
+       ANIMACIONES
+       ============================================ */
+    .animar-entrada:not(.hero) {
+        opacity: 0;
+        transition: opacity 0.9s ease;
+    }
+    .animar-entrada.visible {
+        opacity: 1;
+    }
+    .visible :is(.info-cabecera, .cita, .detalles, .lugares, .vestimenta, .countdown, .acciones-rapidas, .familia, .itinerario, .boton-mesa-regalos, .nota-ninos, .galeria-cabecera, .guirnalda) {
+        animation: aparecer 0.9s var(--curva) both;
+    }
+    @keyframes aparecer {
+        from { opacity: 0; translate: 0 0.9rem; }
+    }
+    /* el sol sale del mar al abrir la invitación (y su reflejo con él) */
+    @keyframes amanecer {
+        from { transform: translateY(calc(var(--sol) + var(--separacion) + 1rem)); }
+    }
+    @keyframes reflejar {
+        from { transform: translateY(calc((var(--sol) * 1.05 + var(--separacion) + 1rem) * -1)); }
+    }
+    @keyframes respirar {
+        to { scale: 1.06; opacity: 0.85; }
+    }
+    @keyframes girar {
+        to { rotate: 1turn; }
+    }
+    @keyframes ondular {
+        from { translate: -4px 0; scale: 1 1; }
+        to { translate: 4px 0; scale: 1.06 1; }
+    }
+    @keyframes titilar {
+        from { opacity: 0.25; }
+        to { opacity: 1; }
+    }
+    @keyframes deriva {
+        to { transform: translateX(-360px); }
+    }
+    @keyframes navegar {
+        to { translate: -2.8rem 0; }
+    }
+    @keyframes planear {
+        50% { translate: -3rem 0.8rem; }
+        to { translate: -6rem -0.4rem; }
+    }
+    @keyframes aletear {
+        to { scale: 1 0.45; }
+    }
+    @keyframes olita {
+        50% { translate: 0 0.25rem; }
+    }
+    /* se mueve la imagen, no la caja: así la sombra nunca se sale de la tarjeta */
+    @keyframes palmera {
+        to { background-position: right -1.9rem top -2.1rem; }
+    }
+    @keyframes foco {
+        from { opacity: 0.75; }
+        to { opacity: 1; }
+    }
+    @keyframes columpio {
+        from { rotate: -2.2deg; }
+        to { rotate: 2.2deg; }
+    }
+    @keyframes llamar {
+        0%, 86%, 100% { rotate: 0deg; }
+        90% { rotate: -10deg; }
+        95% { rotate: 7deg; }
+    }
+    @keyframes mecer {
+        50% { rotate: -8deg; }
+    }
+    @keyframes onda {
+        from { opacity: 0.9; scale: 1; }
+        to { opacity: 0; scale: 1.75; }
+    }
+    @keyframes llegar {
+        from { translate: 140% 0; rotate: 14deg; }
+        60% { rotate: -6deg; }
+    }
+    @keyframes flotar {
+        50% { translate: 0 0.25rem; rotate: -3deg; }
+    }
+    @keyframes corcho {
+        to { transform: translate(14px, -26px) rotate(80deg); opacity: 0; }
+    }
+    @keyframes deriva-ola {
+        to { background-position: 5rem 0; }
+    }
+    @keyframes desenrollar {
+        from { clip-path: inset(0 0 100% 0); opacity: 0; translate: 0 -1rem; }
+        30% { opacity: 1; }
+        to { clip-path: inset(0 0 0 0); }
+    }
+
+    /* ============================================
+       PANTALLAS ANCHAS (compu y tablet)
+       ============================================ */
+    @media (min-width: 640px) {
+        .guirnalda {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    @media (min-width: 1000px) {
+        .guirnalda {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .galeria.con-guirnalda {
+            padding-inline: 4vw;
+        }
+    }
+
+    /* ============================================
+       MOVIMIENTO REDUCIDO
+       El atardecer sigue al scroll, pero el sol se desvanece en vez de bajar
+       y nada se mece ni titila.
+       ============================================ */
+    @media (prefers-reduced-motion: reduce) {
+        .sol-baja,
+        .reflejo-baja {
+            transform: none;
+            opacity: calc(1 - var(--puesta));
+        }
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            animation-delay: 0s !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+</style>
+{% if foto_portada %}
+<style>
+    /* la foto de esta invitación para el reflejo en el mar */
+    :root { --foto-sol: url("{{ foto_portada }}"); }
+</style>
+{% endif %}
+{% endblock %}
+
+{% block scripts_tema %}
+<script>
+    // Decoración progresiva del tema: si este script falla, la invitación se ve y
+    // funciona igual (hora dorada fija, nombres en un renglón, fotos en cuadrícula).
+    (function () {
+        const raiz = document.documentElement;
+
+        // --- 1. El atardecer sigue al scroll ---
+        // Solo se escriben dos números; el CSS calcula cielos, sol, luna y estrellas.
+        //   --t       0 → 1 de arriba a abajo de toda la invitación
+        //   --puesta  0 → 1 mientras sales de la portada (el sol se mete)
+        let pendiente = false;
+        function pintarCielo() {
+            pendiente = false;
+            const alto = window.innerHeight;
+            const recorrido = Math.max(raiz.scrollHeight - alto, 1);
+            const y = window.scrollY;
+            raiz.style.setProperty('--t', Math.min(Math.max(y / recorrido, 0), 1).toFixed(4));
+            raiz.style.setProperty('--puesta', Math.min(Math.max(y / (alto * 0.85), 0), 1).toFixed(4));
+        }
+        function pedirCielo() {
+            if (pendiente) return;
+            pendiente = true;
+            requestAnimationFrame(pintarCielo);
+        }
+        window.addEventListener('scroll', pedirCielo, { passive: true });
+        window.addEventListener('resize', pedirCielo);
+        pintarCielo();
+
+        // --- 2. Nombres: el conector que escribió el cliente (&, y, e) va caligráfico ---
+        const titulo = document.querySelector('.hero .nombres');
+        const texto = titulo ? titulo.textContent.trim() : '';
+        const partes = texto.split(/\s+(&|y|e)\s+/i);
+        let iniciales = [texto.charAt(0).toUpperCase()];
+        if (partes.length === 3) {
+            titulo.textContent = '';
+            [['nombre', partes[0]], ['amp', partes[1]], ['nombre', partes[2]]].forEach(([clase, parte], i) => {
+                const span = document.createElement('span');
+                span.className = clase;
+                span.textContent = parte;
+                if (i) titulo.append(' ');
+                titulo.appendChild(span);
+            });
+            iniciales = [partes[0].charAt(0).toUpperCase(), partes[2].charAt(0).toUpperCase()];
+        }
+        document.querySelectorAll('[data-iniciales]').forEach(el => {
+            el.textContent = iniciales[0];
+            if (iniciales.length === 2) {
+                const amp = document.createElement('i');
+                amp.textContent = '&';
+                el.append(amp, iniciales[1]);
+            }
+        });
+
+        // --- 3. Los nombres nunca se salen de la pantalla ---
+        function ajustarNombre() {
+            if (!titulo) return;
+            titulo.style.fontSize = '';
+            let tamano = parseFloat(getComputedStyle(titulo).fontSize);
+            let vueltas = 0;
+            const nombres = titulo.querySelectorAll('.nombre');
+            const ancho = titulo.clientWidth + 1;
+            const seSale = () => titulo.scrollWidth > ancho || [...nombres].some(n => n.offsetWidth > ancho);
+            while (seSale() && vueltas < 20) {
+                tamano *= 0.94;
+                titulo.style.fontSize = tamano + 'px';
+                vueltas++;
+            }
+        }
+        ajustarNombre();
+        if (document.fonts) document.fonts.ready.then(ajustarNombre);
+        let ajustePendiente = false;
+        window.addEventListener('resize', () => {
+            if (ajustePendiente) return;
+            ajustePendiente = true;
+            requestAnimationFrame(() => { ajustePendiente = false; ajustarNombre(); });
+        });
+
+        // --- 4. La nota de niños como letrero de playa ---
+        const ninos = document.querySelector('.nota-ninos');
+        if (ninos) {
+            const soloAdultos = /adultos/i.test(ninos.textContent);
+            ninos.textContent = '';
+            const grande = document.createElement('strong');
+            grande.textContent = soloAdultos ? 'Solo adultos' : 'Niños bienvenidos';
+            ninos.append(grande, soloAdultos ? 'Gracias por su comprensión' : '¡Traigan su cubeta y su pala!');
+        }
+
+        // --- 5. Galería: cada foto colgada con su pinza de una guirnalda de focos ---
+        const galeria = document.querySelector('.galeria');
+        const fotos = galeria ? galeria.querySelectorAll(':scope > img') : [];
+        if (fotos.length) {
+            const cabecera = document.createElement('header');
+            cabecera.className = 'galeria-cabecera';
+            cabecera.innerHTML = '<p class="kicker">Bajo las luces</p><h2 class="titulo">Nuestra historia</h2>';
+            const guirnalda = document.createElement('div');
+            guirnalda.className = 'guirnalda';
+            fotos.forEach((img, i) => {
+                const figura = document.createElement('figure');
+                figura.className = 'foto-colgada';
+                figura.style.setProperty('--i', i);
+                const pinza = document.createElement('span');
+                pinza.className = 'pinza';
+                figura.append(pinza, img);
+                guirnalda.appendChild(figura);
+            });
+            galeria.append(cabecera, guirnalda);
+            galeria.classList.add('con-guirnalda');
+        }
+
+        // --- 6. RSVP con voz de boda ---
+        const encabezado = document.querySelector('.rsvp h2');
+        if (encabezado) encabezado.textContent = '¿Nos acompañas?';
+        const form = document.getElementById('form-rsvp');
+        const enviar = form && form.querySelector('button[type="submit"]');
+        if (enviar) enviar.textContent = 'Confirmar asistencia';
+
+        // --- 7. Quien confirma con "Sí" recibe un mensaje en una botella ---
+        // El motor borra el formulario antes de avisar, así que el nombre se
+        // guarda al enviar. Solo el primer nombre: "Ana: te esperamos frente al mar".
+        let nombreInvitado = '';
+        if (form) {
+            form.addEventListener('submit', () => {
+                const campo = form.querySelector('[name="nombre_invitado"]');
+                nombreInvitado = campo ? campo.value.trim().split(/\s+/)[0] : '';
+            });
+        }
+        const status = document.getElementById('rsvp-status');
+        const plantillaBotella = document.getElementById('plantilla-botella');
+        document.addEventListener('rsvp:enviado', e => {
+            document.querySelectorAll('.rsvp .botella-mar, .rsvp .mensaje-botella, .rsvp .mensaje-nota').forEach(el => el.remove());
+            if (!status || !plantillaBotella || e.detail.asistencia !== 'si') return;
+            const copia = plantillaBotella.content.cloneNode(true);
+            // textContent (no innerHTML): el nombre lo escribe el invitado
+            copia.querySelector('.mensaje-para').textContent = nombreInvitado ? `${nombreInvitado}:` : 'Querido invitado:';
+            const nota = copia.querySelector('.mensaje-nota');
+            status.after(copia);
+            setTimeout(() => {
+                if (nota.isConnected) nota.textContent = 'Guárdalo con una captura de pantalla.';
+            }, 4400);
+        });
+    })();
+</script>
+{% endblock %}

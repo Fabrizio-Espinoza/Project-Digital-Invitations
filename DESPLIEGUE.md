@@ -150,8 +150,8 @@ Prueba: `https://tuusuario.pythonanywhere.com/` (el catálogo),
 python manage.py crear_todos_los_demos --host https://tuusuario.pythonanywhere.com
 ```
 
-Imprime los 18 links. Sube las fotos de galería desde el admin. Los demos de El Velo, Cajita Musical y
-Primer Latido traen su foto de portada (se copia sola a `media/invitaciones/portadas/`).
+Imprime los 19 links. Sube las fotos de galería desde el admin. Los demos de El Velo, Frente al Mar,
+Cajita Musical y Primer Latido traen su foto de portada (se copia sola a `media/invitaciones/portadas/`).
 
 ## 6. Dominio propio + HTTPS
 
