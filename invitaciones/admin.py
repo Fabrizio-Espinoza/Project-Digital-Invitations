@@ -5,8 +5,10 @@ from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
 
+from .catalogo import DISENOS
 from .fotos import LADO_MAXIMO_PORTADA, preparar_foto
 from .models import Confirmacion, ImagenGaleria, Invitacion, Pedido, Plantilla
+from .pedidos import DISENOS_CON_PORTADA
 
 
 class ImagenGaleriaInline(admin.TabularInline):
@@ -42,6 +44,15 @@ class FormularioInvitacion(forms.ModelForm):
     class Meta:
         model = Invitacion
         fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # la ayuda nombra los diseños que hoy usan la foto (sale del catálogo, no se queda vieja)
+        if "foto_portada" in self.fields:
+            nombres = " y ".join(f"«{d['nombre']}»" for d in DISENOS if d["slug_tema"] in DISENOS_CON_PORTADA)
+            self.fields["foto_portada"].help_text = (
+                f"La usan los diseños con foto en la portada ({nombres}). Vertical se ve mejor. "
+                "Si no hay, se usa la primera foto de la galería.")
 
     def clean_foto_portada(self):
         # la foto que subes aquí pasa por lo mismo que las del cliente:
